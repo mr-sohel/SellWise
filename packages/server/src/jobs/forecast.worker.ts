@@ -1,20 +1,23 @@
 import { Worker, Job } from 'bullmq';
 import { bullMqConnection } from '../config/redis';
 import { db } from '../config/db';
+import { forecastService } from '../services/forecast.service';
 
 export const forecastWorker = new Worker('forecasts', async (job: Job) => {
-  console.log(`[Worker: Forecast] Processing job ${job.id} for store ${job.data?.storeId || 'ALL'}`);
+  console.log(`[Worker: Forecast] Processing job ${job.id}`);
 
   if (job.name === 'forecast:generate') {
-    // 1. Get all active stores
     const { rows: stores } = await db.query('SELECT id FROM stores');
+    let totalProcessed = 0;
 
-    // 2. Process forecasts for each store
     for (const store of stores) {
       console.log(`[Worker: Forecast] Generating forecasts for store ${store.id}`);
-      // In a real implementation:
-      // await forecastService.generateForecasts(store.id);
+      const result = await forecastService.generateForecasts(store.id);
+      totalProcessed += result.productsProcessed;
+      await job.updateProgress(totalProcessed);
     }
+
+    console.log(`[Worker: Forecast] Done. Processed ${totalProcessed} products across ${stores.length} stores`);
   }
 }, {
   connection: bullMqConnection,

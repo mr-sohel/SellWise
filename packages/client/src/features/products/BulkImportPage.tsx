@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { useBulkImportProducts } from './hooks/useProducts';
+import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
 import type { CreateProductDTO } from '@sellwise/shared';
@@ -9,7 +10,8 @@ import { Link } from 'react-router-dom';
 
 export function BulkImportPage() {
   const navigate = useNavigate();
-  const storeId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+  const { activeStoreId } = useAuthStore();
+  const storeId = activeStoreId || '';
   const importMutation = useBulkImportProducts(storeId);
 
   const [file, setFile] = useState<File | null>(null);

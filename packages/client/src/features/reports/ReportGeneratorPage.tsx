@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useDashboard } from '../dashboard/hooks/useDashboard';
+import { useAuthStore } from '../../stores/auth.store';
 import { FileDown, Calendar } from 'lucide-react';
 
 export function ReportGeneratorPage() {
-  const { t } = useTranslation();
-  const storeId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+  const { activeStoreId } = useAuthStore();
+  const storeId = activeStoreId || '';
   const [range, setRange] = useState('30d');
 
   const { data, isLoading } = useDashboard(storeId, range);

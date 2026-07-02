@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useOrders } from './hooks/useOrders';
+import { useAuthStore } from '../../stores/auth.store';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Eye } from 'lucide-react';
 
 export function OrderListPage() {
-  const { t } = useTranslation();
-  const storeId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+  const { activeStoreId } = useAuthStore();
+  const storeId = activeStoreId || '';
 
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
 
@@ -18,7 +18,7 @@ export function OrderListPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold text-foreground">
-          {t('common.orders')}
+          Orders
         </h1>
         <Link to="/orders/new" className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md shadow-sm text-sm font-medium transition-opacity">
           <Plus className="mr-2 h-4 w-4" />

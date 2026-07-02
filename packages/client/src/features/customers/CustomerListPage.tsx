@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCustomers } from './hooks/useCustomers';
+import { useAuthStore } from '../../stores/auth.store';
 import { Search } from 'lucide-react';
 
 export function CustomerListPage() {
   const { t } = useTranslation();
-  const storeId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+  const { activeStoreId } = useAuthStore();
+  const storeId = activeStoreId || '';
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');

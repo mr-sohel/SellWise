@@ -21,7 +21,6 @@ describe('Auth Endpoints', () => {
     const res = await request(app)
       .post('/api/v1/auth/signup')
       .send({
-        name: 'Test User',
         email: testEmail,
         password: testPassword,
         preferred_lang: 'en'
@@ -31,7 +30,8 @@ describe('Auth Endpoints', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.user).toHaveProperty('id');
     expect(res.body.data.user.email).toBe(testEmail);
-    expect(res.headers['set-cookie']).toBeDefined(); // HTTP-only cookie set
+    expect(res.body.data).toHaveProperty('storeId');
+    expect(res.headers['set-cookie']).toBeDefined();
   });
 
   it('should login an existing user', async () => {
@@ -45,6 +45,7 @@ describe('Auth Endpoints', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.user.email).toBe(testEmail);
+    expect(res.body.data).toHaveProperty('storeId');
     expect(res.headers['set-cookie']).toBeDefined();
   });
 

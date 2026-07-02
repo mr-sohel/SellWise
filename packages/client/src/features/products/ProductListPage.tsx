@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProducts, useDeleteProduct } from './hooks/useProducts';
-import { Link, useParams } from 'react-router-dom';
+import { useAuthStore } from '../../stores/auth.store';
+import { Link } from 'react-router-dom';
 import { Plus, Search, FileUp, Trash2, Edit } from 'lucide-react';
-// import { ProductFiltersDTO } from '@sellwise/shared';
 
 export function ProductListPage() {
   const { t } = useTranslation();
-  // Using a mock storeId for now, but in reality it comes from URL params or Zustand
-  // e.g. const { storeId } = useParams<{ storeId: string }>();
-  const storeId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+  const { activeStoreId } = useAuthStore();
+  const storeId = activeStoreId || '';
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');

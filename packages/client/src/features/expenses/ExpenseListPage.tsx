@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses, useDeleteExpense, useCreateExpense } from './hooks/useExpenses';
+import { useAuthStore } from '../../stores/auth.store';
 import { Trash2, Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +8,8 @@ import type { CreateExpenseDTO } from '@sellwise/shared';
 import { createExpenseSchema } from '@sellwise/shared';
 
 export function ExpenseListPage() {
-  const storeId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+  const { activeStoreId } = useAuthStore();
+  const storeId = activeStoreId || '';
 
   const [page, setPage] = useState(1);
   const { data: result, isLoading } = useExpenses(storeId, { page, limit: 10 });

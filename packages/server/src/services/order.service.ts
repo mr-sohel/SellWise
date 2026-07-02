@@ -2,11 +2,24 @@ import { db } from '../config/db';
 import { orderRepository } from '../repositories/order.repository';
 import { customerRepository } from '../repositories/customer.repository';
 import { productRepository } from '../repositories/product.repository';
-import { CreateOrderDTO, Order, OrderItem, UpdateOrderStatusDTO, ORDER_STATUS_TRANSITIONS } from '@sellwise/shared';
+import { CreateOrderDTO, Order, OrderItem, OrderFiltersDTO, PaginatedResult, UpdateOrderStatusDTO, ORDER_STATUS_TRANSITIONS } from '@sellwise/shared';
 import { ConflictError, NotFoundError } from '../errors/AppError';
 import { generateOrderNumber } from '../utils/orderNumber';
 
 export class OrderService {
+  async listOrders(storeId: string, filters: OrderFiltersDTO): Promise<PaginatedResult<Order>> {
+    return orderRepository.findByStore(storeId, filters);
+  }
+
+  async getOrder(storeId: string, id: string): Promise<Order & { items: OrderItem[] }> {
+    const order = await orderRepository.findById(id);
+    if (!order || order.store_id !== storeId) {
+      throw new NotFoundError('Order');
+    }
+    const items = await orderRepository.findItemsByOrderId(id);
+    return { ...order, items };
+  }
+
   async createOrder(storeId: string, data: CreateOrderDTO): Promise<Order> {
     const client = await db.connect();
 

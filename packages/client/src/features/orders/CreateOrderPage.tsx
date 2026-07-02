@@ -4,13 +4,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { CreateOrderDTO } from '@sellwise/shared';
 import { createOrderSchema } from '@sellwise/shared';
 import { useCreateOrder } from './hooks/useOrders';
+import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, Plus } from 'lucide-react';
 import { useProducts } from '../products/hooks/useProducts';
 
 export function CreateOrderPage() {
   const navigate = useNavigate();
-  const storeId = "00000000-0000-0000-0000-000000000000"; // Placeholder
+  const { activeStoreId } = useAuthStore();
+  const storeId = activeStoreId || '';
   const createMutation = useCreateOrder(storeId);
   const { data: productsResult } = useProducts(storeId, { page: 1, limit: 100 });
 
