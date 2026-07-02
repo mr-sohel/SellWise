@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "fastapi dev main.py",
-    "start": "fastapi run main.py"
+    "dev": "fastapi dev app/main.py",
+    "start": "fastapi run app/main.py",
+    "test": "pytest"
   }
 }

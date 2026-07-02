@@ -1,0 +1,26 @@
+{
+  "common": {
+    "dashboard": "ড্যাশবোর্ড",
+    "products": "পণ্য",
+    "orders": "অর্ডার",
+    "customers": "গ্রাহক",
+    "expenses": "খরচ",
+    "reports": "রিপোর্ট",
+    "alerts": "সতর্কতা",
+    "settings": "সেটিংস",
+    "save": "সংরক্ষণ করুন",
+    "cancel": "বাতিল করুন",
+    "delete": "মুছে ফেলুন",
+    "edit": "সম্পাদনা করুন",
+    "create": "তৈরি করুন",
+    "search": "অনুসন্ধান",
+    "total": "মোট",
+    "status": "স্ট্যাটাস",
+    "date": "তারিখ"
+  },
+  "auth": {
+    "login": "লগ ইন",
+    "signup": "সাইন আপ",
+    "logout": "লগ আউট"
+  }
+}
