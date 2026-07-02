@@ -123,3 +123,8 @@ pip-delete-this-directory.txt
 
 # Antigravity artifacts
 .gemini/
+
+# Documentation
+*.md
+!README.md
+!*/README.md
