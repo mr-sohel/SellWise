@@ -1,0 +1,80 @@
+ Here are the 6 architectural improvements you need to make to ensure this is truly        
+  production-ready:
+
+  ### 1. The Database Deadlock Risk (Order Creation Flow)
+
+  In your order creation sequence ( 9.3 ), you correctly identify that you must use
+  SELECT ... FOR UPDATE  to prevent overselling. You execute this inside a loop for each    
+  line item.
+
+  • The Problem: If Customer A orders [Product 1, Product 2] and Customer B orders
+  [Product 2, Product 1] at the exact same millisecond, Transaction A locks Product 1 and   
+  waits for Product 2. Transaction B locks Product 2 and waits for Product 1. This is a     
+  classic database deadlock, and PostgreSQL will crash one of the transactions.
+  • The Fix: Before starting the loop in your  OrderService , you must sort the 
+  product_id s alphanumerically. If all transactions always lock products in the exact      
+  same order (e.g., lowest ID to highest ID), deadlocks are mathematically impossible.      
+
+  ### 2. Webhook Idempotency (Order Ingestion)
+
+  In your webhook workflow ( 9.8 ), you ingest orders from external sources like Shopify.   
+
+  • The Problem: Webhooks from platforms like Shopify are guaranteed to be delivered at     
+  least once, which means they occasionally send the exact same webhook payload twice       
+  (due to network blips). If you don't handle this, you will create duplicate orders,       
+  deduct stock twice, and ruin your analytics.
+  • The Fix: Add an  ExternalReferenceId  (string, nullable) column to your  Orders         
+  table with a  UNIQUE  constraint per  StoreId . When processing a webhook, check if the   
+  external order ID already exists. If it does, return  200 OK  and ignore it
+  (Idempotency).
+
+  ### 3. Analytics Accuracy (Cancelled Orders)
+
+  In the Analytics Dashboard data flow ( 9.5 ), you aggregate revenue metrics via SQL.      
+
+  • The Problem: If an order transitions to  cancelled  or  returned , the stock is
+  restored, but if your SQL queries do not explicitly exclude these statuses, your
+  dashboard will show inflated, fake revenue.
+  • The Fix: Ensure all repository queries for analytics explicitly include  WHERE status   
+  NOT IN ('cancelled', 'returned') . Alternatively, you can use a CQRS approach where       
+  changing an order status triggers an event that updates a pre-aggregated  DailyRevenue    
+  table, but the  WHERE  clause is perfectly fine for MVP.
+
+  ### 4. Background Job Scalability (BullMQ / Hangfire)
+
+  In your Background Job Pipeline ( 9.6 ), the scheduler triggers a single
+  "forecast:generate"  job for each store.
+
+  • The Problem: As you scale to hundreds of stores, a single background job looping        
+  through every product of every store will eventually hit memory limits or timeout. If     
+  it crashes at store #49, stores #50-100 never get their forecasts, and restarting the     
+  job re-processes the first 49.
+  • The Fix: Implement a fan-out pattern. Have a master job that runs at 2:00 AM. This      
+  master job simply queries the DB for all active  StoreId s, and then enqueues a
+  separate Hangfire job for each store (e.g.,  Hangfire.Enqueue(() => _forecastService.     
+  GenerateForStore(storeId)) ). This distributes the work, allows parallel processing,      
+  and isolates failures.
+
+  ### 5. Multi-Tenant Security Hardening
+
+  In your API Standards, your URL pattern is  /api/v1/stores/:storeId/<resource> .
+
+  • The Problem: A logged-in user has a valid JWT, but they might try to change the
+  storeId  in the URL to access another user's store (Insecure Direct Object Reference -    
+  IDOR).
+  • The Fix: In ASP.NET Core, you need a custom Authorization Filter or Middleware (e.g.,   
+  StoreAccessFilter ) that runs on every request. It must take the  storeId  from the       
+  route parameters, look up the  UserId  from the JWT claims, and query the  StoreMembers   
+  table (with caching) to verify they actually belong to that specific store before
+  hitting the Controller.
+
+  ### 6. Soft Delete Edge Cases (ML Pipeline)
+
+  You correctly decided to use soft deletes ( IsActive = false ) for products to maintain   
+  referential integrity with past orders.
+
+  • The Problem: The ML Service might pull all historical data and try to generate
+  forecasts or low-stock alerts for products that the owner has deleted.
+  • The Fix: Ensure that the SQL queries feeding the ML Service explicitly filter out       
+  IsActive = false . You don't want to waste compute predicting demand for discontinued     
+  items.

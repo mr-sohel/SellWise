@@ -1,0 +1,9 @@
+{
+  "name": "@sellwise/ml-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "fastapi dev main.py",
+    "start": "fastapi run main.py"
+  }
+}

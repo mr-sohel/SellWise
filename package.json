@@ -1,0 +1,16 @@
+{
+  "name": "sellwise",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SellWise - AI-Powered Sales Analytics & Inventory Management SaaS",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=@sellwise/server",
+    "dev:client": "npm run dev --workspace=@sellwise/client",
+    "build:shared": "npm run build --workspace=@sellwise/shared",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
