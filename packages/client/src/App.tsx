@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MainLayout } from './components/layout/MainLayout'
 import { LoginPage } from './features/auth/LoginPage'
 import { SignupPage } from './features/auth/SignupPage'
+import { OnboardingPage } from './features/onboarding/OnboardingPage'
 import { ProductListPage } from './features/products/ProductListPage'
 import { CreateProductPage } from './features/products/CreateProductPage'
 import { EditProductPage } from './features/products/EditProductPage'
@@ -28,6 +29,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
 
           {/* Protected Routes Wrapper */}
           <Route element={<MainLayout />}>

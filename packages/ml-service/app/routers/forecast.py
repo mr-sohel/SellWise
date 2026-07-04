@@ -1,14 +1,20 @@
+import logging
 from fastapi import APIRouter, HTTPException
 from ..models.schemas import ForecastRequest, ForecastResponse
 from ..services.prophet_service import generate_forecast
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("/forecast", response_model=ForecastResponse)
 async def create_forecast(request: ForecastRequest):
     try:
-        # Generate forecast using the prophet service
-        predictions = generate_forecast(request.history, request.periods)
+        # Generate forecast using the prophet service with business-type-aware seasonality
+        predictions = generate_forecast(
+            request.history,
+            request.periods,
+            business_type=request.business_type,
+        )
 
         return ForecastResponse(
             store_id=request.store_id,
@@ -16,4 +22,5 @@ async def create_forecast(request: ForecastRequest):
             forecast=predictions
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Forecast generation failed: {str(e)}")
+        logger.exception("Forecast generation failed")
+        raise HTTPException(status_code=500, detail="Forecast generation failed. Please try again later.")

@@ -9,8 +9,9 @@ class SalesHistoryPoint(BaseModel):
 class ForecastRequest(BaseModel):
     store_id: str
     product_id: str
-    history: List[SalesHistoryPoint] = Field(..., min_length=30, description="At least 30 data points needed for Prophet")
-    periods: int = Field(30, description="Number of days to forecast into the future")
+    history: List[SalesHistoryPoint] = Field(..., min_length=7, description="At least 7 data points needed")
+    periods: int = Field(30, ge=1, le=365, description="Number of days to forecast (1-365)")
+    business_type: Optional[str] = Field(None, description="Business type for seasonality tuning")
 
 class ForecastResultPoint(BaseModel):
     ds: date
@@ -25,14 +26,14 @@ class ForecastResponse(BaseModel):
 
 class CustomerDataPoint(BaseModel):
     customer_id: str
-    recency_days: int
-    frequency_count: int
-    monetary_value: float
-    avg_gap_between_orders: float
+    recency_days: int = Field(ge=0)
+    frequency_count: int = Field(ge=0)
+    monetary_value: float = Field(ge=0)
+    avg_gap_between_orders: float = Field(ge=0)
 
 class ChurnRequest(BaseModel):
     store_id: str
-    customers: List[CustomerDataPoint]
+    customers: List[CustomerDataPoint] = Field(..., max_length=10000)
 
 class ChurnResultPoint(BaseModel):
     customer_id: str

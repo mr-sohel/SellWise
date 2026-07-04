@@ -15,6 +15,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   });
 
   pgm.createIndex('customer_rfm', 'store_id');
+  // Unique constraint for ON CONFLICT in upsert queries
+  pgm.createIndex('customer_rfm', ['customer_id', 'store_id'], { unique: true });
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {

@@ -1,10 +1,16 @@
 import { forecastRepository, SalesHistory } from '../repositories/forecast.repository';
+import { storeRepository } from '../repositories/store.repository';
 import { env } from '../config/env';
+import logger from '../utils/logger';
 
 export class ForecastService {
   async generateForecasts(storeId: string): Promise<{ productsProcessed: number }> {
     const productIds = await forecastRepository.getActiveProductIds(storeId);
     let productsProcessed = 0;
+
+    // Fetch store's business_type for ML seasonality tuning
+    const store = await storeRepository.findById(storeId);
+    const businessType = store?.business_type || null;
 
     for (const productId of productIds) {
       try {
@@ -19,12 +25,12 @@ export class ForecastService {
           await this.generateSMAForecast(storeId, productId, history);
         } else {
           // Tier 2: Call Python ML service for Prophet
-          await this.generateProphetForecast(storeId, productId, history);
+          await this.generateProphetForecast(storeId, productId, history, businessType);
         }
 
         productsProcessed++;
       } catch (error) {
-        console.error(`[ForecastService] Failed for product ${productId}:`, error);
+        logger.error(`[ForecastService] Failed for product ${productId}:`, error);
       }
     }
 
@@ -62,37 +68,45 @@ export class ForecastService {
     await forecastRepository.upsertForecasts(storeId, productId, forecasts);
   }
 
-  private async generateProphetForecast(storeId: string, productId: string, history: SalesHistory[]): Promise<void> {
+  private async generateProphetForecast(storeId: string, productId: string, history: SalesHistory[], businessType: string | null): Promise<void> {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
       const response = await fetch(`${env.ML_SERVICE_URL}/forecast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          product_id: productId,
           store_id: storeId,
-          history: history.map(h => ({ date: h.date, quantity: h.total_qty })),
+          product_id: productId,
+          history: history.map(h => ({ ds: h.date, y: h.total_qty })),
+          periods: 30,
+          business_type: businessType,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeout);
+
       if (!response.ok) {
-        console.error(`[ForecastService] ML service returned ${response.status}, falling back to SMA`);
+        logger.error(`[ForecastService] ML service returned ${response.status}, falling back to SMA`);
         await this.generateSMAForecast(storeId, productId, history);
         return;
       }
 
-      const result = await response.json() as { forecasts: Array<{ date: string; predicted: number; lower: number; upper: number }> };
+      const result = await response.json() as { forecast: Array<{ ds: string; yhat: number; yhat_lower: number; yhat_upper: number }> };
 
-      const forecasts = result.forecasts.map(f => ({
-        forecast_date: f.date,
-        predicted_qty: Math.max(0, f.predicted),
-        lower_bound: Math.max(0, f.lower),
-        upper_bound: f.upper,
+      const forecasts = result.forecast.map(f => ({
+        forecast_date: f.ds,
+        predicted_qty: Math.max(0, f.yhat),
+        lower_bound: Math.max(0, f.yhat_lower),
+        upper_bound: f.yhat_upper,
         model_used: 'prophet',
       }));
 
       await forecastRepository.upsertForecasts(storeId, productId, forecasts);
     } catch (error) {
-      console.error(`[ForecastService] ML service call failed, falling back to SMA:`, error);
+      logger.error(`[ForecastService] ML service call failed, falling back to SMA:`, error);
       await this.generateSMAForecast(storeId, productId, history);
     }
   }

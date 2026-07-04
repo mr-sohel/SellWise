@@ -1,0 +1,38 @@
+Okay, But there are many types of small business out there and they are our targeted subscriber like facebook electronic gadget seller, facebook clothing, small super shops who don't even have their own websites, how our app can work for everyone?
+
+
+
+Current ML Assessment
+Your current forecast model is basic but functional. It uses Facebook Prophet with only 3 things: historical sales, weekly seasonality, and Bangladesh holidays. For an SDP submission, it works — but for real-world Bangladeshi e-commerce, it's significantly underfitting.
+Key Gaps
+Issue	Impact
+yearly_seasonality=False	Critical — Can't capture annual patterns (Eid, Ramadan, 11.11 sales)
+No external features	Blind to promotions, price changes, stockouts
+Trains from scratch per request	Slow, no model persistence
+30-day minimum data	New products get a flat line
+Churn model trains on synthetic labels	No real predictive power
+Bangladesh-Specific Improvements
+Here's what matters for the Bangladeshi online seller market:
+1. Eid Seasonality (highest impact)
+- Eid al-Fitr and Eid al-Adha cause massive demand spikes (clothing, gifts, food)
+- Prophet can model this with yearly_seasonality=True + Eid holiday regressors
+- Demand often 3-5x normal for 2-3 weeks before Eid
+2. Ramadan Shift
+- Night shopping increases, day-time drops
+- Categories shift (food/iftar items surge, fashion dips mid-Ramadan)
+3. Monsoon (June-September)
+- Demand drops for many categories, spikes for rain gear, umbrellas
+- Delivery delays affect reorder patterns
+4. 11.11 / 12.12 / Flash Sales
+- These mega-sale days create artificial demand spikes
+- Can be added as binary regressors (is_sale_day)
+5. Bengali New Year (Pohela Boishakh — April 14)
+- Major shopping occasion, similar to Lunar New Year in other markets
+What I'd Recommend Implementing (Priority Order)
+1. Enable yearly seasonality — one-line change, biggest impact
+2. Add product category as a feature — different categories have different seasonality (fashion vs electronics vs food)
+3. Add price/promotion regressors — if the backend tracks discounts
+4. Model persistence — save trained models, don't retrain per request
+5. Shorter fallback for new products — drop minimum from 30 to 14 days
+6. Churn model with real labels — use actual customer return patterns instead of synthetic
+Want me to implement these improvements? I can start with the high-impact, low-risk changes (yearly seasonality + category-aware forecasting) that will make the most visible difference in your demo.

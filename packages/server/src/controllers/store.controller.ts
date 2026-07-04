@@ -23,6 +23,26 @@ export class StoreController {
     }
   }
 
+  async completeOnboarding(req: Request, res: Response, next: NextFunction) {
+    try {
+      const storeId = req.params.storeId as string;
+      const store = await storeService.completeOnboarding(storeId, req.body);
+      res.status(200).json(ApiResponse.success(store));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const storeId = req.params.storeId as string;
+      const store = await storeService.updateStoreProfile(storeId, req.body);
+      res.status(200).json(ApiResponse.success(store));
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async createMember(req: Request, res: Response, next: NextFunction) {
     try {
       const storeId = req.params.storeId as string;

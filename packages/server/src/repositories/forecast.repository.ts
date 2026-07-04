@@ -49,14 +49,27 @@ export class ForecastRepository extends BaseRepository<Forecast> {
   }
 
   async upsertForecasts(storeId: string, productId: string, forecasts: Omit<Forecast, 'id' | 'store_id' | 'product_id' | 'created_at'>[], client?: PoolClient): Promise<void> {
-    for (const f of forecasts) {
+    // Batch upsert in chunks of 100 to avoid N+1 queries
+    const batchSize = 100;
+    for (let i = 0; i < forecasts.length; i += batchSize) {
+      const batch = forecasts.slice(i, i + batchSize);
+      const values: string[] = [];
+      const params: any[] = [];
+      let paramIndex = 1;
+
+      for (const f of batch) {
+        values.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6})`);
+        params.push(storeId, productId, f.forecast_date, f.predicted_qty, f.lower_bound, f.upper_bound, f.model_used);
+        paramIndex += 7;
+      }
+
       await this.query(
         `INSERT INTO ${this.tableName} (store_id, product_id, forecast_date, predicted_qty, lower_bound, upper_bound, model_used)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         VALUES ${values.join(', ')}
          ON CONFLICT (store_id, product_id, forecast_date)
          DO UPDATE SET predicted_qty = EXCLUDED.predicted_qty, lower_bound = EXCLUDED.lower_bound,
                        upper_bound = EXCLUDED.upper_bound, model_used = EXCLUDED.model_used`,
-        [storeId, productId, f.forecast_date, f.predicted_qty, f.lower_bound, f.upper_bound, f.model_used],
+        params,
         client
       );
     }

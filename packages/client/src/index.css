@@ -1,28 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #020817;
+  /* ── Vercel Canvas / Surface ── */
+  --color-background: #fafafa;
+  --color-foreground: #171717;
   --color-card: #ffffff;
-  --color-card-foreground: #020817;
+  --color-card-foreground: #171717;
   --color-popover: #ffffff;
-  --color-popover-foreground: #020817;
-  --color-primary: #0f172a;
-  --color-primary-foreground: #f8fafc;
-  --color-secondary: #f1f5f9;
-  --color-secondary-foreground: #0f172a;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-accent: #f1f5f9;
-  --color-accent-foreground: #0f172a;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #f8fafc;
-  --color-border: #e2e8f0;
-  --color-input: #e2e8f0;
-  --color-ring: #020817;
+  --color-popover-foreground: #171717;
+
+  /* ── Vercel Primary (Ink) ── */
+  --color-primary: #171717;
+  --color-primary-foreground: #ffffff;
+
+  /* ── Vercel Secondary (Canvas) ── */
+  --color-secondary: #ffffff;
+  --color-secondary-foreground: #171717;
+
+  /* ── Vercel Muted ── */
+  --color-muted: #fafafa;
+  --color-muted-foreground: #888888;
+
+  /* ── Vercel Accent ── */
+  --color-accent: #fafafa;
+  --color-accent-foreground: #171717;
+
+  /* ── Vercel Destructive / Error ── */
+  --color-destructive: #ee0000;
+  --color-destructive-foreground: #ffffff;
+
+  /* ── Vercel Border / Input / Ring ── */
+  --color-border: #ebebeb;
+  --color-input: #ebebeb;
+  --color-ring: #171717;
+
+  /* ── Vercel Semantic ── */
+  --color-success: #0070f3;
+  --color-success-foreground: #ffffff;
+  --color-warning: #f5a623;
+  --color-warning-foreground: #171717;
+  --color-link: #0070f3;
+  --color-link-deep: #0761d1;
+
+  /* ── Vercel Extended Palette ── */
+  --color-canvas-soft: #fafafa;
+  --color-canvas-soft-2: #f5f5f5;
+  --color-body: #4d4d4d;
+  --color-mute: #888888;
+  --color-hairline: #ebebeb;
+  --color-hairline-strong: #a1a1a1;
+
+  --color-error-soft: #f7d4d6;
+  --color-error-deep: #c50000;
+  --color-warning-soft: #ffefcf;
+  --color-warning-deep: #ab570a;
+  --color-link-bg-soft: #d3e5ff;
+
+  --color-violet: #7928ca;
+  --color-violet-soft: #d8ccf1;
+  --color-violet-deep: #4c2889;
+  --color-cyan: #50e3c2;
+  --color-cyan-soft: #aaffec;
+  --color-cyan-deep: #29bc9b;
+}
+
+/* ── Base Styles ── */
+*,
+*::before,
+*::after {
+  border-color: var(--color-border);
+}
+
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ── Typography ── */
+.font-display-xl {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 48px;
+  letter-spacing: -2.4px;
+}
+
+.font-display-lg {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 40px;
+  letter-spacing: -1.28px;
+}
+
+.font-display-md {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: -0.96px;
+}
+
+.font-display-sm {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: -0.6px;
+}
+
+/* ── Stacked Shadow System ── */
+.shadow-vercel-1 {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-vercel-2 {
+  box-shadow:
+    0px 1px 1px rgba(0, 0, 0, 0.02),
+    0px 2px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-vercel-3 {
+  box-shadow:
+    0px 2px 2px rgba(0, 0, 0, 0.04),
+    0px 8px 8px -8px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-vercel-4 {
+  box-shadow:
+    0px 2px 2px rgba(0, 0, 0, 0.04),
+    0px 8px 16px -4px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-vercel-5 {
+  box-shadow:
+    0px 1px 1px rgba(0, 0, 0, 0.02),
+    0px 8px 16px -4px rgba(0, 0, 0, 0.04),
+    0px 24px 32px -8px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: #171717;
+  color: #f2f2f2;
 }

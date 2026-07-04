@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import { env } from './config/env';
 import { requestId } from './middleware/requestId';
 import { requestLogger } from './middleware/requestLogger';
@@ -8,15 +10,31 @@ import routes from './routes';
 
 const app = express();
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware Stack
-// TODO: Add helmet() for security headers
+app.use(helmet());
 app.use(cors({
-  origin: env.NODE_ENV === 'production' ? process.env.CLIENT_URL : true,
+  origin: env.NODE_ENV === 'production' ? process.env.CLIENT_URL : 'http://localhost:5173',
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+app.use(limiter);
 app.use(requestId);
 app.use(requestLogger);
+app.use('/api/v1/auth', authLimiter);
 
 // Health check route
 app.get('/api/v1/health', (req, res) => {

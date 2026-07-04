@@ -1,11 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../../../lib/api/client';
 import type { Customer, CreateCustomerDTO, UpdateCustomerDTO, CustomerFiltersDTO, PaginatedResult } from '@sellwise/shared';
-
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api/v1',
-  withCredentials: true,
-});
 
 export function useCustomers(storeId: string, filters: CustomerFiltersDTO) {
   return useQuery({

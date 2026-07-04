@@ -2,6 +2,36 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../lib/api/client';
 import type { Product, CreateProductDTO, UpdateProductDTO, ProductFiltersDTO, PaginatedResult } from '@sellwise/shared';
 
+export interface ForecastDataPoint {
+  forecast_date: string;
+  predicted_qty: number;
+  lower_bound: number;
+  upper_bound: number;
+  model_used: string;
+}
+
+export function useProduct(storeId: string, productId: string) {
+  return useQuery({
+    queryKey: ['products', storeId, productId],
+    queryFn: async (): Promise<Product> => {
+      const { data } = await api.get(`/stores/${storeId}/products/${productId}`);
+      return data.data;
+    },
+    enabled: !!storeId && !!productId,
+  });
+}
+
+export function useProductForecast(storeId: string, productId: string, days: number) {
+  return useQuery({
+    queryKey: ['forecast', storeId, productId, days],
+    queryFn: async (): Promise<ForecastDataPoint[]> => {
+      const { data } = await api.get(`/stores/${storeId}/products/${productId}/forecast`, { params: { days } });
+      return data.data;
+    },
+    enabled: !!storeId && !!productId,
+  });
+}
+
 export function useProducts(storeId: string, filters: ProductFiltersDTO) {
   return useQuery({
     queryKey: ['products', storeId, filters],

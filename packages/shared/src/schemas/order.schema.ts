@@ -1,13 +1,20 @@
 import { z } from 'zod';
 import { createCustomerSchema } from './customer.schema';
+import { ORDER_STATUSES } from '../constants/order-status';
 
 export const orderItemSchema = z.object({
   product_id: z.string().uuid('Invalid product ID'),
   quantity: z.number().int().positive('Quantity must be greater than 0'),
 });
 
+// Link existing customer by ID or create/upsert by phone
+export const orderCustomerSchema = z.union([
+  z.object({ customer_id: z.string().uuid('Invalid customer ID') }),
+  createCustomerSchema,
+]);
+
 export const createOrderSchema = z.object({
-  customer: createCustomerSchema,
+  customer: orderCustomerSchema,
   items: z.array(orderItemSchema).min(1, 'Order must have at least one item'),
   delivery_charge: z.number().min(0).default(0),
   discount: z.number().min(0).default(0),
@@ -17,7 +24,7 @@ export const createOrderSchema = z.object({
 });
 
 export const updateOrderStatusSchema = z.object({
-  status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned']),
+  status: z.enum(ORDER_STATUSES),
 });
 
 export const orderFiltersSchema = z.object({

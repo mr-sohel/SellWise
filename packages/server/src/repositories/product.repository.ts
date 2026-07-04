@@ -80,8 +80,13 @@ export class ProductRepository extends BaseRepository<Product> {
     const params: any[] = [id, storeId];
     let paramIndex = 3;
 
+    const ALLOWED_COLUMNS = new Set([
+      'name', 'name_bn', 'sku', 'category', 'cost_price', 'selling_price',
+      'stock_quantity', 'low_stock_threshold', 'unit'
+    ]);
+
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
+      if (value !== undefined && ALLOWED_COLUMNS.has(key)) {
         updates.push(`${key} = $${paramIndex}`);
         params.push(value);
         paramIndex++;
@@ -124,10 +129,10 @@ export class ProductRepository extends BaseRepository<Product> {
     return rows[0] || null;
   }
 
-  async decrementStock(id: string, quantity: number, client: PoolClient): Promise<void> {
+  async decrementStock(id: string, storeId: string, quantity: number, client: PoolClient): Promise<void> {
     await this.query(
-      `UPDATE ${this.tableName} SET stock_quantity = stock_quantity - $1 WHERE id = $2`,
-      [quantity, id],
+      `UPDATE ${this.tableName} SET stock_quantity = stock_quantity - $1 WHERE id = $2 AND store_id = $3`,
+      [quantity, id, storeId],
       client
     );
   }

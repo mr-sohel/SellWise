@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../../../lib/api/client';
 import type { CreateMemberDTO } from '@sellwise/shared';
 
-// Define the response type for members
 export interface StaffMember {
   id: string;
   email: string;
@@ -16,7 +15,7 @@ export const useStaff = (storeId: string) => {
     queryKey: ['staff', storeId],
     queryFn: async () => {
       if (!storeId) return { data: [] };
-      const { data } = await axios.get<{ data: StaffMember[] }>(`/stores/${storeId}/members`);
+      const { data } = await api.get<{ data: StaffMember[] }>(`/stores/${storeId}/members`);
       return data;
     },
     enabled: !!storeId,
@@ -28,7 +27,7 @@ export const useAddStaff = (storeId: string) => {
 
   return useMutation({
     mutationFn: async (memberData: CreateMemberDTO) => {
-      const { data } = await axios.post(`/stores/${storeId}/members`, memberData);
+      const { data } = await api.post(`/stores/${storeId}/members`, memberData);
       return data;
     },
     onSuccess: () => {
@@ -42,7 +41,7 @@ export const useRemoveStaff = (storeId: string) => {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { data } = await axios.delete(`/stores/${storeId}/members/${userId}`);
+      const { data } = await api.delete(`/stores/${storeId}/members/${userId}`);
       return data;
     },
     onSuccess: () => {

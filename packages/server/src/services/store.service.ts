@@ -1,7 +1,8 @@
 import { storeRepository } from '../repositories/store.repository';
 import { userRepository } from '../repositories/user.repository';
+import { categoryRepository } from '../repositories/category.repository';
 import { db } from '../config/db';
-import { CreateStoreDTO, Store, CreateMemberDTO } from '@sellwise/shared';
+import { CreateStoreDTO, Store, CreateMemberDTO, CompleteOnboardingDTO, DEFAULT_CATEGORIES_BY_TYPE } from '@sellwise/shared';
 import bcrypt from 'bcryptjs';
 import { ConflictError, NotFoundError, ForbiddenError } from '../errors/AppError';
 
@@ -23,6 +24,66 @@ export class StoreService {
 
   async listUserStores(userId: string): Promise<Store[]> {
     return storeRepository.findStoresByUser(userId);
+  }
+
+  async completeOnboarding(storeId: string, data: CompleteOnboardingDTO): Promise<Store> {
+    const client = await db.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Update store profile
+      const store = await storeRepository.updateStoreProfile(storeId, {
+        business_type: data.business_type,
+        sales_channels: data.sales_channels,
+      }, client);
+
+      // Seed default categories for this business type
+      const defaultCategories = DEFAULT_CATEGORIES_BY_TYPE[data.business_type] || [];
+      await categoryRepository.bulkCreate(
+        storeId,
+        defaultCategories.map(name => ({ name, is_default: true })),
+        client
+      );
+
+      await client.query('COMMIT');
+      return store;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async updateStoreProfile(storeId: string, data: { name?: string; name_bn?: string }): Promise<Store> {
+    const store = await storeRepository.findById(storeId);
+    if (!store) {
+      throw new NotFoundError('Store not found');
+    }
+
+    const fields: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (data.name !== undefined) {
+      fields.push(`name = $${paramIndex++}`);
+      params.push(data.name);
+    }
+    if (data.name_bn !== undefined) {
+      fields.push(`name_bn = $${paramIndex++}`);
+      params.push(data.name_bn);
+    }
+
+    if (fields.length === 0) return store;
+
+    fields.push(`updated_at = NOW()`);
+    params.push(storeId);
+
+    const { rows } = await db.query(
+      `UPDATE stores SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      params
+    );
+    return rows[0];
   }
 
   async createMember(storeId: string, data: CreateMemberDTO): Promise<any> {

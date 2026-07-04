@@ -13,6 +13,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   });
 
   pgm.createIndex('api_keys', 'store_id');
+  pgm.createIndex('api_keys', 'key_hash');
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {

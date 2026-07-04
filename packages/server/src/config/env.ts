@@ -8,7 +8,7 @@ const envSchema = z.object({
   PORT: z.string().default('5000'),
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
-  JWT_SECRET: z.string().min(10),
+  JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('7d'),
   ML_SERVICE_URL: z.string().url().default('http://localhost:8000'),
 });

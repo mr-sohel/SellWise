@@ -28,9 +28,6 @@ export class CustomerService {
     queryText += ` ORDER BY c.total_spent DESC, c.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     const queryParams = [...params, limit, offset];
 
-    // Using any type for client to bypass protected query method directly if we added public method in repo,
-    // but better to just use db directly or add a findByStore to the repository.
-    // For now, I'll use the raw db import to run the query.
     return this.findWithFilters(queryText, countQueryText, queryParams, params, page, limit);
   }
 
@@ -60,19 +57,24 @@ export class CustomerService {
 
   async createCustomer(storeId: string, data: CreateCustomerDTO): Promise<Customer> {
     const { db } = await import('../config/db');
-    return customerRepository.upsertByPhone(storeId, data, await db.connect());
+    const client = await db.connect();
+    try {
+      return await customerRepository.upsertByPhone(storeId, data, client);
+    } finally {
+      client.release();
+    }
   }
 
   async updateCustomer(id: string, storeId: string, data: UpdateCustomerDTO): Promise<Customer> {
     const customer = await this.getCustomer(id, storeId);
 
-    // Build update query
+    const ALLOWED_COLUMNS = new Set(['name', 'phone', 'email', 'address']);
     const updates: string[] = [];
     const params: any[] = [id, storeId];
     let paramIndex = 3;
 
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
+      if (value !== undefined && ALLOWED_COLUMNS.has(key)) {
         updates.push(`${key} = $${paramIndex}`);
         params.push(value);
         paramIndex++;

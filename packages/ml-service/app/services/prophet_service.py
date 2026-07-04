@@ -1,25 +1,86 @@
 import pandas as pd
 from prophet import Prophet
-from typing import List
+from typing import List, Optional
 from ..models.schemas import SalesHistoryPoint, ForecastResultPoint
 
-def generate_forecast(history: List[SalesHistoryPoint], periods: int = 30) -> List[ForecastResultPoint]:
+# Business-type-specific seasonality configs
+SEASONALITY_CONFIGS = {
+    'facebook_seller': {
+        'yearly_seasonality': True,
+        'weekly_seasonality': True,
+        'daily_seasonality': False,
+        'extra_regressors': [],
+        'custom_seasonalities': [
+            {'name': '11_11_sale', 'period': 365.25, 'fourier_order': 3},
+            {'name': '12_12_sale', 'period': 365.25, 'fourier_order': 3},
+        ],
+    },
+    'small_shop': {
+        'yearly_seasonality': True,
+        'weekly_seasonality': True,
+        'daily_seasonality': False,
+        'extra_regressors': [],
+        'custom_seasonalities': [],
+    },
+    'online_store': {
+        'yearly_seasonality': True,
+        'weekly_seasonality': True,
+        'daily_seasonality': False,
+        'extra_regressors': [],
+        'custom_seasonalities': [],
+    },
+    'wholesaler': {
+        'yearly_seasonality': True,
+        'weekly_seasonality': True,
+        'daily_seasonality': False,
+        'extra_regressors': [],
+        'custom_seasonalities': [],
+    },
+}
+
+DEFAULT_CONFIG = {
+    'yearly_seasonality': True,
+    'weekly_seasonality': True,
+    'daily_seasonality': False,
+    'extra_regressors': [],
+    'custom_seasonalities': [],
+}
+
+
+def generate_forecast(
+    history: List[SalesHistoryPoint],
+    periods: int = 30,
+    business_type: Optional[str] = None,
+) -> List[ForecastResultPoint]:
     """
     Generates a demand forecast using Facebook Prophet.
+    Supports business-type-aware seasonality tuning.
     """
     # Convert input to DataFrame
     df = pd.DataFrame([{"ds": point.ds, "y": point.y} for point in history])
 
-    # Initialize Prophet model
+    # Get config for business type
+    config = SEASONALITY_CONFIGS.get(business_type, DEFAULT_CONFIG) if business_type else DEFAULT_CONFIG
+
+    # Initialize Prophet model with business-type-aware settings
     model = Prophet(
-        yearly_seasonality=False,
-        weekly_seasonality=True,
-        daily_seasonality=False,
-        interval_width=0.80 # 80% confidence interval
+        yearly_seasonality=config['yearly_seasonality'],
+        weekly_seasonality=config['weekly_seasonality'],
+        daily_seasonality=config['daily_seasonality'],
+        interval_width=0.80,
+        changepoint_prior_scale=0.05,  # Regularize to prevent overfitting
     )
 
-    # Add Bangladesh Holidays (builtin in Prophet)
+    # Add Bangladesh Holidays
     model.add_country_holidays(country_name='BD')
+
+    # Add custom seasonalities based on business type
+    for custom in config.get('custom_seasonalities', []):
+        model.add_seasonality(
+            name=custom['name'],
+            period=custom['period'],
+            fourier_order=custom['fourier_order'],
+        )
 
     # Fit model
     model.fit(df)

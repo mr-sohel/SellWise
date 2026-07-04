@@ -14,7 +14,7 @@ def predict_churn(customers: List[CustomerDataPoint]) -> List[ChurnResultPoint]:
         return []
 
     # Convert to DataFrame
-    df = pd.DataFrame([c.dict() for c in customers])
+    df = pd.DataFrame([c.model_dump() for c in customers])
 
     # Feature Engineering
     # Simple heuristic: If recency > 2 * avg_gap, high risk of churn

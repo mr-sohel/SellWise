@@ -4,11 +4,22 @@ import api from '../../../lib/api/client';
 export interface AnalyticsOverview {
   revenue: number;
   orders: number;
+  averageOrderValue: number;
   revenueGrowth: number;
   healthScore: number;
   topProducts: any[];
+  worstProducts: any[];
   revenueTrend: any[];
   categoryBreakdown: any[];
+  inventoryStatus: {
+    totalValue: number;
+    turnoverRate: number;
+  };
+  customerInsights: {
+    totalCustomers: number;
+    retainedCustomers: number;
+    retentionRate: number;
+  };
 }
 
 export function useDashboard(storeId: string, range: string) {

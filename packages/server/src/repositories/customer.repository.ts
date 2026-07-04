@@ -24,14 +24,20 @@ export class CustomerRepository extends BaseRepository<Customer> {
     return rows[0];
   }
 
-  async incrementOrderStats(customerId: string, amount: number, client: PoolClient): Promise<void> {
+  async incrementOrderStats(customerId: string, storeId: string, amount: number, client: PoolClient): Promise<void> {
+    // Lock the row first to prevent race conditions under concurrent orders
+    await this.query(
+      `SELECT * FROM ${this.tableName} WHERE id = $1 AND store_id = $2 FOR UPDATE`,
+      [customerId, storeId],
+      client
+    );
     await this.query(
       `UPDATE ${this.tableName}
        SET total_orders = total_orders + 1,
            total_spent = total_spent + $1,
            updated_at = current_timestamp
-       WHERE id = $2`,
-      [amount, customerId],
+       WHERE id = $2 AND store_id = $3`,
+      [amount, customerId, storeId],
       client
     );
   }

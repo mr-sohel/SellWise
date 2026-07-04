@@ -16,11 +16,11 @@ export class UserRepository extends BaseRepository<User> {
     return rows[0] || null;
   }
 
-  async findById(id: string, client?: PoolClient): Promise<User | null> {
+  async findById(id: string, storeIdOrClient?: string | PoolClient, client?: PoolClient): Promise<User | null> {
     const { rows } = await this.query(
       `SELECT * FROM ${this.tableName} WHERE id = $1`,
       [id],
-      client
+      typeof storeIdOrClient === 'object' ? storeIdOrClient : client
     );
     return rows[0] || null;
   }

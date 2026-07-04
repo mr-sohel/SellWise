@@ -1,11 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../../../lib/api/client';
 import type { Order, CreateOrderDTO, UpdateOrderStatusDTO, OrderFiltersDTO, PaginatedResult } from '@sellwise/shared';
-
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api/v1',
-  withCredentials: true,
-});
 
 export function useOrders(storeId: string, filters: OrderFiltersDTO) {
   return useQuery({
@@ -27,7 +22,7 @@ export function useCreateOrder(storeId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders', storeId] });
-      queryClient.invalidateQueries({ queryKey: ['products', storeId] }); // Stock changed
+      queryClient.invalidateQueries({ queryKey: ['products', storeId] });
     },
   });
 }

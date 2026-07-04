@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useDashboard } from '../dashboard/hooks/useDashboard';
 import { useAuthStore } from '../../stores/auth.store';
 import { FileDown, Calendar } from 'lucide-react';
+import { PageHeader } from '../../components/ui/page-header';
 
 export function ReportGeneratorPage() {
   const { activeStoreId } = useAuthStore();
@@ -17,7 +18,6 @@ export function ReportGeneratorPage() {
 
     const doc = new jsPDF();
 
-    // Title
     doc.setFontSize(20);
     doc.text('SellWise Analytics Report', 14, 22);
 
@@ -25,7 +25,6 @@ export function ReportGeneratorPage() {
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
     doc.text(`Reporting Period: Last ${range}`, 14, 36);
 
-    // KPI Summary
     doc.setFontSize(14);
     doc.text('Performance Summary', 14, 50);
 
@@ -39,10 +38,9 @@ export function ReportGeneratorPage() {
         ['Health Score', `${data.healthScore}/100`],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [170, 59, 255] }
+      headStyles: { fillColor: [23, 23, 23] }
     });
 
-    // Top Products
     const finalY = (doc as any).lastAutoTable.finalY || 55;
     doc.text('Top Performing Products', 14, finalY + 15);
 
@@ -57,10 +55,9 @@ export function ReportGeneratorPage() {
       head: [['Product Name', 'Units Sold', 'Revenue']],
       body: productData,
       theme: 'striped',
-      headStyles: { fillColor: [170, 59, 255] }
+      headStyles: { fillColor: [23, 23, 23] }
     });
 
-    // Inventory Status
     const topProdY = (doc as any).lastAutoTable.finalY || finalY + 20;
     doc.setFontSize(14);
     doc.text('Inventory Status', 14, topProdY + 15);
@@ -73,13 +70,11 @@ export function ReportGeneratorPage() {
         ['Inventory Turnover Rate', data.inventoryStatus.turnoverRate.toString()],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [170, 59, 255] }
+      headStyles: { fillColor: [23, 23, 23] }
     });
 
-    // Customer Insights
     const invY = (doc as any).lastAutoTable.finalY || topProdY + 20;
 
-    // Check if we need to add a new page
     if (invY > 230) {
       doc.addPage();
     }
@@ -97,7 +92,7 @@ export function ReportGeneratorPage() {
         ['Retention Rate', `${data.customerInsights.retentionRate}%`],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [170, 59, 255] }
+      headStyles: { fillColor: [23, 23, 23] }
     });
 
     doc.save(`sellwise_report_${range}_${new Date().getTime()}.pdf`);
@@ -105,30 +100,26 @@ export function ReportGeneratorPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground">
-          Reports
-        </h1>
-      </div>
+      <PageHeader title="Reports" />
 
-      <div className="bg-card border border-border p-8 rounded-xl shadow-sm space-y-8">
+      <div className="bg-card border border-border p-8 rounded-xl shadow-vercel-3 space-y-8">
         <div>
-          <h2 className="text-xl font-semibold mb-2">Generate PDF Report</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-lg font-medium mb-2">Generate PDF Report</h2>
+          <p className="text-sm text-body">
             Download a comprehensive summary of your store's performance, including revenue, growth metrics, and top products.
           </p>
         </div>
 
-        <div className="flex items-center gap-6 p-6 bg-muted/30 rounded-lg border border-border">
+        <div className="flex items-center gap-6 p-6 bg-canvas-soft rounded-xl border border-border">
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2 flex items-center">
-              <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
+            <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
               Reporting Period
             </label>
             <select
               value={range}
               onChange={(e) => setRange(e.target.value)}
-              className="w-full px-4 py-3 bg-background border border-input rounded-md shadow-sm text-sm outline-none"
+              className="flex h-12 w-full rounded-md border border-input bg-card px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-muted-foreground appearance-none"
             >
               <option value="7d">Last 7 Days</option>
               <option value="30d">Last 30 Days</option>
@@ -141,16 +132,16 @@ export function ReportGeneratorPage() {
             <button
               onClick={generatePDF}
               disabled={isLoading || !data}
-              className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground hover:opacity-90 rounded-md shadow text-sm font-medium transition-opacity disabled:opacity-50 min-w-[200px]"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 min-w-[200px]"
             >
-              <FileDown className="mr-2 h-5 w-5" />
+              <FileDown className="h-5 w-5" />
               {isLoading ? 'Loading Data...' : 'Download PDF'}
             </button>
           </div>
         </div>
 
         {data && (
-          <div className="text-sm text-muted-foreground pt-4 border-t border-border">
+          <div className="text-sm text-body pt-4 border-t border-border">
             <strong>Preview:</strong> This report will include {data.orders} orders totaling ৳{data.revenue.toLocaleString()} in revenue for the selected period.
           </div>
         )}

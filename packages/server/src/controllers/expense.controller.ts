@@ -40,7 +40,7 @@ export class ExpenseController {
       const storeId = req.params.storeId as string;
       const id = req.params.id as string;
       await expenseService.deleteExpense(id, storeId);
-      res.status(200).json(ApiResponse.success(null));
+      res.status(204).send();
     } catch (error) {
       next(error);
     }

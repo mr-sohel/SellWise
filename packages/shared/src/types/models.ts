@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ORDER_STATUSES } from '../constants/order-status';
+import { BUSINESS_TYPES, SALES_CHANNELS } from '../constants/business';
 
 export const userSchema = z.object({
   id: z.string().uuid(),
@@ -15,6 +17,8 @@ export const storeSchema = z.object({
   name_bn: z.string().optional().nullable(),
   currency: z.string().default('BDT'),
   timezone: z.string().default('Asia/Dhaka'),
+  business_type: z.enum(BUSINESS_TYPES).optional().nullable(),
+  sales_channels: z.array(z.enum(SALES_CHANNELS)).default([]),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -33,10 +37,10 @@ export const productSchema = z.object({
   name_bn: z.string().nullable(),
   sku: z.string().nullable(),
   category: z.string().nullable(),
-  cost_price: z.number(),
-  selling_price: z.number(),
-  stock_quantity: z.number(),
-  low_stock_threshold: z.number(),
+  cost_price: z.number().min(0),
+  selling_price: z.number().min(0),
+  stock_quantity: z.number().min(0),
+  low_stock_threshold: z.number().min(0),
   unit: z.string(),
   is_active: z.boolean(),
   created_at: z.date(),
@@ -61,9 +65,9 @@ export const orderItemModelSchema = z.object({
   order_id: z.string().uuid(),
   product_id: z.string().uuid(),
   product_name: z.string(),
-  unit_price: z.number(),
-  cost_price: z.number(),
-  quantity: z.number(),
+  unit_price: z.number().min(0),
+  cost_price: z.number().min(0),
+  quantity: z.number().min(0),
   created_at: z.date(),
 });
 
@@ -72,11 +76,11 @@ export const orderSchema = z.object({
   store_id: z.string().uuid(),
   customer_id: z.string().uuid(),
   order_number: z.string(),
-  status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned']),
+  status: z.enum(ORDER_STATUSES),
   source: z.string(),
-  total: z.number(),
-  delivery_charge: z.number(),
-  discount: z.number(),
+  total: z.number().min(0),
+  delivery_charge: z.number().min(0),
+  discount: z.number().min(0),
   notes: z.string().nullable(),
   order_date: z.date(),
   external_reference_id: z.string().nullable(),
@@ -88,7 +92,7 @@ export const expenseSchema = z.object({
   id: z.string().uuid(),
   store_id: z.string().uuid(),
   category: z.string(),
-  amount: z.number(),
+  amount: z.number().min(0),
   expense_date: z.date(),
   notes: z.string().nullable(),
   created_at: z.date(),

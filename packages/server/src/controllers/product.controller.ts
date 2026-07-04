@@ -52,7 +52,7 @@ export class ProductController {
       const storeId = req.params.storeId as string;
       const id = req.params.id as string;
       await productService.deleteProduct(id, storeId);
-      res.status(200).json(ApiResponse.success(null));
+      res.status(204).send();
     } catch (error) {
       next(error);
     }
@@ -87,8 +87,6 @@ export class ProductController {
       const days = parseInt(req.query.days as string, 10) || 30;
 
       const forecasts = await forecastService.getForecasts(storeId, id);
-
-      // Filter forecasts based on requested days
       const filteredForecasts = forecasts.slice(0, days);
 
       res.status(200).json(ApiResponse.success(filteredForecasts));

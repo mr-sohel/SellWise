@@ -2,15 +2,16 @@ import { Worker, Job } from 'bullmq';
 import { bullMqConnection } from '../config/redis';
 import { db } from '../config/db';
 import { env } from '../config/env';
+import logger from '../utils/logger';
 
 export const rfmWorker = new Worker('rfm', async (job: Job) => {
-  console.log(`[Worker: RFM/Churn] Processing job ${job.id}`);
+  logger.info(`[Worker: RFM/Churn] Processing job ${job.id}`);
 
   if (job.name === 'rfm:calculate') {
     const { rows: stores } = await db.query('SELECT id FROM stores');
 
     for (const store of stores) {
-      console.log(`[Worker: RFM/Churn] Calculating RFM for store ${store.id}`);
+      logger.info(`[Worker: RFM/Churn] Calculating RFM for store ${store.id}`);
       await calculateRFM(store.id);
     }
   }
@@ -54,15 +55,17 @@ async function calculateRFM(storeId: string) {
 
   // Score Frequency (higher = better)
   scored.sort((a: any, b: any) => (b.frequency ?? 0) - (a.frequency ?? 0));
+  const fQuintile = Math.ceil(scored.length / 5) || 1;
   for (let i = 0; i < scored.length; i++) {
-    scored[i].f_score = Math.min(5, Math.floor(i / rQuintile) + 1);
+    scored[i].f_score = Math.min(5, Math.floor(i / fQuintile) + 1);
   }
   scored.forEach((s: any) => { s.f_score = 6 - s.f_score; });
 
   // Score Monetary (higher = better)
   scored.sort((a: any, b: any) => (b.monetary ?? 0) - (a.monetary ?? 0));
+  const mQuintile = Math.ceil(scored.length / 5) || 1;
   for (let i = 0; i < scored.length; i++) {
-    scored[i].m_score = Math.min(5, Math.floor(i / rQuintile) + 1);
+    scored[i].m_score = Math.min(5, Math.floor(i / mQuintile) + 1);
   }
   scored.forEach((s: any) => { s.m_score = 6 - s.m_score; });
 
@@ -95,7 +98,7 @@ async function calculateRFM(storeId: string) {
       }
     }
   } catch (error) {
-    console.error(`[Worker: RFM] ML service unavailable for churn prediction:`, error);
+    logger.error(`[Worker: RFM] ML service unavailable for churn prediction:`, error);
   }
 
   // 5. Upsert into customer_rfm (batched)
@@ -115,7 +118,7 @@ async function calculateRFM(storeId: string) {
     await db.query(
       `INSERT INTO customer_rfm (customer_id, store_id, recency_score, frequency_score, monetary_score, segment, churn_probability)
        VALUES ${values.join(', ')}
-       ON CONFLICT (customer_id, store_id)
+       ON CONFLICT (customer_id)
        DO UPDATE SET recency_score = EXCLUDED.recency_score, frequency_score = EXCLUDED.frequency_score,
                      monetary_score = EXCLUDED.monetary_score, segment = EXCLUDED.segment,
                      churn_probability = EXCLUDED.churn_probability, updated_at = CURRENT_TIMESTAMP`,
@@ -123,7 +126,7 @@ async function calculateRFM(storeId: string) {
     );
   }
 
-  console.log(`[Worker: RFM] Processed ${scored.length} customers for store ${storeId}`);
+  logger.info(`[Worker: RFM] Processed ${scored.length} customers for store ${storeId}`);
 }
 
 function assignSegment(r: number, f: number, m: number): string {
@@ -137,9 +140,9 @@ function assignSegment(r: number, f: number, m: number): string {
 }
 
 rfmWorker.on('completed', (job) => {
-  console.log(`[Worker: RFM/Churn] Job ${job.id} completed successfully`);
+  logger.info(`[Worker: RFM/Churn] Job ${job.id} completed successfully`);
 });
 
 rfmWorker.on('failed', (job, err) => {
-  console.error(`[Worker: RFM/Churn] Job ${job?.id} failed:`, err);
+  logger.error(`[Worker: RFM/Churn] Job ${job?.id} failed:`, err);
 });

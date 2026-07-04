@@ -4,11 +4,11 @@ import { env } from '../config/env';
 import { db } from '../config/db';
 import { userRepository } from '../repositories/user.repository';
 import { storeRepository } from '../repositories/store.repository';
-import { LoginDTO, SignupDTO, User, UpdateProfileDTO } from '@sellwise/shared';
+import { LoginDTO, SignupDTO, User, UpdateProfileDTO, Store } from '@sellwise/shared';
 import { ConflictError, UnauthorizedError, NotFoundError } from '../errors/AppError';
 
 export class AuthService {
-  async signup(data: SignupDTO): Promise<{ user: Omit<User, 'password_hash'>, storeId: string, role: string, token: string }> {
+  async signup(data: SignupDTO): Promise<{ user: Omit<User, 'password_hash'>, store: Store, role: string, token: string }> {
     const existingUser = await userRepository.findByEmail(data.email);
     if (existingUser) {
       throw new ConflictError('User with this email already exists');
@@ -37,7 +37,7 @@ export class AuthService {
 
       const token = this.generateToken(user.id);
       const { password_hash: _, ...userWithoutPassword } = user;
-      return { user: userWithoutPassword, storeId: store.id, role: 'owner', token };
+      return { user: userWithoutPassword, store, role: 'owner', token };
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -46,7 +46,7 @@ export class AuthService {
     }
   }
 
-  async login(data: LoginDTO): Promise<{ user: Omit<User, 'password_hash'>, storeId: string | null, role: string | null, token: string }> {
+  async login(data: LoginDTO): Promise<{ user: Omit<User, 'password_hash'>, store: Store | null, role: string | null, token: string }> {
     const user = await userRepository.findByEmail(data.email);
     if (!user) {
       throw new UnauthorizedError('Invalid credentials');
@@ -61,8 +61,9 @@ export class AuthService {
     const token = this.generateToken(user.id);
 
     const { password_hash: _, ...userWithoutPassword } = user;
-    const role = stores.length > 0 ? (stores[0] as any).role : null;
-    return { user: userWithoutPassword, storeId: stores[0]?.id || null, role, token };
+    const store = stores[0] || null;
+    const role = store ? (stores[0] as any).role : null;
+    return { user: userWithoutPassword, store, role, token };
   }
 
   async updateProfile(userId: string, data: UpdateProfileDTO): Promise<Omit<User, 'password_hash'>> {
@@ -71,7 +72,7 @@ export class AuthService {
       throw new NotFoundError('User not found');
     }
 
-    const isMatch = await bcrypt.compare(data.currentPassword, user.password_hash);
+    const isMatch = await bcrypt.compare(data.current_password, user.password_hash);
     if (!isMatch) {
       throw new UnauthorizedError('Incorrect current password');
     }
@@ -86,9 +87,9 @@ export class AuthService {
       updates.email = data.email;
     }
 
-    if (data.newPassword) {
+    if (data.new_password) {
       const salt = await bcrypt.genSalt(12);
-      updates.password_hash = await bcrypt.hash(data.newPassword, salt);
+      updates.password_hash = await bcrypt.hash(data.new_password, salt);
     }
 
     if (Object.keys(updates).length > 0) {

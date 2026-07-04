@@ -4,7 +4,7 @@ import { useAuthStore } from '../../stores/auth.store';
 import { LogOut, Home, Box, ShoppingCart, Users, Receipt, BarChart3, Settings, ChevronDown, Bell } from 'lucide-react';
 
 export function MainLayout() {
-  const { isAuthenticated, logout, user } = useAuthStore();
+  const { isAuthenticated, store, logout, user } = useAuthStore();
   const location = useLocation();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -25,6 +25,11 @@ export function MainLayout() {
     return <Navigate to="/login" replace />;
   }
 
+  // Redirect to onboarding if business_type is not set
+  if (!store?.business_type && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: Home },
     { to: '/products', label: 'Products', icon: Box },
@@ -38,53 +43,58 @@ export function MainLayout() {
   return (
     <div className="min-h-screen flex w-full bg-background text-foreground">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card flex flex-col">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-primary">SellWise</h2>
+      <aside className="w-64 border-r border-border bg-card flex flex-col shrink-0">
+        <div className="h-16 flex items-center px-6 border-b border-border">
+          <Link to="/dashboard" className="text-lg font-semibold tracking-tight text-primary">
+            SellWise
+          </Link>
         </div>
-        <nav className="flex-1 px-4 space-y-2">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-                location.pathname === to || location.pathname.startsWith(`${to}/`)
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'hover:bg-muted text-muted-foreground'
-              }`}
-            >
-              <Icon size={20} />
-              <span>{label}</span>
-            </Link>
-          ))}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {navItems.map(({ to, label, icon: Icon }) => {
+            const isActive = location.pathname === to || location.pathname.startsWith(`${to}/`);
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-3 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-body hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-8">
-          <h1 className="text-xl font-semibold capitalize">
-             {location.pathname.split('/')[1] || 'Dashboard'}
+        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-8 shrink-0">
+          <h1 className="text-base font-medium capitalize text-foreground">
+            {location.pathname.split('/')[1] || 'Dashboard'}
           </h1>
           <div className="flex items-center relative" ref={dropdownRef}>
-            <button 
+            <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center space-x-2 text-sm text-foreground hover:bg-muted px-3 py-2 rounded-md transition-colors"
+              className="flex items-center gap-2 text-sm text-body hover:text-foreground px-3 py-1.5 rounded-full hover:bg-muted transition-colors"
             >
-              <span>{user?.email}</span>
-              <ChevronDown size={16} className="text-muted-foreground" />
+              <span className="max-w-[160px] truncate">{user?.email}</span>
+              <ChevronDown size={14} className="text-muted-foreground" />
             </button>
-            
+
             {/* Dropdown Menu */}
             {isProfileOpen && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-md shadow-lg py-1 z-50">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-vercel-5 py-1 z-50">
                 <Link
                   to="/settings"
                   onClick={() => setIsProfileOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors w-full text-left"
+                  className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors w-full text-left"
                 >
-                  <Settings size={16} className="text-muted-foreground" />
+                  <Settings size={14} className="text-muted-foreground" />
                   <span>Settings</span>
                 </Link>
                 <div className="h-px bg-border my-1" />
@@ -93,9 +103,9 @@ export function MainLayout() {
                     setIsProfileOpen(false);
                     logout();
                   }}
-                  className="flex items-center space-x-3 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
+                  className="flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-destructive/5 transition-colors w-full text-left"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={14} />
                   <span>Log out</span>
                 </button>
               </div>

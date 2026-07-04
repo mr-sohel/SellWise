@@ -62,7 +62,9 @@ export class OrderRepository extends BaseRepository<Order> {
 
   async findItemsByOrderId(orderId: string, client?: PoolClient): Promise<OrderItem[]> {
     const { rows } = await this.query(
-      `SELECT * FROM order_items WHERE order_id = $1`,
+      `SELECT oi.* FROM order_items oi
+       JOIN orders o ON oi.order_id = o.id
+       WHERE oi.order_id = $1`,
       [orderId],
       client
     );

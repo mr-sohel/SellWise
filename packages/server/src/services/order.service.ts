@@ -2,7 +2,7 @@ import { db } from '../config/db';
 import { orderRepository } from '../repositories/order.repository';
 import { customerRepository } from '../repositories/customer.repository';
 import { productRepository } from '../repositories/product.repository';
-import { CreateOrderDTO, Order, OrderItem, OrderFiltersDTO, PaginatedResult, UpdateOrderStatusDTO, ORDER_STATUS_TRANSITIONS } from '@sellwise/shared';
+import { CreateOrderDTO, Order, OrderItem, OrderFiltersDTO, PaginatedResult, UpdateOrderStatusDTO, ORDER_STATUS_TRANSITIONS, type OrderStatus } from '@sellwise/shared';
 import { ConflictError, NotFoundError } from '../errors/AppError';
 import { generateOrderNumber } from '../utils/orderNumber';
 
@@ -26,8 +26,16 @@ export class OrderService {
     try {
       await client.query('BEGIN');
 
-      // 1. Upsert Customer
-      const customer = await customerRepository.upsertByPhone(storeId, data.customer, client);
+      // 1. Resolve Customer — link existing by ID or upsert by phone
+      let customer;
+      if ('customer_id' in data.customer) {
+        const customerId = data.customer.customer_id as string;
+        const found = await customerRepository.findById(customerId);
+        if (!found || found.store_id !== storeId) throw new NotFoundError('Customer');
+        customer = found;
+      } else {
+        customer = await customerRepository.upsertByPhone(storeId, data.customer, client);
+      }
 
       // 2. Sort items by product_id to prevent deadlocks when locking rows
       const sortedItems = [...data.items].sort((a, b) => a.product_id.localeCompare(b.product_id));
@@ -63,7 +71,7 @@ export class OrderService {
         });
 
         // Deduct stock
-        await productRepository.decrementStock(product.id, item.quantity, client);
+        await productRepository.decrementStock(product.id, storeId, item.quantity, client);
       }
 
       const total = subtotal + data.delivery_charge - data.discount;
@@ -86,7 +94,7 @@ export class OrderService {
       }
 
       // 5. Update Customer Stats
-      await customerRepository.incrementOrderStats(customer.id, total, client);
+      await customerRepository.incrementOrderStats(customer.id, storeId, total, client);
 
       await client.query('COMMIT');
       return order;
@@ -109,10 +117,10 @@ export class OrderService {
         throw new NotFoundError('Order');
       }
 
-      // Basic Status Transition Rules validation
-      // You should define a strict state machine map in shared package
-      if (order.status === 'cancelled' || order.status === 'returned') {
-        throw new ConflictError('Cannot update status of a terminal order');
+      // Validate status transition using the state machine
+      const allowedTransitions = ORDER_STATUS_TRANSITIONS[order.status as OrderStatus];
+      if (!allowedTransitions || !allowedTransitions.includes(data.status as OrderStatus)) {
+        throw new ConflictError(`Cannot transition from '${order.status}' to '${data.status}'`);
       }
 
       const updatedOrder = await orderRepository.updateStatus(id, storeId, data.status, client);
@@ -122,7 +130,7 @@ export class OrderService {
         const items = await orderRepository.findItemsByOrderId(id, client);
         for (const item of items) {
           // decrementStock with negative quantity = increment
-          await productRepository.decrementStock(item.product_id, -item.quantity, client);
+          await productRepository.decrementStock(item.product_id, storeId, -item.quantity, client);
         }
       }
 

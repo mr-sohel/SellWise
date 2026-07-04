@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { User, Users } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
@@ -16,14 +15,14 @@ export function SettingsLayout() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and store preferences.</p>
+        <h1 className="font-display-md text-foreground">Settings</h1>
+        <p className="text-sm text-body mt-1">Manage your account and store preferences.</p>
       </div>
 
       <div className="border-b border-border">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = location.pathname.startsWith(tab.path);
@@ -32,14 +31,14 @@ export function SettingsLayout() {
                 key={tab.name}
                 to={tab.path}
                 className={`
-                  whitespace-nowrap flex py-4 px-1 border-b-2 font-medium text-sm
+                  whitespace-nowrap flex items-center gap-2 py-3 px-4 text-sm font-medium rounded-t-lg transition-colors
                   ${isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                    ? 'bg-card border border-border border-b-card text-foreground -mb-px'
+                    : 'text-muted-foreground hover:text-foreground'
                   }
                 `}
               >
-                <Icon className={`mr-2 h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Icon className={`h-4 w-4 ${isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
                 {tab.name}
               </NavLink>
             );
@@ -47,7 +46,7 @@ export function SettingsLayout() {
         </nav>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-2">
         <Outlet />
       </div>
     </div>

@@ -4,6 +4,8 @@ export * from './schemas/product.schema';
 export * from './schemas/customer.schema';
 export * from './schemas/order.schema';
 export * from './schemas/expense.schema';
+export * from './schemas/category.schema';
 export * from './types/api';
 export * from './types/models';
 export * from './constants/order-status';
+export * from './constants/business';

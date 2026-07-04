@@ -3,7 +3,7 @@ import Papa from 'papaparse';
 import { useBulkImportProducts } from './hooks/useProducts';
 import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import type { CreateProductDTO } from '@sellwise/shared';
 import { createProductSchema } from '@sellwise/shared';
 import { Link } from 'react-router-dom';
@@ -70,13 +70,13 @@ export function BulkImportPage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div className="flex items-center gap-4">
-        <Link to="/products" className="text-muted-foreground hover:text-foreground">
+        <Link to="/products" className="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-3xl font-bold text-foreground">Bulk Import Products</h1>
+        <h1 className="font-display-md text-foreground">Bulk Import Products</h1>
       </div>
 
-      <div className="bg-card border border-border rounded-lg shadow p-6 space-y-6">
+      <div className="bg-card border border-border rounded-xl shadow-vercel-3 p-8 space-y-6">
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">Upload CSV File</label>
           <div className="flex items-center gap-4">
@@ -84,12 +84,12 @@ export function BulkImportPage() {
               type="file"
               accept=".csv"
               onChange={handleFileChange}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:opacity-90"
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:opacity-90 file:cursor-pointer"
             />
             <button
               onClick={handleParse}
               disabled={!file}
-              className="whitespace-nowrap px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:opacity-90 disabled:opacity-50"
+              className="whitespace-nowrap px-4 py-2 border border-border bg-card text-foreground rounded-full text-sm font-medium hover:bg-muted disabled:opacity-50 transition-colors"
             >
               Preview Data
             </button>
@@ -100,9 +100,9 @@ export function BulkImportPage() {
         </div>
 
         {errors.length > 0 && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4 space-y-2">
-            <div className="flex items-center gap-2 text-destructive font-medium">
-              <AlertCircle className="h-5 w-5" />
+          <div className="bg-error-soft border border-destructive/20 rounded-lg p-4 space-y-2">
+            <div className="flex items-center gap-2 text-destructive font-medium text-sm">
+              <AlertCircle className="h-4 w-4" />
               <span>Validation Errors ({errors.length})</span>
             </div>
             <ul className="text-sm text-destructive/80 list-disc list-inside pl-4 max-h-40 overflow-y-auto">
@@ -113,13 +113,14 @@ export function BulkImportPage() {
 
         {parsedData.length > 0 && errors.length === 0 && (
           <div className="space-y-4">
-            <div className="p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-md border border-green-200 dark:border-green-900">
-              <p className="font-medium">Ready to import {parsedData.length} products!</p>
+            <div className="p-4 bg-link-bg-soft text-link rounded-lg border border-link/20 flex items-center gap-2 text-sm font-medium">
+              <CheckCircle className="h-4 w-4" />
+              Ready to import {parsedData.length} products!
             </div>
             <button
               onClick={handleImport}
               disabled={importMutation.isPending}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 font-medium"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               <Upload className="h-4 w-4" />
               {importMutation.isPending ? 'Importing...' : 'Confirm Import'}

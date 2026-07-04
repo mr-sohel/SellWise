@@ -28,10 +28,14 @@ export class AnalyticsService {
   async getOverview(storeId: string, range: string): Promise<AnalyticsOverview> {
     const cacheKey = `analytics:overview:${storeId}:${range}`;
 
-    // 1. Try to get from Cache
-    const cachedData = await redis.get(cacheKey);
-    if (cachedData) {
-      return JSON.parse(cachedData) as AnalyticsOverview;
+    // 1. Try to get from Cache (gracefully handle Redis failures)
+    try {
+      const cachedData = await redis.get(cacheKey);
+      if (cachedData) {
+        return JSON.parse(cachedData) as AnalyticsOverview;
+      }
+    } catch {
+      // Redis unavailable — proceed without cache
     }
 
     // 2. Determine DateRange based on 'range' parameter
@@ -129,8 +133,12 @@ export class AnalyticsService {
       }
     };
 
-    // 6. Cache and Return
-    await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(overview));
+    // 6. Cache and Return (gracefully handle Redis failures)
+    try {
+      await redis.setex(cacheKey, this.CACHE_TTL, JSON.stringify(overview));
+    } catch {
+      // Redis unavailable — return without caching
+    }
 
     return overview;
   }

@@ -8,6 +8,7 @@ import expenseRoutes from './expense.routes';
 import analyticsRoutes from './analytics.routes';
 import webhookRoutes from './webhook.routes';
 import alertRoutes from './alert.routes';
+import categoryRoutes from './category.routes';
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use('/stores/:storeId/customers', customerRoutes);
 router.use('/stores/:storeId/expenses', expenseRoutes);
 router.use('/stores/:storeId/analytics', analyticsRoutes);
 router.use('/stores/:storeId/alerts', alertRoutes);
+router.use('/stores/:storeId/categories', categoryRoutes);
 router.use('/webhooks', webhookRoutes);
 
 export default router;

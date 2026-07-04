@@ -30,6 +30,33 @@ export class StoreRepository extends BaseRepository<Store> {
     return store;
   }
 
+  async updateStoreProfile(storeId: string, data: { business_type?: string; sales_channels?: string[] }, client?: PoolClient): Promise<Store> {
+    const fields: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (data.business_type !== undefined) {
+      fields.push(`business_type = $${paramIndex++}`);
+      params.push(data.business_type);
+    }
+    if (data.sales_channels !== undefined) {
+      fields.push(`sales_channels = $${paramIndex++}`);
+      params.push(data.sales_channels);
+    }
+
+    fields.push(`updated_at = NOW()`);
+    params.push(storeId);
+
+    const { rows } = await this.query(
+      `UPDATE ${this.tableName} SET ${fields.join(', ')}
+       WHERE id = $${paramIndex}
+       RETURNING *`,
+      params,
+      client
+    );
+    return rows[0];
+  }
+
   async findStoresByUser(userId: string, client?: PoolClient): Promise<Store[]> {
     const { rows } = await this.query(
       `SELECT s.*, sm.role
