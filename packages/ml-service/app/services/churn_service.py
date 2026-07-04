@@ -6,7 +6,7 @@ import os
 import joblib
 from datetime import datetime, timedelta
 from typing import List
-from ..models.schemas import CustomerDataPoint, ChurnResultPoint
+from ..models.schemas import CustomerDataPoint, ChurnResultPoint, LabeledCustomerDataPoint
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
@@ -129,3 +129,33 @@ def _fit_lr_model(df: pd.DataFrame, model_path: str) -> np.ndarray | None:
 
     except Exception:
         return None
+
+def train_churn_model(store_id: str, customers: List[LabeledCustomerDataPoint]) -> bool:
+    """
+    Trains and persists a logistic regression model using explicit historical labels.
+    Returns True if successful, False otherwise.
+    """
+    if len(customers) < 10:
+        return False
+        
+    df = pd.DataFrame([c.model_dump() for c in customers])
+    
+    # Need at least 2 classes to fit LR
+    if df['churned'].nunique() <= 1:
+        return False
+        
+    features = ['recency_days', 'frequency_count', 'monetary_value', 'avg_gap_between_orders']
+    X = df[features].fillna(0)
+    y = df['churned']
+    
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    model = LogisticRegression(class_weight='balanced', max_iter=200)
+    try:
+        model.fit(X_scaled, y)
+        model_path = os.path.join(MODEL_DIR, f"lr_churn_{store_id}.joblib")
+        joblib.dump((model, scaler), model_path)
+        return True
+    except Exception:
+        return False

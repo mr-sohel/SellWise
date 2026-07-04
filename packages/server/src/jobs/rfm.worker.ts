@@ -11,6 +11,9 @@ export const rfmWorker = new Worker('rfm', async (job: Job) => {
     const { rows: stores } = await db.query('SELECT id FROM stores');
 
     for (const store of stores) {
+      logger.info(`[Worker: RFM/Churn] Training historical Churn Model for store ${store.id}`);
+      await trainMLChurnModel(store.id);
+
       logger.info(`[Worker: RFM/Churn] Calculating RFM for store ${store.id}`);
       await calculateRFM(store.id);
     }
@@ -157,3 +160,63 @@ rfmWorker.on('completed', (job) => {
 rfmWorker.on('failed', (job, err) => {
   logger.error(`[Worker: RFM/Churn] Job ${job?.id} failed:`, err);
 });
+
+async function trainMLChurnModel(storeId: string) {
+  // 1. Snapshot date: 180 days ago. 
+  // Calculate RFM exactly as it was 180 days ago.
+  // Label = 1 if no orders in the past 180 days.
+  const { rows: historicalCustomers } = await db.query(
+    `WITH historical_orders AS (
+       SELECT
+         customer_id,
+         order_date,
+         total,
+         EXTRACT(DAY FROM order_date - LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date))::int as days_gap
+       FROM orders
+       WHERE store_id = $1 
+         AND status NOT IN ('cancelled', 'returned')
+         AND order_date < NOW() - INTERVAL '180 days'
+     ),
+     recent_orders AS (
+       SELECT DISTINCT customer_id
+       FROM orders
+       WHERE store_id = $1 
+         AND status NOT IN ('cancelled', 'returned')
+         AND order_date >= NOW() - INTERVAL '180 days'
+     )
+     SELECT c.id,
+            EXTRACT(DAY FROM (NOW() - INTERVAL '180 days') - MAX(ho.order_date))::int as recency,
+            COUNT(ho.order_date) as frequency,
+            COALESCE(SUM(ho.total), 0) as monetary,
+            COALESCE(AVG(ho.days_gap), 0) as avg_gap_between_orders,
+            CASE WHEN ro.customer_id IS NULL THEN 1 ELSE 0 END as churned
+     FROM customers c
+     JOIN historical_orders ho ON c.id = ho.customer_id
+     LEFT JOIN recent_orders ro ON c.id = ro.customer_id
+     WHERE c.store_id = $1
+     GROUP BY c.id, ro.customer_id`,
+    [storeId]
+  );
+
+  if (historicalCustomers.length < 10) return; // Need at least 10 for ML to fit
+
+  try {
+    await fetch(`${env.ML_SERVICE_URL}/churn/train`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        store_id: storeId,
+        customers: historicalCustomers.map((c: any) => ({
+          customer_id: c.id,
+          recency_days: Number(c.recency ?? 9999),
+          frequency_count: Number(c.frequency ?? 0),
+          monetary_value: Number(c.monetary ?? 0),
+          avg_gap_between_orders: Number(c.avg_gap_between_orders ?? 0),
+          churned: Number(c.churned ?? 0)
+        })),
+      }),
+    });
+  } catch (error) {
+    logger.error(`[Worker: RFM] Failed to train historical churn model:`, error);
+  }
+}

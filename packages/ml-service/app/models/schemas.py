@@ -46,6 +46,13 @@ class CustomerDataPoint(BaseModel):
     monetary_value: float = Field(ge=0)
     avg_gap_between_orders: float = Field(ge=0)
 
+class LabeledCustomerDataPoint(CustomerDataPoint):
+    churned: int = Field(description="1 if churned, 0 if retained")
+
+class TrainChurnRequest(BaseModel):
+    store_id: str
+    customers: List[LabeledCustomerDataPoint] = Field(..., max_length=10000)
+
 class ChurnRequest(BaseModel):
     store_id: str
     customers: List[CustomerDataPoint] = Field(..., max_length=10000)
