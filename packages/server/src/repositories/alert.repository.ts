@@ -17,13 +17,20 @@ export class AlertRepository extends BaseRepository<InventoryAlert> {
     super('inventory_alerts');
   }
 
-  async findLowStockProducts(storeId: string): Promise<Array<{ id: string; name: string; stock_quantity: number; low_stock_threshold: number }>> {
+  async findLowStockProducts(storeId: string, forecastDays: number = 30): Promise<Array<{ id: string; name: string; stock_quantity: number; predicted_demand: number }>> {
     const { rows } = await this.query(
-      `SELECT id, name, stock_quantity, low_stock_threshold
-       FROM products
-       WHERE store_id = $1 AND is_active = true
-         AND stock_quantity <= low_stock_threshold`,
-      [storeId]
+      `WITH predicted AS (
+         SELECT product_id, SUM(predicted_qty) as predicted_demand
+         FROM forecasts
+         WHERE store_id = $1 AND forecast_date >= CURRENT_DATE AND forecast_date < CURRENT_DATE + INTERVAL '1 day' * $2
+         GROUP BY product_id
+       )
+       SELECT p.id, p.name, p.stock_quantity, COALESCE(pr.predicted_demand, 0) as predicted_demand
+       FROM products p
+       LEFT JOIN predicted pr ON p.id = pr.product_id
+       WHERE p.store_id = $1 AND p.is_active = true
+         AND p.stock_quantity < COALESCE(pr.predicted_demand, 0)`,
+      [storeId, forecastDays]
     );
     return rows;
   }
@@ -51,6 +58,22 @@ export class AlertRepository extends BaseRepository<InventoryAlert> {
       [storeId, daysSinceLastSale]
     );
     return rows;
+  }
+
+  async bulkCreateAlerts(alerts: Array<{ storeId: string; productId: string; alertType: string; severity: string; message: string }>, client?: PoolClient): Promise<void> {
+    if (alerts.length === 0) return;
+    const values: string[] = [];
+    const params: string[] = [];
+    let idx = 1;
+    for (const a of alerts) {
+      values.push(`($${idx++}, $${idx++}, $${idx++}, $${idx++}, $${idx++})`);
+      params.push(a.storeId, a.productId, a.alertType, a.severity, a.message);
+    }
+    await this.query(
+      `INSERT INTO ${this.tableName} (store_id, product_id, alert_type, severity, message) VALUES ${values.join(', ')}`,
+      params,
+      client
+    );
   }
 
   async createAlert(storeId: string, productId: string, alertType: string, severity: string, message: string, client?: PoolClient): Promise<InventoryAlert> {

@@ -4,32 +4,37 @@ export class AlertService {
   async generateAlerts(storeId: string): Promise<{ alertsCreated: number }> {
     let alertsCreated = 0;
 
-    // 1. Low stock alerts
-    const lowStockProducts = await alertRepository.findLowStockProducts(storeId);
+    // 1. Low stock alerts (stock < predicted demand)
+    const lowStockProducts = await alertRepository.findLowStockProducts(storeId, 30);
+    const newAlerts = [];
+    
     for (const product of lowStockProducts) {
       if (product.stock_quantity === 0) {
-        // Out of stock — check if we already have an unread alert for this product
-        await alertRepository.createAlert(
-          storeId, product.id, 'out_of_stock', 'critical',
-          `'${product.name}' is out of stock`
-        );
+        newAlerts.push({
+          storeId, productId: product.id, alertType: 'out_of_stock', severity: 'critical',
+          message: `'${product.name}' is out of stock`
+        });
       } else {
-        await alertRepository.createAlert(
-          storeId, product.id, 'low_stock', 'warning',
-          `'${product.name}' is low on stock (${product.stock_quantity} remaining, threshold: ${product.low_stock_threshold})`
-        );
+        const safetyBuffer = product.predicted_demand * 0.2;
+        const reorderQty = Math.ceil((product.predicted_demand + safetyBuffer) - product.stock_quantity);
+        newAlerts.push({
+          storeId, productId: product.id, alertType: 'low_stock', severity: 'warning',
+          message: `${product.name} — current stock: ${product.stock_quantity}, predicted demand: ${Math.round(product.predicted_demand)} in 30 days. Restock recommended: ${reorderQty} units`
+        });
       }
-      alertsCreated++;
+    }
+    
+    const deadStockProducts = await alertRepository.findDeadStock(storeId, 60);
+    for (const product of deadStockProducts) {
+      newAlerts.push({
+        storeId, productId: product.id, alertType: 'dead_stock', severity: 'info',
+        message: `'${product.name}' has ${product.stock_quantity} units but no sales in 60 days`
+      });
     }
 
-    // 2. Dead stock alerts (no sales in 90 days but still in stock)
-    const deadStockProducts = await alertRepository.findDeadStock(storeId, 90);
-    for (const product of deadStockProducts) {
-      await alertRepository.createAlert(
-        storeId, product.id, 'dead_stock', 'info',
-        `'${product.name}' has ${product.stock_quantity} units but no sales in 90 days`
-      );
-      alertsCreated++;
+    if (newAlerts.length > 0) {
+      await alertRepository.bulkCreateAlerts(newAlerts);
+      alertsCreated = newAlerts.length;
     }
 
     return { alertsCreated };

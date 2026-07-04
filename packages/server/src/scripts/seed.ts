@@ -32,7 +32,7 @@ async function seed() {
       });
       user = result.user as any;
       storeId = result.storeId;
-      console.log(`Created user with ID: ${user.id} and Store ID: ${storeId}`);
+      console.log(`Created user with ID: ${user!.id} and Store ID: ${storeId}`);
     } else {
       console.log(`User ${TARGET_EMAIL} found. Logging in to get store...`);
       const result = await authService.login({

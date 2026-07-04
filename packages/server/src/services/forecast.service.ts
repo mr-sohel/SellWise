@@ -33,7 +33,7 @@ export class ForecastService {
 
   private async generateSMAForecast(storeId: string, productId: string, history: SalesHistory[]): Promise<void> {
     const windowSize = 7;
-    const forecastDays = 14;
+    const forecastDays = 30;
     const values = history.map(h => h.total_qty);
 
     // Calculate SMA

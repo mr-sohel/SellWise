@@ -7,21 +7,25 @@ export class CustomerService {
     const { page, limit, search } = filters;
     const offset = (page - 1) * limit;
 
-    let queryText = `SELECT * FROM customers WHERE store_id = $1`;
-    let countQueryText = `SELECT COUNT(*) FROM customers WHERE store_id = $1`;
+    let queryText = `
+      SELECT c.*, r.segment, r.churn_probability, r.recency_score, r.frequency_score, r.monetary_score
+      FROM customers c
+      LEFT JOIN customer_rfm r ON c.id = r.customer_id AND c.store_id = r.store_id
+      WHERE c.store_id = $1`;
+    let countQueryText = `SELECT COUNT(*) FROM customers c WHERE c.store_id = $1`;
 
     const params: any[] = [storeId];
     let paramIndex = 2;
 
     if (search) {
       const searchPattern = `%${search}%`;
-      queryText += ` AND (name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`;
-      countQueryText += ` AND (name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`;
+      queryText += ` AND (c.name ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.email ILIKE $${paramIndex})`;
+      countQueryText += ` AND (c.name ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.email ILIKE $${paramIndex})`;
       params.push(searchPattern);
       paramIndex++;
     }
 
-    queryText += ` ORDER BY total_spent DESC, created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    queryText += ` ORDER BY c.total_spent DESC, c.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     const queryParams = [...params, limit, offset];
 
     // Using any type for client to bypass protected query method directly if we added public method in repo,

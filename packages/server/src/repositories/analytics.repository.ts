@@ -82,6 +82,33 @@ export class AnalyticsRepository {
     }));
   }
 
+  async getWorstProducts(storeId: string, range: DateRange, limit: number = 5, client?: PoolClient) {
+    const { rows } = await this.query(
+      `SELECT
+         product_id,
+         product_name,
+         SUM(quantity) as units_sold,
+         SUM(quantity * unit_price) as revenue
+       FROM order_items oi
+       JOIN orders o ON o.id = oi.order_id
+       WHERE o.store_id = $1
+         AND o.order_date >= $2
+         AND o.order_date <= $3
+         AND o.status NOT IN ('cancelled', 'returned')
+       GROUP BY product_id, product_name
+       ORDER BY units_sold ASC
+       LIMIT $4`,
+      [storeId, range.startDate, range.endDate, limit],
+      client
+    );
+    return rows.map(r => ({
+      productId: r.product_id,
+      productName: r.product_name,
+      unitsSold: parseInt(r.units_sold, 10),
+      revenue: parseFloat(r.revenue)
+    }));
+  }
+
   async getCategoryBreakdown(storeId: string, range: DateRange, client?: PoolClient) {
     const { rows } = await this.query(
       `SELECT
@@ -129,6 +156,29 @@ export class AnalyticsRepository {
       client
     );
     return parseFloat(rows[0].cogs);
+  }
+
+  async getCustomerRetention(storeId: string, range: DateRange, client?: PoolClient) {
+    const { rows } = await this.query(
+      `SELECT
+         COUNT(DISTINCT o.customer_id) as total_customers,
+         COUNT(DISTINCT CASE WHEN c.total_orders > 1 THEN o.customer_id END) as retained_customers
+       FROM orders o
+       JOIN customers c ON c.id = o.customer_id
+       WHERE o.store_id = $1
+         AND o.order_date >= $2
+         AND o.order_date <= $3`,
+      [storeId, range.startDate, range.endDate],
+      client
+    );
+
+    const total = parseInt(rows[0].total_customers, 10);
+    const retained = parseInt(rows[0].retained_customers, 10);
+
+    return {
+      total,
+      retained
+    };
   }
 
   async getFulfillmentMetrics(storeId: string, range: DateRange, client?: PoolClient) {

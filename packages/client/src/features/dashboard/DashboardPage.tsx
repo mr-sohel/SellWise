@@ -6,7 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Activity, BarChart2, LineChart as LineChartIcon } from 'lucide-react';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c'];
 
@@ -14,6 +14,7 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const { activeStoreId } = useAuthStore();
   const [range, setRange] = useState('30d');
+  const [trendChartType, setTrendChartType] = useState<'line' | 'bar'>('line');
 
   const { data, isLoading, isError, error } = useDashboard(activeStoreId || '', range);
 
@@ -61,7 +62,7 @@ export function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-card border border-border p-6 rounded-xl shadow-sm flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-1">Total Revenue</p>
@@ -88,9 +89,19 @@ export function DashboardPage() {
 
         <div className="bg-card border border-border p-6 rounded-xl shadow-sm flex items-center justify-between">
           <div>
+            <p className="text-sm font-medium text-muted-foreground mb-1">Avg Order Value</p>
+            <h3 className="text-3xl font-bold text-foreground">৳{data.averageOrderValue?.toLocaleString() || 0}</h3>
+          </div>
+          <div className="h-12 w-12 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+            <DollarSign className="h-6 w-6" />
+          </div>
+        </div>
+
+        <div className="bg-card border border-border p-6 rounded-xl shadow-sm flex items-center justify-between">
+          <div>
             <p className="text-sm font-medium text-muted-foreground mb-1">Health Score</p>
             <h3 className="text-3xl font-bold text-foreground">{data.healthScore}/100</h3>
-            <p className="text-sm text-muted-foreground mt-2">Based on growth, turnover, and fulfillment</p>
+            <p className="text-sm text-muted-foreground mt-2">Based on growth, turnover, and retention</p>
           </div>
           <div className="h-12 w-12 bg-primary/10 text-primary rounded-full flex items-center justify-center">
             <Activity className="h-6 w-6" />
@@ -101,34 +112,78 @@ export function DashboardPage() {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-card border border-border p-6 rounded-xl shadow-sm lg:col-span-2">
-          <h3 className="text-lg font-medium text-foreground mb-6">Revenue Trend</h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-medium text-foreground">Revenue Trend</h3>
+            <div className="flex bg-muted rounded-md p-1">
+              <button
+                onClick={() => setTrendChartType('line')}
+                className={`p-1.5 rounded-sm transition-colors ${trendChartType === 'line' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <LineChartIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setTrendChartType('bar')}
+                className={`p-1.5 rounded-sm transition-colors ${trendChartType === 'bar' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <BarChart2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.revenueTrend}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(val) => `৳${val}`}
-                />
-                <Tooltip
-                  labelFormatter={(val) => new Date(val).toLocaleDateString()}
-                  formatter={(val: number) => [`৳${val.toLocaleString()}`, 'Revenue']}
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                />
-                <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-              </LineChart>
+              {trendChartType === 'line' ? (
+                <LineChart data={data.revenueTrend}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={10}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `৳${val}`}
+                  />
+                  <Tooltip
+                    labelFormatter={(val) => new Date(val).toLocaleDateString()}
+                    formatter={(val: number) => [`৳${val.toLocaleString()}`, 'Revenue']}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                  />
+                  <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                </LineChart>
+              ) : (
+                <BarChart data={data.revenueTrend}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(val) => new Date(val).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={10}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `৳${val}`}
+                  />
+                  <Tooltip
+                    labelFormatter={(val) => new Date(val).toLocaleDateString()}
+                    formatter={(val: number) => [`৳${val.toLocaleString()}`, 'Revenue']}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>
@@ -166,40 +221,79 @@ export function DashboardPage() {
       </div>
 
       {/* Charts Row 2 */}
-      <div className="bg-card border border-border p-6 rounded-xl shadow-sm">
-        <h3 className="text-lg font-medium text-foreground mb-6">Top Performing Products</h3>
-        <div className="h-[300px] w-full">
-          {data.topProducts.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.topProducts} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                <XAxis
-                  type="number"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(val) => `৳${val}`}
-                />
-                <YAxis
-                  dataKey="productName"
-                  type="category"
-                  stroke="hsl(var(--foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  width={150}
-                />
-                <Tooltip
-                  formatter={(val: number) => [`৳${val.toLocaleString()}`, 'Revenue']}
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
-                />
-                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">No data available</div>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-card border border-border p-6 rounded-xl shadow-sm">
+          <h3 className="text-lg font-medium text-foreground mb-6">Top Performing Products</h3>
+          <div className="h-[300px] w-full">
+            {data.topProducts.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.topProducts} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                  <XAxis
+                    type="number"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `৳${val}`}
+                  />
+                  <YAxis
+                    dataKey="productName"
+                    type="category"
+                    stroke="hsl(var(--foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    width={120}
+                  />
+                  <Tooltip
+                    formatter={(val: number) => [`৳${val.toLocaleString()}`, 'Revenue']}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">No data available</div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-card border border-border p-6 rounded-xl shadow-sm">
+          <h3 className="text-lg font-medium text-foreground mb-6">Worst Performing Products</h3>
+          <div className="h-[300px] w-full">
+            {data.worstProducts && data.worstProducts.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.worstProducts} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                  <XAxis
+                    type="number"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `৳${val}`}
+                  />
+                  <YAxis
+                    dataKey="productName"
+                    type="category"
+                    stroke="hsl(var(--foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    width={120}
+                  />
+                  <Tooltip
+                    formatter={(val: number) => [`৳${val.toLocaleString()}`, 'Revenue']}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="revenue" fill="hsl(var(--destructive))" radius={[0, 4, 4, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">No data available</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

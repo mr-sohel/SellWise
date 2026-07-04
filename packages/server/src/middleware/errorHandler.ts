@@ -10,5 +10,5 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
 
   // logger.error('Unhandled error', { error: err, requestId: req.id });
   console.error('Unhandled error:', err);
-  return res.status(500).json(ApiResponse.error('INTERNAL_ERROR', 'An unexpected error occurred'));
+  return res.status(500).json(ApiResponse.error('INTERNAL_ERROR', err.message || 'An unexpected error occurred'));
 }

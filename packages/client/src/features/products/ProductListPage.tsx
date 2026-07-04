@@ -88,9 +88,9 @@ export function ProductListPage() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button className="text-muted-foreground hover:text-primary transition-colors">
+                        <Link to={`/products/${product.id}/edit`} className="text-muted-foreground hover:text-primary transition-colors">
                           <Edit className="h-4 w-4" />
-                        </button>
+                        </Link>
                         <button
                           onClick={() => handleDelete(product.id)}
                           className="text-muted-foreground hover:text-destructive transition-colors"

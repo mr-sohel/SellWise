@@ -8,7 +8,7 @@ import { LoginDTO, SignupDTO, User, UpdateProfileDTO } from '@sellwise/shared';
 import { ConflictError, UnauthorizedError, NotFoundError } from '../errors/AppError';
 
 export class AuthService {
-  async signup(data: SignupDTO): Promise<{ user: Omit<User, 'password_hash'>, storeId: string, token: string }> {
+  async signup(data: SignupDTO): Promise<{ user: Omit<User, 'password_hash'>, storeId: string, role: string, token: string }> {
     const existingUser = await userRepository.findByEmail(data.email);
     if (existingUser) {
       throw new ConflictError('User with this email already exists');
@@ -37,7 +37,7 @@ export class AuthService {
 
       const token = this.generateToken(user.id);
       const { password_hash: _, ...userWithoutPassword } = user;
-      return { user: userWithoutPassword, storeId: store.id, token };
+      return { user: userWithoutPassword, storeId: store.id, role: 'owner', token };
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -46,7 +46,7 @@ export class AuthService {
     }
   }
 
-  async login(data: LoginDTO): Promise<{ user: Omit<User, 'password_hash'>, storeId: string | null, token: string }> {
+  async login(data: LoginDTO): Promise<{ user: Omit<User, 'password_hash'>, storeId: string | null, role: string | null, token: string }> {
     const user = await userRepository.findByEmail(data.email);
     if (!user) {
       throw new UnauthorizedError('Invalid credentials');
@@ -61,7 +61,8 @@ export class AuthService {
     const token = this.generateToken(user.id);
 
     const { password_hash: _, ...userWithoutPassword } = user;
-    return { user: userWithoutPassword, storeId: stores[0]?.id || null, token };
+    const role = stores.length > 0 ? (stores[0] as any).role : null;
+    return { user: userWithoutPassword, storeId: stores[0]?.id || null, role, token };
   }
 
   async updateProfile(userId: string, data: UpdateProfileDTO): Promise<Omit<User, 'password_hash'>> {

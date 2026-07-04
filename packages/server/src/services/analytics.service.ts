@@ -4,11 +4,22 @@ import { redis } from '../config/redis';
 export interface AnalyticsOverview {
   revenue: number;
   orders: number;
+  averageOrderValue: number;
   revenueGrowth: number;
   healthScore: number;
   topProducts: any[];
+  worstProducts: any[];
   revenueTrend: any[];
   categoryBreakdown: any[];
+  inventoryStatus: {
+    totalValue: number;
+    turnoverRate: number;
+  };
+  customerInsights: {
+    totalCustomers: number;
+    retainedCustomers: number;
+    retentionRate: number;
+  };
 }
 
 export class AnalyticsService {
@@ -48,20 +59,22 @@ export class AnalyticsService {
       currentMetrics,
       prevMetrics,
       topProducts,
+      worstProducts,
       revenueTrend,
       categoryBreakdown,
       inventoryValue,
       cogs,
-      fulfillment
+      customerRetention
     ] = await Promise.all([
       analyticsRepository.getRevenueMetrics(storeId, currentRange),
       analyticsRepository.getRevenueMetrics(storeId, previousRange),
       analyticsRepository.getTopProducts(storeId, currentRange),
+      analyticsRepository.getWorstProducts(storeId, currentRange),
       analyticsRepository.getRevenueTrend(storeId, currentRange),
       analyticsRepository.getCategoryBreakdown(storeId, currentRange),
       analyticsRepository.getInventoryValue(storeId),
       analyticsRepository.getCOGS(storeId, currentRange),
-      analyticsRepository.getFulfillmentMetrics(storeId, currentRange)
+      analyticsRepository.getCustomerRetention(storeId, currentRange)
     ]);
 
     // 4. Calculate Health Score
@@ -83,26 +96,37 @@ export class AnalyticsService {
     // Assume a turnover of 4+ over the period is excellent (100 score)
     const turnoverNorm = Math.min((turnoverRate / 4) * 100, 100);
 
-    // Fulfillment Rate (30%)
-    let fulfillmentRate = 100;
-    if (fulfillment.nonFailed > 0) {
-      fulfillmentRate = (fulfillment.delivered / fulfillment.nonFailed) * 100;
+    // Customer Retention Rate (30%)
+    let retentionRate = 0;
+    if (customerRetention.total > 0) {
+      retentionRate = (customerRetention.retained / customerRetention.total) * 100;
     }
-    const fulfillmentNorm = Math.min(Math.max(fulfillmentRate, 0), 100);
+    const retentionNorm = Math.min(Math.max(retentionRate, 0), 100);
 
     const healthScore = Math.round(
-      (growthNorm * 0.4) + (turnoverNorm * 0.3) + (fulfillmentNorm * 0.3)
+      (growthNorm * 0.4) + (turnoverNorm * 0.3) + (retentionNorm * 0.3)
     );
 
     // 5. Construct Final Object
     const overview: AnalyticsOverview = {
       revenue: currentMetrics.revenue,
       orders: currentMetrics.orders,
+      averageOrderValue: currentMetrics.orders > 0 ? parseFloat((currentMetrics.revenue / currentMetrics.orders).toFixed(2)) : 0,
       revenueGrowth: parseFloat(revenueGrowth.toFixed(2)),
       healthScore,
       topProducts,
+      worstProducts,
       revenueTrend,
-      categoryBreakdown
+      categoryBreakdown,
+      inventoryStatus: {
+        totalValue: inventoryValue,
+        turnoverRate: parseFloat(turnoverRate.toFixed(2)),
+      },
+      customerInsights: {
+        totalCustomers: customerRetention.total,
+        retainedCustomers: customerRetention.retained,
+        retentionRate: parseFloat(retentionRate.toFixed(2)),
+      }
     };
 
     // 6. Cache and Return

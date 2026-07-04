@@ -60,6 +60,46 @@ export function ReportGeneratorPage() {
       headStyles: { fillColor: [170, 59, 255] }
     });
 
+    // Inventory Status
+    const topProdY = (doc as any).lastAutoTable.finalY || finalY + 20;
+    doc.setFontSize(14);
+    doc.text('Inventory Status', 14, topProdY + 15);
+
+    autoTable(doc, {
+      startY: topProdY + 20,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Inventory Value', `BDT ${data.inventoryStatus.totalValue.toLocaleString()}`],
+        ['Inventory Turnover Rate', data.inventoryStatus.turnoverRate.toString()],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [170, 59, 255] }
+    });
+
+    // Customer Insights
+    const invY = (doc as any).lastAutoTable.finalY || topProdY + 20;
+
+    // Check if we need to add a new page
+    if (invY > 230) {
+      doc.addPage();
+    }
+
+    const page2Y = invY > 230 ? 20 : invY + 15;
+    doc.setFontSize(14);
+    doc.text('Customer Insights', 14, page2Y);
+
+    autoTable(doc, {
+      startY: page2Y + 5,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Customers (Period)', data.customerInsights.totalCustomers.toString()],
+        ['Retained Customers', data.customerInsights.retainedCustomers.toString()],
+        ['Retention Rate', `${data.customerInsights.retentionRate}%`],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [170, 59, 255] }
+    });
+
     doc.save(`sellwise_report_${range}_${new Date().getTime()}.pdf`);
   };
 

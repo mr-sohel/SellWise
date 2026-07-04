@@ -25,7 +25,7 @@ export class StoreController {
 
   async createMember(req: Request, res: Response, next: NextFunction) {
     try {
-      const storeId = req.params.storeId;
+      const storeId = req.params.storeId as string;
       const member = await storeService.createMember(storeId, req.body);
       res.status(201).json(ApiResponse.success(member));
     } catch (error) {
@@ -35,7 +35,7 @@ export class StoreController {
 
   async listMembers(req: Request, res: Response, next: NextFunction) {
     try {
-      const storeId = req.params.storeId;
+      const storeId = req.params.storeId as string;
       const members = await storeService.listMembers(storeId);
       res.status(200).json(ApiResponse.success(members));
     } catch (error) {
@@ -45,10 +45,10 @@ export class StoreController {
 
   async removeMember(req: Request, res: Response, next: NextFunction) {
     try {
-      const storeId = req.params.storeId;
-      const targetUserId = req.params.userId;
+      const storeId = req.params.storeId as string;
+      const targetUserId = req.params.userId as string;
       const requesterUserId = req.user!.id;
-      
+
       await storeService.removeMember(storeId, targetUserId, requesterUserId);
       res.status(200).json(ApiResponse.success({ message: 'Member removed successfully' }));
     } catch (error) {

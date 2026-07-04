@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { productService } from '../services/product.service';
+import { forecastService } from '../services/forecast.service';
 import { ApiResponse } from '../utils/ApiResponse';
 
 export class ProductController {
@@ -74,6 +75,23 @@ export class ProductController {
       const storeId = req.params.storeId as string;
       const products = await productService.bulkImport(storeId, req.body.products);
       res.status(201).json(ApiResponse.success(products));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getForecasts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const storeId = req.params.storeId as string;
+      const id = req.params.id as string;
+      const days = parseInt(req.query.days as string, 10) || 30;
+
+      const forecasts = await forecastService.getForecasts(storeId, id);
+
+      // Filter forecasts based on requested days
+      const filteredForecasts = forecasts.slice(0, days);
+
+      res.status(200).json(ApiResponse.success(filteredForecasts));
     } catch (error) {
       next(error);
     }

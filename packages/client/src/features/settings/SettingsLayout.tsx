@@ -1,14 +1,19 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { User, Users } from 'lucide-react';
+import { useAuthStore } from '../../stores/auth.store';
 
 export function SettingsLayout() {
   const location = useLocation();
+  const { role } = useAuthStore();
 
   const tabs = [
     { name: 'Profile', path: '/settings/profile', icon: User },
-    { name: 'Staff Management', path: '/settings/staff', icon: Users },
   ];
+
+  if (role === 'owner') {
+    tabs.push({ name: 'Staff Management', path: '/settings/staff', icon: Users });
+  }
 
   return (
     <div className="space-y-6">
@@ -28,8 +33,8 @@ export function SettingsLayout() {
                 to={tab.path}
                 className={`
                   whitespace-nowrap flex py-4 px-1 border-b-2 font-medium text-sm
-                  ${isActive 
-                    ? 'border-primary text-primary' 
+                  ${isActive
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }
                 `}

@@ -8,15 +8,17 @@ export const validate = (schema: AnyZodObject) => {
       // For GET requests, validate req.query. Otherwise, validate req.body.
       const dataToValidate = req.method === 'GET' ? req.query : req.body;
 
-      const validatedData = await schema.parseAsync(dataToValidate);
+      const validatedData = schema.parse(dataToValidate);
 
       // Replace the original data with the validated/coerced data
       if (req.method === 'GET') {
         // Express 5 makes req.query a getter-only property, so we mutate it instead of reassigning
-        for (const key of Object.keys(req.query)) {
-          delete req.query[key];
-        }
-        Object.assign(req.query, validatedData);
+        Object.defineProperty(req, 'query', {
+          value: validatedData,
+          enumerable: true,
+          configurable: true,
+          writable: true
+        });
       } else {
         req.body = validatedData;
       }

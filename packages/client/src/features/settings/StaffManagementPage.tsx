@@ -8,7 +8,7 @@ import { createMemberSchema } from '@sellwise/shared';
 import type { CreateMemberDTO } from '@sellwise/shared';
 
 export function StaffManagementPage() {
-  const { activeStoreId, user: currentUser } = useAuthStore();
+  const { activeStoreId, user: currentUser, role: globalRole } = useAuthStore();
   const storeId = activeStoreId || '';
 
   const { data: result, isLoading, error } = useStaff(storeId);
@@ -49,7 +49,15 @@ export function StaffManagementPage() {
     });
   };
 
-  const isOwner = staffMembers.find(m => m.id === currentUser?.id)?.role === 'owner';
+  const isOwner = globalRole === 'owner' || staffMembers.find(m => m.id === currentUser?.id)?.role === 'owner';
+
+  if (globalRole && globalRole !== 'owner') {
+    return (
+      <div className="bg-destructive/10 text-destructive p-4 rounded-md border border-destructive/20">
+        Only the store owner can manage staff members.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

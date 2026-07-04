@@ -5,7 +5,7 @@ import { ApiResponse } from '../utils/ApiResponse';
 export class AuthController {
   async signup(req: Request, res: Response, next: NextFunction) {
     try {
-      const { user, storeId, token } = await authService.signup(req.body);
+      const { user, storeId, role, token } = await authService.signup(req.body);
 
       // Set HTTP-only cookie
       res.cookie('token', token, {
@@ -15,7 +15,7 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      res.status(201).json(ApiResponse.success({ user, storeId }));
+      res.status(201).json(ApiResponse.success({ user, storeId, role }));
     } catch (error) {
       next(error);
     }
@@ -23,7 +23,7 @@ export class AuthController {
 
   async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { user, storeId, token } = await authService.login(req.body);
+      const { user, storeId, role, token } = await authService.login(req.body);
 
       // Set HTTP-only cookie
       res.cookie('token', token, {
@@ -33,7 +33,7 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      res.status(200).json(ApiResponse.success({ user, storeId }));
+      res.status(200).json(ApiResponse.success({ user, storeId, role }));
     } catch (error) {
       next(error);
     }

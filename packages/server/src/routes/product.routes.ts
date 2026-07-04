@@ -16,6 +16,7 @@ router.get('/', validate(productFiltersSchema), productController.list);
 router.post('/', validate(createProductSchema), productController.create);
 router.post('/bulk', productController.bulkImport); // Add dedicated schema for bulk if needed
 router.get('/:id', productController.get);
+router.get('/:id/forecast', productController.getForecasts);
 router.put('/:id', validate(updateProductSchema), productController.update);
 router.delete('/:id', requireRole(['owner']), productController.delete);
 router.patch('/:id/stock', productController.updateStock);

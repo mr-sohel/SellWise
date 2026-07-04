@@ -12,8 +12,9 @@ interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   activeStoreId: string | null;
+  role: string | null;
   isAuthenticated: boolean;
-  setAuth: (user: AuthUser, storeId: string) => void;
+  setAuth: (user: AuthUser, storeId: string, role: string | null) => void;
   logout: () => void;
 }
 
@@ -22,9 +23,10 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       activeStoreId: null,
+      role: null,
       isAuthenticated: false,
-      setAuth: (user, storeId) => set({ user, activeStoreId: storeId, isAuthenticated: true }),
-      logout: () => set({ user: null, activeStoreId: null, isAuthenticated: false }),
+      setAuth: (user, storeId, role) => set({ user, activeStoreId: storeId, role, isAuthenticated: true }),
+      logout: () => set({ user: null, activeStoreId: null, role: null, isAuthenticated: false }),
     }),
     {
       name: 'sellwise-auth',

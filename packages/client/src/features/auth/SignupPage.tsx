@@ -28,8 +28,8 @@ export function SignupPage() {
     try {
       const response = await axios.post('/auth/signup', data);
       if (response.data.success) {
-        const { user, storeId } = response.data.data;
-        setAuth(user, storeId);
+        const { user, storeId, role } = response.data.data;
+        setAuth(user, storeId, role);
         navigate('/dashboard');
       }
     } catch (error) {

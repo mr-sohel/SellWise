@@ -27,8 +27,8 @@ export function LoginPage() {
     try {
       const response = await axios.post('/auth/login', data);
       if (response.data.success) {
-        const { user, storeId } = response.data.data;
-        setAuth(user, storeId);
+        const { user, storeId, role } = response.data.data;
+        setAuth(user, storeId, role);
         navigate('/dashboard');
       }
     } catch (error) {

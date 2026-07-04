@@ -1,12 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../../../lib/api/client';
 import type { Product, CreateProductDTO, UpdateProductDTO, ProductFiltersDTO, PaginatedResult } from '@sellwise/shared';
-
-// Ideally, this axios instance would be centralized in `api/client.ts`
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api/v1',
-  withCredentials: true,
-});
 
 export function useProducts(storeId: string, filters: ProductFiltersDTO) {
   return useQuery({
