@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from ..models.schemas import ForecastRequest, ForecastResponse
-from ..services.prophet_service import generate_forecast
+from ..models.schemas import ForecastRequest, ForecastResponse, BacktestResponse
+from ..services.prophet_service import generate_forecast, backtest_forecast
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -24,3 +24,19 @@ async def create_forecast(request: ForecastRequest):
     except Exception as e:
         logger.exception("Forecast generation failed")
         raise HTTPException(status_code=500, detail="Forecast generation failed. Please try again later.")
+
+@router.post("/backtest", response_model=BacktestResponse)
+async def run_backtest(request: ForecastRequest):
+    try:
+        metrics = backtest_forecast(
+            request.history,
+            business_type=request.business_type,
+        )
+        return BacktestResponse(
+            store_id=request.store_id,
+            product_id=request.product_id,
+            metrics=metrics
+        )
+    except Exception as e:
+        logger.exception("Backtest failed")
+        raise HTTPException(status_code=500, detail=str(e))

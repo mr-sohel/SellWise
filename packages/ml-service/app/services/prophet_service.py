@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 from prophet import Prophet
 from typing import List, Optional
-from ..models.schemas import SalesHistoryPoint, ForecastResultPoint
+from prophet.diagnostics import cross_validation, performance_metrics
+from ..models.schemas import SalesHistoryPoint, ForecastResultPoint, BacktestMetrics
 
 # Business-type-specific seasonality configs
 SEASONALITY_CONFIGS = {
@@ -143,3 +144,61 @@ def generate_forecast(
         ))
 
     return results
+
+def backtest_forecast(
+    history: List[SalesHistoryPoint],
+    business_type: Optional[str] = None,
+    initial_days: int = 60,
+    horizon_days: int = 15,
+    period_days: int = 15,
+) -> List[BacktestMetrics]:
+    """
+    Evaluates the Prophet model using historical cross-validation.
+    """
+    df = pd.DataFrame([{"ds": point.ds, "y": point.y} for point in history])
+    
+    if len(df) < initial_days + horizon_days:
+        raise ValueError(f"Not enough data for backtesting. Need at least {initial_days + horizon_days} days.")
+
+    config = SEASONALITY_CONFIGS.get(business_type, DEFAULT_CONFIG) if business_type else DEFAULT_CONFIG
+
+    model = Prophet(
+        yearly_seasonality=config['yearly_seasonality'],
+        weekly_seasonality=config['weekly_seasonality'],
+        daily_seasonality=config['daily_seasonality'],
+    )
+    
+    for custom in config.get('custom_seasonalities', []):
+        model.add_seasonality(
+            name=custom['name'],
+            period=custom['period'],
+            fourier_order=custom['fourier_order'],
+        )
+        
+    model.fit(df)
+    
+    # Run cross-validation
+    df_cv = cross_validation(
+        model, 
+        initial=f'{initial_days} days', 
+        period=f'{period_days} days', 
+        horizon=f'{horizon_days} days'
+    )
+    
+    # Calculate performance metrics
+    df_p = performance_metrics(df_cv)
+    
+    metrics = []
+    for _, row in df_p.iterrows():
+        metrics.append(BacktestMetrics(
+            horizon=str(row['horizon']),
+            mse=float(row['mse']),
+            rmse=float(row['rmse']),
+            mae=float(row['mae']),
+            mape=float(row['mape']),
+            mdape=float(row['mdape']),
+            smape=float(row['smape']),
+            coverage=float(row['coverage'])
+        ))
+        
+    return metrics

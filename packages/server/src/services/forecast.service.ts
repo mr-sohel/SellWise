@@ -196,14 +196,10 @@ export class ForecastService {
     }
   }
 
-  /**
-   * Calculate forecast accuracy (MAPE) by comparing past forecasts with actual sales.
-   * Only evaluates forecasts that are at least 3 days old (allowing actuals to accumulate).
-   */
   private async calculateAccuracy(storeId: string): Promise<number | undefined> {
     try {
       const { rows } = await this.query(
-        `SELECT f.predicted_qty, SUM(oi.quantity) as actual_qty
+        `SELECT f.product_id, f.predicted_qty, SUM(oi.quantity) as actual_qty
          FROM forecasts f
          LEFT JOIN order_items oi ON oi.product_id = f.product_id
          LEFT JOIN orders o ON oi.order_id = o.id
@@ -213,21 +209,42 @@ export class ForecastService {
            AND f.forecast_date >= CURRENT_DATE - INTERVAL '30 days'
            AND f.forecast_date < CURRENT_DATE - INTERVAL '3 days'
            AND f.model_used IN ('ewma', 'prophet')
-         GROUP BY f.id, f.predicted_qty
+         GROUP BY f.product_id, f.id, f.predicted_qty
          HAVING SUM(oi.quantity) IS NOT NULL AND SUM(oi.quantity) > 0`,
         [storeId]
       );
 
       if (rows.length === 0) return undefined;
 
-      // MAPE = mean(|actual - predicted| / actual)
-      const mape = rows.reduce((sum: number, r: any) => {
+      const productMapes = new Map<string, { totalMape: number; count: number }>();
+
+      rows.forEach((r: any) => {
+        const productId = r.product_id;
         const actual = Number(r.actual_qty);
         const predicted = Number(r.predicted_qty);
-        return sum + Math.abs(actual - predicted) / actual;
-      }, 0) / rows.length;
+        const mape = Math.abs(actual - predicted) / actual;
+        
+        const existing = productMapes.get(productId) || { totalMape: 0, count: 0 };
+        existing.totalMape += mape;
+        existing.count += 1;
+        productMapes.set(productId, existing);
+      });
 
-      return Math.round(mape * 10000) / 100; // Return as percentage with 2 decimals
+      let overallMapeSum = 0;
+      let overallCount = 0;
+
+      // Update products table with per-product MAPE
+      for (const [productId, data] of productMapes.entries()) {
+        const productMape = Math.round((data.totalMape / data.count) * 10000) / 100;
+        await this.query(
+          `UPDATE products SET forecast_mape = $1 WHERE id = $2 AND store_id = $3`,
+          [productMape, productId, storeId]
+        );
+        overallMapeSum += data.totalMape;
+        overallCount += data.count;
+      }
+
+      return Math.round((overallMapeSum / overallCount) * 10000) / 100;
     } catch (error) {
       logger.error('[ForecastService] Failed to calculate accuracy:', error);
       return undefined;

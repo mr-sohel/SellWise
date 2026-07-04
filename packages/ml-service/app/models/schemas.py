@@ -24,6 +24,21 @@ class ForecastResponse(BaseModel):
     product_id: str
     forecast: List[ForecastResultPoint]
 
+class BacktestMetrics(BaseModel):
+    horizon: str
+    mse: float
+    rmse: float
+    mae: float
+    mape: float
+    mdape: float
+    smape: float
+    coverage: float
+
+class BacktestResponse(BaseModel):
+    store_id: str
+    product_id: str
+    metrics: List[BacktestMetrics]
+
 class CustomerDataPoint(BaseModel):
     customer_id: str
     recency_days: int = Field(ge=0)

@@ -2,11 +2,16 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+import os
+import joblib
+from datetime import datetime, timedelta
 from typing import List
 from ..models.schemas import CustomerDataPoint, ChurnResultPoint
 
+MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "models")
+os.makedirs(MODEL_DIR, exist_ok=True)
 
-def predict_churn(customers: List[CustomerDataPoint]) -> List[ChurnResultPoint]:
+def predict_churn(store_id: str, customers: List[CustomerDataPoint]) -> List[ChurnResultPoint]:
     """
     Predicts churn probability using an ensemble of heuristic + logistic regression.
 
@@ -32,7 +37,28 @@ def predict_churn(customers: List[CustomerDataPoint]) -> List[ChurnResultPoint]:
     # Secondary: LR model (only if we have enough diversity in the data)
     lr_probs = None
     if len(customers) >= 10:
-        lr_probs = _fit_lr_model(df)
+        model_path = os.path.join(MODEL_DIR, f"lr_churn_{store_id}.joblib")
+        
+        # Load existing model if it exists
+        model_data = None
+        if os.path.exists(model_path):
+            try:
+                model_data = joblib.load(model_path)
+            except Exception:
+                pass
+                
+        if model_data:
+            model, scaler = model_data
+            try:
+                features = ['recency_days', 'frequency_count', 'monetary_value', 'avg_gap_between_orders']
+                X = df[features].fillna(0)
+                X_scaled = scaler.transform(X)
+                lr_probs = model.predict_proba(X_scaled)[:, 1]
+            except Exception:
+                # Fallback to refitting if loading/predicting fails
+                lr_probs = _fit_lr_model(df, model_path)
+        else:
+            lr_probs = _fit_lr_model(df, model_path)
 
     # Ensemble: combine heuristic + LR if available
     if lr_probs is not None:
@@ -53,7 +79,7 @@ def predict_churn(customers: List[CustomerDataPoint]) -> List[ChurnResultPoint]:
     return results
 
 
-def _fit_lr_model(df: pd.DataFrame) -> np.ndarray | None:
+def _fit_lr_model(df: pd.DataFrame, model_path: str) -> np.ndarray | None:
     """
     Fit a logistic regression model with synthetic labels derived from
     multiple signals (not just gap_ratio) to reduce tautological bias.
@@ -92,6 +118,13 @@ def _fit_lr_model(df: pd.DataFrame) -> np.ndarray | None:
         model.fit(X_scaled, y)
 
         probs = model.predict_proba(X_scaled)[:, 1]
+        
+        # Save model and scaler
+        try:
+            joblib.dump((model, scaler), model_path)
+        except Exception:
+            pass
+
         return probs
 
     except Exception:

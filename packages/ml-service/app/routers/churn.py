@@ -9,8 +9,7 @@ logger = logging.getLogger(__name__)
 @router.post("/churn", response_model=ChurnResponse)
 async def calculate_churn(request: ChurnRequest):
     try:
-        predictions = predict_churn(request.customers)
-
+        predictions = predict_churn(request.store_id, request.customers)
         return ChurnResponse(
             store_id=request.store_id,
             predictions=predictions
