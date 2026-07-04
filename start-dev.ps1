@@ -22,7 +22,13 @@ Write-Host "Starting services in background (Ctrl+C to stop all)..." -Foreground
 
 $mlJob = Start-Job -ScriptBlock {
     Set-Location "$using:PWD\packages\ml-service"
-    python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+    # Ensure dependencies are installed via uv
+    uv venv --allow-existing
+    uv pip install -r requirements.txt
+
+    # Run the service via uvicorn directly instead of the fastapi CLI wrapper
+    uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 }
 
 $serverJob = Start-Job -ScriptBlock {

@@ -14,7 +14,7 @@ export function SignupPage() {
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupDTO>({
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(signupSchema) as any,
     defaultValues: {
       preferred_lang: 'en'
     }

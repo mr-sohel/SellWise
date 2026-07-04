@@ -33,10 +33,10 @@ export function ProductListPage() {
             <FileUp className="mr-2 h-4 w-4" />
             Bulk Import
           </Link>
-          <button className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md shadow-sm text-sm font-medium transition-opacity">
+          <Link to="/products/new" className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-md shadow-sm text-sm font-medium transition-opacity">
             <Plus className="mr-2 h-4 w-4" />
             Add Product
-          </button>
+          </Link>
         </div>
       </div>
 

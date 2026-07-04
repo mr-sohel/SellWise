@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth.store';
-import { LogOut, Home, Box, ShoppingCart, Users, Receipt, BarChart3 } from 'lucide-react';
+import { LogOut, Home, Box, ShoppingCart, Users, Receipt, BarChart3, Settings } from 'lucide-react';
 
 export function MainLayout() {
   const { isAuthenticated, logout, user } = useAuthStore();
@@ -18,6 +18,7 @@ export function MainLayout() {
     { to: '/customers', label: 'Customers', icon: Users },
     { to: '/expenses', label: 'Expenses', icon: Receipt },
     { to: '/reports', label: 'Reports', icon: BarChart3 },
+    { to: '/settings', label: 'Settings', icon: Settings },
   ];
 
   return (

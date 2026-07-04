@@ -22,6 +22,39 @@ export class StoreController {
       next(error);
     }
   }
+
+  async createMember(req: Request, res: Response, next: NextFunction) {
+    try {
+      const storeId = req.params.storeId;
+      const member = await storeService.createMember(storeId, req.body);
+      res.status(201).json(ApiResponse.success(member));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async listMembers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const storeId = req.params.storeId;
+      const members = await storeService.listMembers(storeId);
+      res.status(200).json(ApiResponse.success(members));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async removeMember(req: Request, res: Response, next: NextFunction) {
+    try {
+      const storeId = req.params.storeId;
+      const targetUserId = req.params.userId;
+      const requesterUserId = req.user!.id;
+      
+      await storeService.removeMember(storeId, targetUserId, requesterUserId);
+      res.status(200).json(ApiResponse.success({ message: 'Member removed successfully' }));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const storeController = new StoreController();

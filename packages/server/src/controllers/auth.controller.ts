@@ -60,6 +60,16 @@ export class AuthController {
       next(error);
     }
   }
+
+  async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.id;
+      const updatedUser = await authService.updateProfile(userId, req.body);
+      res.status(200).json(ApiResponse.success(updatedUser));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const authController = new AuthController();

@@ -50,6 +50,36 @@ export class StoreRepository extends BaseRepository<Store> {
     );
     return rows[0]?.role || null;
   }
+
+  async addMember(storeId: string, userId: string, role: 'owner' | 'manager', client?: PoolClient): Promise<void> {
+    await this.query(
+      `INSERT INTO store_members (store_id, user_id, role)
+       VALUES ($1, $2, $3)`,
+      [storeId, userId, role],
+      client
+    );
+  }
+
+  async listMembers(storeId: string, client?: PoolClient): Promise<any[]> {
+    const { rows } = await this.query(
+      `SELECT u.id, u.email, u.preferred_lang, sm.role, sm.created_at
+       FROM store_members sm
+       JOIN users u ON sm.user_id = u.id
+       WHERE sm.store_id = $1
+       ORDER BY sm.created_at ASC`,
+      [storeId],
+      client
+    );
+    return rows;
+  }
+
+  async removeMember(storeId: string, userId: string, client?: PoolClient): Promise<void> {
+    await this.query(
+      `DELETE FROM store_members WHERE store_id = $1 AND user_id = $2`,
+      [storeId, userId],
+      client
+    );
+  }
 }
 
 export const storeRepository = new StoreRepository();

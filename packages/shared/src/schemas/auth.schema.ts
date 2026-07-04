@@ -11,3 +11,11 @@ export const signupSchema = loginSchema.extend({
 
 export type LoginDTO = z.infer<typeof loginSchema>;
 export type SignupDTO = z.infer<typeof signupSchema>;
+
+export const updateProfileSchema = z.object({
+  email: z.string().email("Invalid email address").optional(),
+  currentPassword: z.string().min(1, "Current password is required to make changes"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters").optional(),
+});
+
+export type UpdateProfileDTO = z.infer<typeof updateProfileSchema>;

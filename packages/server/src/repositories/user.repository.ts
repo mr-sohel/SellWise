@@ -16,6 +16,15 @@ export class UserRepository extends BaseRepository<User> {
     return rows[0] || null;
   }
 
+  async findById(id: string, client?: PoolClient): Promise<User | null> {
+    const { rows } = await this.query(
+      `SELECT * FROM ${this.tableName} WHERE id = $1`,
+      [id],
+      client
+    );
+    return rows[0] || null;
+  }
+
   async create(data: Omit<SignupDTO, 'password'> & { password_hash: string }, client?: PoolClient): Promise<User> {
     const { rows } = await this.query(
       `INSERT INTO ${this.tableName} (email, password_hash, preferred_lang)
@@ -24,6 +33,29 @@ export class UserRepository extends BaseRepository<User> {
       [data.email, data.password_hash, data.preferred_lang || 'en'],
       client
     );
+    return rows[0];
+  }
+
+  async update(id: string, data: Partial<User>, client?: PoolClient): Promise<User> {
+    const fields = [];
+    const values = [];
+    let queryIndex = 1;
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) {
+        fields.push(`${key} = $${queryIndex}`);
+        values.push(value);
+        queryIndex++;
+      }
+    }
+
+    values.push(id);
+    const { rows } = await this.query(
+      `UPDATE ${this.tableName} SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $${queryIndex} RETURNING *`,
+      values,
+      client
+    );
+
     return rows[0];
   }
 }

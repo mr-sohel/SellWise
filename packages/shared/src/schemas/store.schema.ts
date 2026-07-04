@@ -10,3 +10,11 @@ export const updateStoreSchema = createStoreSchema.partial();
 
 export type CreateStoreDTO = z.infer<typeof createStoreSchema>;
 export type UpdateStoreDTO = z.infer<typeof updateStoreSchema>;
+
+export const createMemberSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  preferred_lang: z.enum(['en', 'bn']).default('en'),
+});
+
+export type CreateMemberDTO = z.infer<typeof createMemberSchema>;

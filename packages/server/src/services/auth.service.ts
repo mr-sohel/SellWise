@@ -4,8 +4,8 @@ import { env } from '../config/env';
 import { db } from '../config/db';
 import { userRepository } from '../repositories/user.repository';
 import { storeRepository } from '../repositories/store.repository';
-import { LoginDTO, SignupDTO, User } from '@sellwise/shared';
-import { ConflictError, UnauthorizedError } from '../errors/AppError';
+import { LoginDTO, SignupDTO, User, UpdateProfileDTO } from '@sellwise/shared';
+import { ConflictError, UnauthorizedError, NotFoundError } from '../errors/AppError';
 
 export class AuthService {
   async signup(data: SignupDTO): Promise<{ user: Omit<User, 'password_hash'>, storeId: string, token: string }> {
@@ -62,6 +62,42 @@ export class AuthService {
 
     const { password_hash: _, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, storeId: stores[0]?.id || null, token };
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileDTO): Promise<Omit<User, 'password_hash'>> {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    const isMatch = await bcrypt.compare(data.currentPassword, user.password_hash);
+    if (!isMatch) {
+      throw new UnauthorizedError('Incorrect current password');
+    }
+
+    const updates: Partial<User> = {};
+
+    if (data.email && data.email !== user.email) {
+      const existingUser = await userRepository.findByEmail(data.email);
+      if (existingUser) {
+        throw new ConflictError('Email is already in use by another account');
+      }
+      updates.email = data.email;
+    }
+
+    if (data.newPassword) {
+      const salt = await bcrypt.genSalt(12);
+      updates.password_hash = await bcrypt.hash(data.newPassword, salt);
+    }
+
+    if (Object.keys(updates).length > 0) {
+      const updatedUser = await userRepository.update(userId, updates);
+      const { password_hash: _, ...userWithoutPassword } = updatedUser;
+      return userWithoutPassword;
+    }
+
+    const { password_hash: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   private generateToken(userId: string): string {
