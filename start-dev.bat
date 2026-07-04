@@ -19,7 +19,7 @@ echo.
 echo [4/4] Launching Microservices in separate windows...
 
 :: Start ML Service
-start "SellWise: ML Service" cmd /k "cd packages\ml-service && echo Starting ML Service... && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+start "SellWise: ML Service" cmd /k "cd packages\ml-service && echo Starting ML Service... && uv venv --allow-existing && uv pip install -r requirements.txt && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 :: Start Backend API
 start "SellWise: Backend API" cmd /k "echo Starting Backend API... && npm run dev:server"
