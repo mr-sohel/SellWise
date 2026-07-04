@@ -1,14 +1,12 @@
 import { db } from '../config/db';
-import { authService } from '../services/auth.service';
 import { userRepository } from '../repositories/user.repository';
+import { categoryRepository } from '../repositories/category.repository';
 import type { PoolClient } from 'pg';
 
-const TARGET_EMAIL = 'test@gmail.com';
-const TARGET_PASSWORD = 'Sohelr';
+const TARGET_EMAIL = 'sohel@gmail.com';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 const ri = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-const rf = (min: number, max: number) => Math.random() * (max - min) + min;
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const wPick = <T>(items: T[], weights: number[]): T => {
   const total = weights.reduce((a, b) => a + b, 0);
@@ -26,7 +24,7 @@ const daysAgo = (n: number): Date => {
   return d;
 };
 
-// ─── realistic product catalogue ─────────────────────────────────────────────
+// ─── realistic Bangladeshi electronics products ──────────────────────────────
 interface ProductDef {
   name: string;
   name_bn: string;
@@ -40,47 +38,66 @@ interface ProductDef {
 }
 
 const PRODUCTS: ProductDef[] = [
-  // Electronics
-  { name: 'Xiaomi Redmi Buds 4', name_bn: 'শাওমি রেডমি বাডস ৪', sku: 'EL-001', category: 'Electronics', cost: 900, price: 1299, stock: 85, threshold: 15, unit: 'pcs' },
-  { name: 'Samsung 65W Fast Charger', name_bn: 'স্যামসাং ৬৫ডব্লিউ ফাস্ট চার্জার', sku: 'EL-002', category: 'Electronics', cost: 450, price: 699, stock: 120, threshold: 20, unit: 'pcs' },
-  { name: 'Remax RGB Gaming Mouse', name_bn: 'রিম্যাক্স আরজিবি গেমিং মাউস', sku: 'EL-003', category: 'Electronics', cost: 600, price: 950, stock: 60, threshold: 10, unit: 'pcs' },
-  { name: 'Baseus Power Bank 20000mAh', name_bn: 'বাসিউস পাওয়ার ব্যাংক ২০০০০', sku: 'EL-004', category: 'Electronics', cost: 1100, price: 1699, stock: 45, threshold: 10, unit: 'pcs' },
-  { name: 'TP-Link TL-WA850RE Extender', name_bn: 'টিপি-লিংক ওয়াই-ফাই এক্সটেন্ডার', sku: 'EL-005', category: 'Electronics', cost: 1200, price: 1850, stock: 30, threshold: 8, unit: 'pcs' },
-  { name: 'JBL Clip 4 Bluetooth Speaker', name_bn: 'জেবিএল ক্লিপ ৪ স্পিকার', sku: 'EL-006', category: 'Electronics', cost: 2200, price: 3299, stock: 25, threshold: 5, unit: 'pcs' },
-  { name: 'Type-C USB Hub 7-in-1', name_bn: 'টাইপ-সি ইউএসবি হাব', sku: 'EL-007', category: 'Electronics', cost: 550, price: 899, stock: 90, threshold: 20, unit: 'pcs' },
+  // ── Mobile Phones ──────────────────────────────────────────────────────
+  { name: 'Samsung Galaxy A15 (6/128GB)', name_bn: 'স্যামসাং গ্যালাক্সি A15', sku: 'MP-001', category: 'Mobile Phones', cost: 13500, price: 16999, stock: 25, threshold: 5, unit: 'pcs' },
+  { name: 'Samsung Galaxy A25 5G (8/128GB)', name_bn: 'স্যামসাং গ্যালাক্সি A25', sku: 'MP-002', category: 'Mobile Phones', cost: 22000, price: 27999, stock: 18, threshold: 4, unit: 'pcs' },
+  { name: 'Xiaomi Redmi 13C (6/128GB)', name_bn: 'শাওমি রেডমি 13C', sku: 'MP-003', category: 'Mobile Phones', cost: 9500, price: 12499, stock: 30, threshold: 6, unit: 'pcs' },
+  { name: 'Xiaomi Redmi Note 13 (8/128GB)', name_bn: 'শাওমি রেডমি নোট 13', sku: 'MP-004', category: 'Mobile Phones', cost: 17500, price: 21999, stock: 20, threshold: 5, unit: 'pcs' },
+  { name: 'Realme Narzo 70x 5G (6/128GB)', name_bn: 'রিয়েলমি নারজো 70x', sku: 'MP-005', category: 'Mobile Phones', cost: 14000, price: 17999, stock: 22, threshold: 5, unit: 'pcs' },
+  { name: 'Vivo Y27 (6/128GB)', name_bn: 'ভিভো Y27', sku: 'MP-006', category: 'Mobile Phones', cost: 13000, price: 16499, stock: 15, threshold: 4, unit: 'pcs' },
+  { name: 'OPPO A18 (4/128GB)', name_bn: 'ওপো A18', sku: 'MP-007', category: 'Mobile Phones', cost: 10000, price: 13499, stock: 28, threshold: 6, unit: 'pcs' },
+  { name: 'Tecno Spark 20 Pro (8/256GB)', name_bn: 'টেকনো স্পার্ক 20 প্রো', sku: 'MP-008', category: 'Mobile Phones', cost: 15000, price: 19999, stock: 12, threshold: 3, unit: 'pcs' },
+  { name: 'iPhone 15 (128GB)', name_bn: 'আইফোন 15', sku: 'MP-009', category: 'Mobile Phones', cost: 95000, price: 114999, stock: 5, threshold: 2, unit: 'pcs' },
+  { name: 'Samsung Galaxy A05s (4/128GB)', name_bn: 'স্যামসাং গ্যালাক্সি A05s', sku: 'MP-010', category: 'Mobile Phones', cost: 10500, price: 13999, stock: 35, threshold: 8, unit: 'pcs' },
 
-  // Clothing
-  { name: 'Men\'s Premium Cotton Polo', name_bn: 'পুরুষ প্রিমিয়াম পোলো', sku: 'CL-001', category: 'Clothing', cost: 280, price: 499, stock: 200, threshold: 30, unit: 'pcs' },
-  { name: 'Women\'s Embroidered Kurti', name_bn: 'মহিলা এমব্রয়ডারি কুর্তি', sku: 'CL-002', category: 'Clothing', cost: 350, price: 649, stock: 150, threshold: 25, unit: 'pcs' },
-  { name: 'Kids Cotton T-Shirt (3–12yr)', name_bn: 'শিশু কটন টি-শার্ট', sku: 'CL-003', category: 'Clothing', cost: 150, price: 275, stock: 300, threshold: 50, unit: 'pcs' },
-  { name: 'Men\'s Slim Fit Jeans', name_bn: 'পুরুষ স্লিম ফিট জিন্স', sku: 'CL-004', category: 'Clothing', cost: 500, price: 899, stock: 100, threshold: 15, unit: 'pcs' },
-  { name: 'Hooded Fleece Jacket', name_bn: 'হুডেড ফ্লিস জ্যাকেট', sku: 'CL-005', category: 'Clothing', cost: 600, price: 1099, stock: 70, threshold: 12, unit: 'pcs' },
-  { name: 'Women\'s Printed Saree', name_bn: 'মহিলা প্রিন্টেড শাড়ি', sku: 'CL-006', category: 'Clothing', cost: 800, price: 1499, stock: 60, threshold: 10, unit: 'pcs' },
+  // ── Phone Accessories ──────────────────────────────────────────────────
+  { name: 'Baseus 20W USB-C Fast Charger', name_bn: 'বাসিউস 20W ফাস্ট চার্জার', sku: 'PA-001', category: 'Phone Accessories', cost: 450, price: 799, stock: 120, threshold: 25, unit: 'pcs' },
+  { name: 'Samsung 25W Super Fast Charger', name_bn: 'স্যামসাং 25W সুপার ফাস্ট চার্জার', sku: 'PA-002', category: 'Phone Accessories', cost: 800, price: 1399, stock: 80, threshold: 15, unit: 'pcs' },
+  { name: 'Baseus 10000mAh MagSafe Power Bank', name_bn: 'বাসিউস পাওয়ার ব্যাংক', sku: 'PA-003', category: 'Phone Accessories', cost: 1200, price: 1999, stock: 60, threshold: 12, unit: 'pcs' },
+  { name: 'Spigen Case for Samsung A15', name_bn: 'স্পাইজেন কেস', sku: 'PA-004', category: 'Phone Accessories', cost: 350, price: 699, stock: 150, threshold: 30, unit: 'pcs' },
+  { name: 'Tempered Glass (Universal)', name_bn: 'টেম্পার্ড গ্লাস', sku: 'PA-005', category: 'Phone Accessories', cost: 50, price: 150, stock: 500, threshold: 100, unit: 'pcs' },
+  { name: 'Anker USB-C to C Cable 1.8m', name_bn: 'অ্যাঙ্কার ইউএসবি-সি কেবল', sku: 'PA-006', category: 'Phone Accessories', cost: 300, price: 599, stock: 200, threshold: 40, unit: 'pcs' },
+  { name: 'Car Phone Holder Mount', name_bn: 'কার ফোন হোল্ডার', sku: 'PA-007', category: 'Phone Accessories', cost: 200, price: 399, stock: 90, threshold: 20, unit: 'pcs' },
+  { name: 'Wireless Charger Pad 15W', name_bn: 'ওয়্যারলেস চার্জার প্যাড', sku: 'PA-008', category: 'Phone Accessories', cost: 500, price: 999, stock: 70, threshold: 15, unit: 'pcs' },
+  { name: 'Phone Ring Holder (360°)', name_bn: 'ফোন রিং হোল্ডার', sku: 'PA-009', category: 'Phone Accessories', cost: 30, price: 99, stock: 300, threshold: 60, unit: 'pcs' },
+  { name: 'Baseus 20000mAh Power Bank', name_bn: 'বাসিউস ২০০০০mAh পাওয়ার ব্যাংক', sku: 'PA-010', category: 'Phone Accessories', cost: 1400, price: 2299, stock: 45, threshold: 10, unit: 'pcs' },
 
-  // Beauty & Personal Care
-  { name: 'Neutrogena Hydro Boost Gel', name_bn: 'নিউট্রোজিনা হাইড্রো বুস্ট', sku: 'BP-001', category: 'Beauty', cost: 750, price: 1199, stock: 80, threshold: 15, unit: 'pcs' },
-  { name: 'Garnier Vitamin C Serum', name_bn: 'গার্নিয়ার ভিটামিন সি সেরাম', sku: 'BP-002', category: 'Beauty', cost: 400, price: 699, stock: 110, threshold: 20, unit: 'pcs' },
-  { name: 'L\'Oreal Paris Hair Color', name_bn: 'লোরিয়াল হেয়ার কালার', sku: 'BP-003', category: 'Beauty', cost: 320, price: 549, stock: 90, threshold: 15, unit: 'pcs' },
-  { name: 'Dove Body Lotion 400ml', name_bn: 'ডাভ বডি লোশন', sku: 'BP-004', category: 'Beauty', cost: 180, price: 310, stock: 150, threshold: 25, unit: 'pcs' },
-  { name: 'Mamaearth Onion Shampoo', name_bn: 'মামাআর্থ অনিয়ন শ্যাম্পু', sku: 'BP-005', category: 'Beauty', cost: 350, price: 599, stock: 100, threshold: 20, unit: 'pcs' },
+  // ── Computers & Laptops ────────────────────────────────────────────────
+  { name: 'HP 250 G10 i5 13th Gen 15.6"', name_bn: 'এইচপি 250 G10 আই5', sku: 'CL-001', category: 'Computers & Laptops', cost: 55000, price: 64999, stock: 8, threshold: 2, unit: 'pcs' },
+  { name: 'Lenovo IdeaPad 3 i5 12th Gen', name_bn: 'লেনোভো আইডিয়াপ্যাড 3', sku: 'CL-002', category: 'Computers & Laptops', cost: 48000, price: 57999, stock: 6, threshold: 2, unit: 'pcs' },
+  { name: 'Acer Aspire 3 i3 12th Gen 14"', name_bn: 'এসার এসপায়ার 3', sku: 'CL-003', category: 'Computers & Laptops', cost: 35000, price: 42999, stock: 10, threshold: 3, unit: 'pcs' },
+  { name: 'Dell Inspiron 15 i5 13th Gen', name_bn: 'ডেল ইন্সপিরন 15', sku: 'CL-004', category: 'Computers & Laptops', cost: 58000, price: 69999, stock: 5, threshold: 2, unit: 'pcs' },
+  { name: 'Logitech MK270 Wireless Keyboard+Mouse', name_bn: 'লজিটেক MK270', sku: 'CL-005', category: 'Computers & Laptops', cost: 1800, price: 2999, stock: 50, threshold: 10, unit: 'set' },
+  { name: 'Logitech G102 Gaming Mouse', name_bn: 'লজিটেক G102 গেমিং মাউস', sku: 'CL-006', category: 'Computers & Laptops', cost: 1500, price: 2499, stock: 40, threshold: 8, unit: 'pcs' },
+  { name: 'A4Tech Bloody J70 RGB Gaming Mouse', name_bn: 'এ4টেক ব্লাডি J70', sku: 'CL-007', category: 'Computers & Laptops', cost: 1200, price: 1999, stock: 35, threshold: 8, unit: 'pcs' },
+  { name: 'Kingston NV2 500GB NVMe SSD', name_bn: 'কিংস্টন NV2 500GB SSD', sku: 'CL-008', category: 'Computers & Laptops', cost: 3200, price: 4499, stock: 60, threshold: 15, unit: 'pcs' },
+  { name: 'Corsair Vengeance 16GB DDR4 RAM', name_bn: 'করসেয়ার 16GB DDR4 RAM', sku: 'CL-009', category: 'Computers & Laptops', cost: 3500, price: 4999, stock: 45, threshold: 10, unit: 'pcs' },
+  { name: 'Logitech C920 HD Webcam', name_bn: 'লজিটেক C920 ওয়েবক্যাম', sku: 'CL-010', category: 'Computers & Laptops', cost: 3500, price: 5499, stock: 25, threshold: 5, unit: 'pcs' },
+  { name: 'Havit HV-KB435L Mechanical Keyboard', name_bn: 'হাভিট মেকানিক্যাল কীবোর্ড', sku: 'CL-011', category: 'Computers & Laptops', cost: 1800, price: 2999, stock: 30, threshold: 6, unit: 'pcs' },
+  { name: 'TP-Link Archer AX23 WiFi Router', name_bn: 'টিপি-লিংক AX23 রাউটার', sku: 'CL-012', category: 'Computers & Laptops', cost: 2500, price: 3799, stock: 35, threshold: 8, unit: 'pcs' },
+  { name: 'TP-Link TL-WA850RE WiFi Extender', name_bn: 'টিপি-লিংক ওয়াই-ফাই এক্সটেন্ডার', sku: 'CL-013', category: 'Computers & Laptops', cost: 1300, price: 1999, stock: 40, threshold: 8, unit: 'pcs' },
 
-  // Home & Kitchen
-  { name: 'Milton Thermosteel Flask 1L', name_bn: 'মিল্টন থার্মোস্টিল ফ্লাস্ক', sku: 'HK-001', category: 'Home & Kitchen', cost: 600, price: 999, stock: 55, threshold: 10, unit: 'pcs' },
-  { name: 'Prestige Non-Stick Tawa 28cm', name_bn: 'প্রেস্টিজ নন-স্টিক তাওয়া', sku: 'HK-002', category: 'Home & Kitchen', cost: 450, price: 799, stock: 40, threshold: 8, unit: 'pcs' },
-  { name: 'Walton Blender WBL-BS20', name_bn: 'ওয়ালটন ব্লেন্ডার', sku: 'HK-003', category: 'Home & Kitchen', cost: 900, price: 1499, stock: 30, threshold: 5, unit: 'pcs' },
-  { name: 'Bamboo Cutting Board (3-pc)', name_bn: 'বাঁশের কাটিং বোর্ড', sku: 'HK-004', category: 'Home & Kitchen', cost: 280, price: 499, stock: 70, threshold: 10, unit: 'pcs' },
-  { name: 'Microfiber Towel Set (4-pc)', name_bn: 'মাইক্রোফাইবার তোয়ালে সেট', sku: 'HK-005', category: 'Home & Kitchen', cost: 350, price: 599, stock: 80, threshold: 12, unit: 'pcs' },
+  // ── Audio & Speakers ───────────────────────────────────────────────────
+  { name: 'Xiaomi Redmi Buds 4 Active', name_bn: 'শাওমি রেডমি বাডস ৪', sku: 'AU-001', category: 'Audio & Speakers', cost: 1200, price: 1899, stock: 80, threshold: 15, unit: 'pcs' },
+  { name: 'JBL Tune 520BT Headphones', name_bn: 'জেবিএল টিউন 520BT', sku: 'AU-002', category: 'Audio & Speakers', cost: 2800, price: 4299, stock: 40, threshold: 8, unit: 'pcs' },
+  { name: 'Edifier X200 TWS Earbuds', name_bn: 'এডিফায়ার X200', sku: 'AU-003', category: 'Audio & Speakers', cost: 1000, price: 1699, stock: 65, threshold: 12, unit: 'pcs' },
+  { name: 'JBL Clip 4 Bluetooth Speaker', name_bn: 'জেবিএল ক্লিপ ৪ স্পিকার', sku: 'AU-004', category: 'Audio & Speakers', cost: 2800, price: 4299, stock: 30, threshold: 6, unit: 'pcs' },
+  { name: 'Samsung Galaxy Buds FE', name_bn: 'স্যামসাং গ্যালাক্সি বাডস FE', sku: 'AU-005', category: 'Audio & Speakers', cost: 6500, price: 9499, stock: 15, threshold: 3, unit: 'pcs' },
+  { name: 'Realme Buds T110', name_bn: 'রিয়েলমি বাডস T110', sku: 'AU-006', category: 'Audio & Speakers', cost: 800, price: 1299, stock: 100, threshold: 20, unit: 'pcs' },
+  { name: 'Anker Soundcore A30i Earbuds', name_bn: 'অ্যাঙ্কার সাউন্ডকোর A30i', sku: 'AU-007', category: 'Audio & Speakers', cost: 1500, price: 2499, stock: 45, threshold: 10, unit: 'pcs' },
+  { name: 'JBL Go 3 Portable Speaker', name_bn: 'জেবিএল Go 3 স্পিকার', sku: 'AU-008', category: 'Audio & Speakers', cost: 2200, price: 3499, stock: 35, threshold: 7, unit: 'pcs' },
+  { name: 'Boya BY-M1 Lavalier Mic', name_bn: 'বোয়া BY-M1 মাইক', sku: 'AU-009', category: 'Audio & Speakers', cost: 500, price: 999, stock: 70, threshold: 15, unit: 'pcs' },
+  { name: 'Havit HV-H206U Gaming Headset', name_bn: 'হাভিট HV-H206U গেমিং হেডসেট', sku: 'AU-010', category: 'Audio & Speakers', cost: 1200, price: 1999, stock: 50, threshold: 10, unit: 'pcs' },
 
-  // Sports & Fitness
-  { name: 'Adidas Running Shoes (Mens)', name_bn: 'অ্যাডিডাস রানিং জুতা', sku: 'SP-001', category: 'Sports', cost: 2200, price: 3499, stock: 40, threshold: 8, unit: 'pcs' },
-  { name: 'Yoga Mat 6mm Non-Slip', name_bn: 'যোগব্যায়াম ম্যাট', sku: 'SP-002', category: 'Sports', cost: 400, price: 699, stock: 60, threshold: 10, unit: 'pcs' },
-  { name: 'Resistance Bands Set (5-bands)', name_bn: 'রেজিস্ট্যান্স ব্যান্ড সেট', sku: 'SP-003', category: 'Sports', cost: 350, price: 599, stock: 75, threshold: 15, unit: 'pcs' },
-  { name: 'Protein Shaker Bottle 700ml', name_bn: 'প্রোটিন শেকার বোতল', sku: 'SP-004', category: 'Sports', cost: 200, price: 349, stock: 100, threshold: 20, unit: 'pcs' },
-
-  // Stationery & Office
-  { name: 'Moleskine Classic Notebook A5', name_bn: 'মোলেস্কিন ক্লাসিক নোটবুক', sku: 'ST-001', category: 'Stationery', cost: 500, price: 849, stock: 90, threshold: 20, unit: 'pcs' },
-  { name: 'Pilot G2 Gel Pen (12-pack)', name_bn: 'পাইলট জেল পেন ১২-প্যাক', sku: 'ST-002', category: 'Stationery', cost: 250, price: 420, stock: 200, threshold: 40, unit: 'box' },
-  { name: 'Desk Organiser Set (6-slot)', name_bn: 'ডেস্ক অর্গানাইজার সেট', sku: 'ST-003', category: 'Stationery', cost: 380, price: 650, stock: 55, threshold: 10, unit: 'pcs' },
+  // ── Cameras ────────────────────────────────────────────────────────────
+  { name: 'Canon EOS 1500D Body', name_bn: 'ক্যানন EOS 1500D', sku: 'CM-001', category: 'Cameras', cost: 38000, price: 46999, stock: 4, threshold: 1, unit: 'pcs' },
+  { name: 'Nikon D3500 Body', name_bn: 'নিকন D3500', sku: 'CM-002', category: 'Cameras', cost: 35000, price: 43999, stock: 3, threshold: 1, unit: 'pcs' },
+  { name: 'GoPro Hero 12 Black', name_bn: 'গোপ্রো হিরো 12', sku: 'CM-003', category: 'Cameras', cost: 32000, price: 42999, stock: 5, threshold: 1, unit: 'pcs' },
+  { name: 'DJI Mini 4K Drone', name_bn: 'ডিজেআই মিনি 4K ড্রোন', sku: 'CM-004', category: 'Cameras', cost: 30000, price: 39999, stock: 3, threshold: 1, unit: 'pcs' },
+  { name: 'SanDisk Ultra 128GB SD Card', name_bn: 'স্যানডিস্ক 128GB SD কার্ড', sku: 'CM-005', category: 'Cameras', cost: 1200, price: 1899, stock: 100, threshold: 20, unit: 'pcs' },
+  { name: 'Manfrotto PIXI Mini Tripod', name_bn: 'ম্যানফ্রোটো PIXI মিনি ট্রাইপড', sku: 'CM-006', category: 'Cameras', cost: 2000, price: 3299, stock: 20, threshold: 5, unit: 'pcs' },
+  { name: 'Canon EF 50mm f/1.8 STM Lens', name_bn: 'ক্যানন 50mm f/1.8 লেন্স', sku: 'CM-007', category: 'Cameras', cost: 18000, price: 24999, stock: 4, threshold: 1, unit: 'pcs' },
+  { name: 'Camera Bag (Large)', name_bn: 'ক্যামেরা ব্যাগ', sku: 'CM-008', category: 'Cameras', cost: 1500, price: 2499, stock: 25, threshold: 5, unit: 'pcs' },
 ];
 
 // ─── realistic Bangladeshi customers ─────────────────────────────────────────
@@ -127,18 +144,24 @@ const CUSTOMERS = [
   { name: 'Meherjaan Begum', phone: '+8801911234540', email: null, address: 'Rayer Bazar, Dhaka' },
 ];
 
-const SOURCES = ['Facebook', 'Instagram', 'Facebook', 'Online', 'Online', 'In-Store', 'WhatsApp'];
+const SOURCES = ['Facebook', 'Facebook', 'Facebook', 'WhatsApp', 'Online', 'Online', 'In-Store', 'TikTok'];
 const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'delivered', 'delivered', 'delivered', 'cancelled', 'returned'];
 const EXPENSE_CATEGORIES = ['Rent', 'Utilities', 'Marketing', 'Salary', 'Packaging', 'Shipping', 'Supplies', 'Other'];
 
-// Seasonal multiplier: simulate higher sales around Eid (day 60-90 ago) and year-end
 function seasonalWeight(dAgo: number): number {
-  // Eid peak: ~70 days ago
-  if (dAgo >= 55 && dAgo <= 90) return 2.5;
-  // Pahela Baishakh: ~30 days ago
-  if (dAgo >= 20 && dAgo <= 40) return 1.8;
-  // Normal with slight weekend bumps (ignored at this granularity)
-  return 1.0;
+  // Simulate massive Eid shopping spike ~60-80 days ago
+  if (dAgo >= 60 && dAgo <= 80) return 4.5;
+
+  // Simulate end of year / winter sale ~180-210 days ago
+  if (dAgo >= 180 && dAgo <= 210) return 3.0;
+
+  // Payday spikes (start of every 30 day cycle)
+  if (dAgo % 30 >= 0 && dAgo % 30 <= 5) return 2.0;
+
+  // Weekend spikes (assuming every 7th and 8th day relative to now is a weekend)
+  if (dAgo % 7 === 0 || dAgo % 7 === 1) return 1.5;
+
+  return 0.8; // Baseline
 }
 
 async function seed() {
@@ -146,25 +169,19 @@ async function seed() {
   let client: PoolClient | null = null;
 
   try {
-    // 1. Resolve user + store
-    let user = await userRepository.findByEmail(TARGET_EMAIL);
-    let storeId: string;
+    const user = await userRepository.findByEmail(TARGET_EMAIL);
+    if (!user) throw new Error(`User ${TARGET_EMAIL} not found. Please sign up and complete onboarding first.`);
 
-    if (!user) {
-      console.log(`Creating user ${TARGET_EMAIL}...`);
-      const result = await authService.signup({ email: TARGET_EMAIL, password: TARGET_PASSWORD, preferred_lang: 'en' });
-      user = result.user as any;
-      storeId = result.store.id;
-    } else {
-      const result = await authService.login({ email: TARGET_EMAIL, password: TARGET_PASSWORD });
-      if (!result.store) throw new Error('User has no store!');
-      storeId = result.store.id;
-      console.log(`Found existing user. Store: ${storeId}`);
-    }
+    const storeResult = await db.query(
+      `SELECT s.id FROM stores s JOIN store_members sm ON s.id = sm.store_id WHERE sm.user_id = $1`,
+      [user.id]
+    );
+    if (storeResult.rows.length === 0) throw new Error('No store found for user.');
+    const storeId = storeResult.rows[0].id;
 
     client = await db.connect();
 
-    // 2. Clear existing seed data so it is idempotent
+    // Clear existing seed data
     console.log('Clearing old seed data...');
     await client.query(`DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE store_id = $1)`, [storeId]);
     await client.query(`DELETE FROM orders WHERE store_id = $1`, [storeId]);
@@ -172,10 +189,15 @@ async function seed() {
     await client.query(`DELETE FROM expenses WHERE store_id = $1`, [storeId]);
     await client.query(`DELETE FROM products WHERE store_id = $1`, [storeId]);
 
-    // 3. Insert products
+    // Insert products using actual category IDs
+    const catResult = await client.query(`SELECT id, name FROM categories WHERE store_id = $1`, [storeId]);
+    const catMap: Record<string, string> = {};
+    for (const row of catResult.rows) catMap[row.name] = row.id;
+
     console.log(`Inserting ${PRODUCTS.length} products...`);
     const dbProducts: any[] = [];
     for (const p of PRODUCTS) {
+      const categoryId = catMap[p.category];
       const { rows } = await client.query(
         `INSERT INTO products (store_id, name, name_bn, sku, category, cost_price, selling_price, stock_quantity, low_stock_threshold, unit, is_active)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
@@ -185,9 +207,11 @@ async function seed() {
     }
     console.log('Products inserted.');
 
-    // 4. Insert customers
-    console.log(`Inserting ${CUSTOMERS.length} customers...`);
+    // Insert customers (Expanded to 200)
+    console.log(`Inserting 200+ customers...`);
     const dbCustomers: any[] = [];
+
+    // Insert base customers
     for (const c of CUSTOMERS) {
       const { rows } = await client.query(
         `INSERT INTO customers (store_id, name, phone, email, address)
@@ -196,88 +220,89 @@ async function seed() {
       );
       dbCustomers.push(rows[0]);
     }
+
+    // Generate 160 more synthetic customers to bulk up the data
+    const firstNames = ['Abu', 'Abdur', 'Asif', 'Rakib', 'Mehdi', 'Jahid', 'Nazmul', 'Sakib', 'Tamim', 'Mashrafe', 'Sadia', 'Nusrat', 'Ayesha', 'Fatema', 'Sumi', 'Tania', 'Mim', 'Ritu'];
+    const lastNames = ['Rahman', 'Islam', 'Hasan', 'Hossain', 'Ahmed', 'Ali', 'Uddin', 'Khan', 'Chowdhury', 'Akter', 'Begum', 'Khatun', 'Parvin'];
+    const areas = ['Uttara, Dhaka', 'Mirpur, Dhaka', 'Dhanmondi, Dhaka', 'Gulshan, Dhaka', 'Banani, Dhaka', 'Badda, Dhaka', 'Chittagong Sadar', 'Sylhet Sadar', 'Rajshahi', 'Khulna'];
+
+    for (let i = 0; i < 160; i++) {
+      const fname = pick(firstNames);
+      const lname = pick(lastNames);
+      const { rows } = await client.query(
+        `INSERT INTO customers (store_id, name, phone, email, address)
+         VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+        [storeId, `${fname} ${lname}`, `+8801${ri(3,9)}${ri(1000000,9999999)}`, `${fname.toLowerCase()}.${ri(1,999)}@gmail.com`, pick(areas)]
+      );
+      dbCustomers.push(rows[0]);
+    }
     console.log('Customers inserted.');
 
-    // 5. Generate orders — 12 months history, ~800 orders
-    // RFM spread: 15 champions, 10 loyal, 8 at-risk, 5 lost, rest normal
-    console.log('Generating orders (12 months)...');
+    // Generate orders — 12 months, ~3500 orders
+    console.log('Generating high-volume orders (12 months)...');
     let orderCount = 0;
     const totalDays = 365;
-
-    // Build a weight distribution across days (seasonal bumps)
     const dayWeights: number[] = Array.from({ length: totalDays }, (_, i) => seasonalWeight(i));
 
-    // Champion customers: high freq, recent
-    const champions = dbCustomers.slice(0, 8);
-    const loyal = dbCustomers.slice(8, 16);
-    const occasional = dbCustomers.slice(16, 30);
-    const atRisk = dbCustomers.slice(30, 36);   // last purchase 90-180 days ago
-    const lost = dbCustomers.slice(36, 40);      // last purchase 200+ days ago
+    // Distribution
+    const champions = dbCustomers.slice(0, 20);
+    const loyal = dbCustomers.slice(20, 60);
+    const occasional = dbCustomers.slice(60, 150);
+    const atRisk = dbCustomers.slice(150, 180);
+    const lost = dbCustomers.slice(180, 200);
 
     const orderBatches: Array<{ customer: any; day: number; numItems: number }> = [];
 
-    // Champions: 15-25 orders each in last 90 days
     for (const c of champions) {
-      const cnt = ri(15, 25);
-      for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: ri(0, 90), numItems: ri(1, 4) });
+      const cnt = ri(25, 45); // highly active
+      for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: wPick(Array.from({ length: totalDays }, (_, i) => i), dayWeights), numItems: ri(1, 6) });
     }
-
-    // Loyal: 6-14 orders each in last 180 days
     for (const c of loyal) {
-      const cnt = ri(6, 14);
-      for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: ri(0, 180), numItems: ri(1, 3) });
+      const cnt = ri(10, 24);
+      for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: wPick(Array.from({ length: totalDays }, (_, i) => i), dayWeights), numItems: ri(1, 4) });
     }
-
-    // Occasional: 2-6 orders spread over the year
     for (const c of occasional) {
-      const cnt = ri(2, 6);
-      for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: ri(0, 360), numItems: ri(1, 3) });
+      const cnt = ri(3, 9);
+      for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: wPick(Array.from({ length: totalDays }, (_, i) => i), dayWeights), numItems: ri(1, 2) });
     }
-
-    // At-risk: 1-3 orders, all 90-200 days ago
     for (const c of atRisk) {
-      const cnt = ri(1, 3);
+      const cnt = ri(1, 4);
       for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: ri(90, 200), numItems: ri(1, 2) });
     }
-
-    // Lost: 1-2 orders, 220+ days ago
     for (const c of lost) {
       const cnt = ri(1, 2);
       for (let i = 0; i < cnt; i++) orderBatches.push({ customer: c, day: ri(220, 360), numItems: 1 });
     }
 
-    // Pad to ~800 total with random customer-day combos
-    while (orderBatches.length < 800) {
+    // Fill the rest up to 3500 orders
+    while (orderBatches.length < 3500) {
       const day = wPick(Array.from({ length: totalDays }, (_, i) => i), dayWeights);
       orderBatches.push({ customer: pick(dbCustomers), day, numItems: ri(1, 5) });
     }
 
-    // Shuffle so inserts aren't grouped
     orderBatches.sort(() => Math.random() - 0.5);
 
     let orderSeq = 1000;
     for (const batch of orderBatches) {
       const orderDate = daysAgo(batch.day);
-
-      // Pick products (no duplicate per order)
       const shuffled = [...dbProducts].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, batch.numItems);
 
       let subtotal = 0;
       const items: any[] = [];
       for (const p of selected) {
-        const qty = ri(1, 4);
+        const qty = ri(1, 3);
         subtotal += p.selling_price * qty;
         items.push({ p, qty });
       }
 
-      const deliveryCharge = ri(60, 130);
-      const discount = ri(0, 1) === 0 ? ri(0, Math.floor(subtotal * 0.12)) : 0;
+      const deliveryCharge = ri(60, 150);
+      const discount = ri(0, 1) === 0 ? ri(0, Math.floor(subtotal * 0.10)) : 0;
       const total = subtotal + deliveryCharge - discount;
 
       const status = batch.day < 7
-        ? wPick(STATUSES, [15, 20, 15, 10, 5, 0, 0, 0, 5, 0])  // recent: mostly pending/confirmed
-        : wPick(STATUSES, [2, 3, 4, 5, 60, 0, 0, 0, 8, 3]);     // older: mostly delivered
+        ? wPick(STATUSES, [15, 20, 15, 10, 5, 0, 0, 0, 5, 0])
+        : wPick(STATUSES, [2, 3, 4, 5, 60, 0, 0, 0, 8, 3]);
 
       const { rows: orderRows } = await client.query(
         `INSERT INTO orders (store_id, customer_id, order_number, status, source, total, delivery_charge, discount, notes, order_date, created_at, updated_at)
@@ -306,7 +331,7 @@ async function seed() {
     }
     console.log(`Inserted ${orderCount} orders.`);
 
-    // 6. Update customer aggregates
+    // Update customer aggregates
     await client.query(`
       UPDATE customers c
       SET total_orders = (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id AND o.status NOT IN ('cancelled','returned')),
@@ -315,34 +340,29 @@ async function seed() {
     `, [storeId]);
     console.log('Customer aggregates updated.');
 
-    // 7. Expenses — 12 months (~120 entries, realistic amounts)
+    // Expenses — 12 months
     console.log('Generating expenses...');
-    // Fixed monthly expenses
     for (let month = 0; month < 12; month++) {
       const baseDay = month * 30 + ri(0, 5);
-      // Rent
       await client.query(
         `INSERT INTO expenses (store_id, category, amount, expense_date, notes) VALUES ($1,$2,$3,$4,$5)`,
         [storeId, 'Rent', 25000, daysAgo(baseDay + 1), 'Monthly office/warehouse rent']
       );
-      // Salary
       await client.query(
         `INSERT INTO expenses (store_id, category, amount, expense_date, notes) VALUES ($1,$2,$3,$4,$5)`,
         [storeId, 'Salary', ri(35000, 50000), daysAgo(baseDay + 2), `Staff salaries - month ${month + 1}`]
       );
-      // Utilities
       await client.query(
         `INSERT INTO expenses (store_id, category, amount, expense_date, notes) VALUES ($1,$2,$3,$4,$5)`,
         [storeId, 'Utilities', ri(3000, 7000), daysAgo(baseDay + 3), 'Electricity, internet, water']
       );
     }
 
-    // Variable expenses spread over the year
     const variableExpenses = [
       { category: 'Marketing', note: 'Facebook/Instagram ad spend', min: 5000, max: 20000 },
       { category: 'Marketing', note: 'Influencer collaboration', min: 8000, max: 25000 },
-      { category: 'Packaging', note: 'Boxes, tape, bubble wrap order', min: 3000, max: 8000 },
-      { category: 'Shipping', note: 'Courier service payment', min: 4000, max: 12000 },
+      { category: 'Packaging', note: 'Boxes, tape, bubble wrap', min: 3000, max: 8000 },
+      { category: 'Shipping', note: 'Courier service payment (Sundarban/Pathao)', min: 4000, max: 12000 },
       { category: 'Supplies', note: 'Office supplies restock', min: 1000, max: 3000 },
       { category: 'Other', note: 'Miscellaneous business expense', min: 500, max: 5000 },
     ];
@@ -360,7 +380,7 @@ async function seed() {
     console.log(`   Products  : ${PRODUCTS.length}`);
     console.log(`   Customers : ${CUSTOMERS.length}`);
     console.log(`   Orders    : ${orderCount}`);
-    console.log(`   Login     : ${TARGET_EMAIL} / ${TARGET_PASSWORD}`);
+    console.log(`   Store     : ${storeId}`);
   } catch (err) {
     console.error('Seed failed:', err);
     process.exit(1);

@@ -9,5 +9,6 @@ router.use(authenticate);
 router.use(requireRole(['owner', 'manager']));
 
 router.get('/overview', analyticsController.getOverview);
+router.get('/demand-forecast', analyticsController.getDemandForecast);
 
 export default router;

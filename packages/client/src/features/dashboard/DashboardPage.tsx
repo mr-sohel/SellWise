@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDashboard } from './hooks/useDashboard';
 import { useAuthStore } from '../../stores/auth.store';
+import { DemandForecastChart } from './components/DemandForecastChart';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend
@@ -113,6 +114,9 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Demand Forecast */}
+      <DemandForecastChart />
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

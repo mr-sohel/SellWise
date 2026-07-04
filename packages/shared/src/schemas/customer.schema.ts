@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RFM_SEGMENTS } from '../constants/rfm-segments';
 
 export const createCustomerSchema = z.object({
   name: z.string().min(1, 'Customer name is required').max(255),
@@ -13,6 +14,7 @@ export const customerFiltersSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().optional(),
+  segment: z.enum(RFM_SEGMENTS).optional(),
 });
 
 export type CreateCustomerDTO = z.infer<typeof createCustomerSchema>;

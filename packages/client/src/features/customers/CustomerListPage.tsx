@@ -5,15 +5,8 @@ import { useAuthStore } from '../../stores/auth.store';
 import { Search, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '../../components/ui/page-header';
 import { Badge } from '../../components/ui/badge';
-
-const segmentVariant: Record<string, 'violet' | 'info' | 'success' | 'warning' | 'destructive' | 'muted'> = {
-  champion: 'violet',
-  loyal: 'info',
-  new: 'success',
-  potential: 'warning',
-  at_risk: 'destructive',
-  lost: 'muted',
-};
+import { RFM_SEGMENTS, RFM_SEGMENT_LABELS, RFM_SEGMENT_COLORS } from '@sellwise/shared';
+import type { RfmSegment } from '@sellwise/shared';
 
 export function CustomerListPage() {
   const { t } = useTranslation();
@@ -22,8 +15,14 @@ export function CustomerListPage() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [segmentFilter, setSegmentFilter] = useState<RfmSegment | ''>('');
 
-  const { data: result, isLoading } = useCustomers(storeId, { page, limit: 10, search });
+  const { data: result, isLoading } = useCustomers(storeId, {
+    page,
+    limit: 10,
+    search,
+    segment: segmentFilter || undefined,
+  });
 
   const formatSegment = (segment?: string) => {
     if (!segment) return 'Uncategorized';
@@ -34,15 +33,33 @@ export function CustomerListPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <PageHeader title={t('common.customers')} />
 
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 w-full max-w-sm">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search by name, phone or email..."
-          className="bg-transparent border-none outline-none w-full text-sm placeholder:text-muted-foreground"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 w-full max-w-sm">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search by name, phone or email..."
+            className="bg-transparent border-none outline-none w-full text-sm placeholder:text-muted-foreground"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <select
+          value={segmentFilter}
+          onChange={(e) => {
+            setSegmentFilter(e.target.value as RfmSegment | '');
+            setPage(1);
+          }}
+          className="px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+        >
+          <option value="">All Segments</option>
+          {RFM_SEGMENTS.map((seg) => (
+            <option key={seg} value={seg}>
+              {RFM_SEGMENT_LABELS[seg]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="bg-card border border-border rounded-xl shadow-vercel-2 overflow-hidden">
@@ -65,12 +82,12 @@ export function CustomerListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {result?.data.map((customer: any) => (
+                {result?.data.map((customer) => (
                   <tr key={customer.id} className="hover:bg-canvas-soft/50 transition-colors">
                     <td className="px-6 py-3 font-medium text-foreground">
                       <div className="flex items-center gap-2">
                         {customer.name}
-                        {customer.churn_probability && customer.churn_probability > 0.7 && (
+                        {customer.churn_probability != null && customer.churn_probability > 0.7 && (
                           <div className="group relative flex items-center">
                             <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
                             <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block bg-primary text-primary-foreground text-xs rounded-lg px-2.5 py-1 shadow-vercel-5 whitespace-nowrap z-10">
@@ -88,11 +105,11 @@ export function CustomerListPage() {
                     <td className="px-6 py-3">
                       {customer.segment ? (
                         <div className="flex flex-col gap-1 items-start">
-                          <Badge variant={segmentVariant[customer.segment] || 'muted'}>
+                          <Badge variant={RFM_SEGMENT_COLORS[customer.segment as RfmSegment] || 'muted'}>
                             {formatSegment(customer.segment)}
                           </Badge>
                           <span className="text-[10px] text-muted-foreground font-mono">
-                            R:{customer.recency_score} F:{customer.frequency_score} M:{customer.monetary_score}
+                            R:{customer.recency_score ?? '-'} F:{customer.frequency_score ?? '-'} M:{customer.monetary_score ?? '-'}
                           </span>
                         </div>
                       ) : (

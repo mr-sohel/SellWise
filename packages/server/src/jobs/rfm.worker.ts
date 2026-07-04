@@ -21,14 +21,20 @@ export const rfmWorker = new Worker('rfm', async (job: Job) => {
 });
 
 async function calculateRFM(storeId: string) {
-  // 1. Calculate raw R, F, M values for each customer
+  // 1. Calculate raw R, F, M values and avg gap between orders for each customer
   const { rows: customers } = await db.query(
     `SELECT c.id,
             EXTRACT(DAY FROM NOW() - MAX(o.order_date))::int as recency,
             COUNT(o.id) as frequency,
-            COALESCE(SUM(o.total), 0) as monetary
+            COALESCE(SUM(o.total), 0) as monetary,
+            COALESCE(AVG(gap.days_gap), 0) as avg_gap_between_orders
      FROM customers c
      LEFT JOIN orders o ON c.id = o.customer_id AND o.status NOT IN ('cancelled', 'returned')
+     LEFT JOIN LATERAL (
+       SELECT EXTRACT(DAY FROM o2.order_date - LAG(o2.order_date) OVER (ORDER BY o2.order_date))::int as days_gap
+       FROM orders o2
+       WHERE o2.customer_id = c.id AND o2.store_id = $1 AND o2.status NOT IN ('cancelled', 'returned')
+     ) gap ON true
      WHERE c.store_id = $1
      GROUP BY c.id`,
     [storeId]
@@ -84,16 +90,17 @@ async function calculateRFM(storeId: string) {
         store_id: storeId,
         customers: scored.map((c: any) => ({
           customer_id: c.id,
-          recency: c.recency ?? 9999,
-          frequency: c.frequency ?? 0,
-          monetary: c.monetary ?? 0,
+          recency_days: c.recency ?? 9999,
+          frequency_count: c.frequency ?? 0,
+          monetary_value: c.monetary ?? 0,
+          avg_gap_between_orders: c.avg_gap_between_orders ?? 0,
         })),
       }),
     });
 
     if (response.ok) {
-      const result = await response.json() as { customers: Array<{ customer_id: string; churn_probability: number }> };
-      for (const r of result.customers) {
+      const result = await response.json() as { predictions: Array<{ customer_id: string; churn_probability: number }> };
+      for (const r of result.predictions) {
         churnPredictions[r.customer_id] = r.churn_probability;
       }
     }

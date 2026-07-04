@@ -16,6 +16,15 @@ interface AuthStore {
   sales_channels: string[];
 }
 
+function cleanStore(raw: any): AuthStore {
+  return {
+    id: raw.id,
+    name: raw.name,
+    business_type: raw.business_type ?? null,
+    sales_channels: raw.sales_channels ?? [],
+  };
+}
+
 interface AuthState {
   user: AuthUser | null;
   store: AuthStore | null;
@@ -37,18 +46,25 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       setAuth: (user, store, role) => set({
         user,
-        store,
-        activeStoreId: store.id,
+        store: store ? cleanStore(store) : null,
+        activeStoreId: store?.id || null,
         role,
         isAuthenticated: true,
       }),
       updateStore: (partial) => set((state) => ({
-        store: state.store ? { ...state.store, ...partial } : null,
+        store: state.store ? cleanStore({ ...state.store, ...partial }) : null,
       })),
       logout: () => set({ user: null, store: null, activeStoreId: null, role: null, isAuthenticated: false }),
     }),
     {
       name: 'sellwise-auth',
+      partialize: (state) => ({
+        user: state.user,
+        store: state.store,
+        activeStoreId: state.activeStoreId,
+        role: state.role,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );

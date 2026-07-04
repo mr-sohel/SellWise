@@ -14,7 +14,35 @@ export class ForecastService {
 
     for (const productId of productIds) {
       try {
-        const history = await forecastRepository.getSalesHistory(storeId, productId, 90);
+        const rawHistory = await forecastRepository.getSalesHistory(storeId, productId, 365);
+
+        if (rawHistory.length < 7) {
+          continue; // Not enough data for any forecast
+        }
+
+        // Fill missing days with 0 sales
+        const history: SalesHistory[] = [];
+        const firstDate = new Date(rawHistory[0].date);
+        firstDate.setUTCHours(0, 0, 0, 0);
+
+        const endDate = new Date();
+        endDate.setUTCHours(0, 0, 0, 0);
+
+        const historyMap = new Map<string, number>();
+        for (const h of rawHistory) {
+          const d = new Date(h.date);
+          historyMap.set(d.toISOString().split('T')[0], Number(h.total_qty));
+        }
+
+        let currentDate = new Date(firstDate);
+        while (currentDate <= endDate) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          history.push({
+            date: dateStr,
+            total_qty: historyMap.get(dateStr) || 0
+          });
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
 
         if (history.length < 7) {
           continue; // Not enough data for any forecast
@@ -40,7 +68,7 @@ export class ForecastService {
   private async generateSMAForecast(storeId: string, productId: string, history: SalesHistory[]): Promise<void> {
     const windowSize = 7;
     const forecastDays = 30;
-    const values = history.map(h => h.total_qty);
+    const values = history.map(h => Number(h.total_qty));
 
     // Calculate SMA
     const sma = values.slice(-windowSize).reduce((a, b) => a + b, 0) / windowSize;
@@ -113,6 +141,10 @@ export class ForecastService {
 
   async getForecasts(storeId: string, productId: string) {
     return forecastRepository.findByProduct(storeId, productId);
+  }
+
+  async getDemandForecast(storeId: string, limit: number = 5, days: number = 30) {
+    return forecastRepository.findTopProductsForecasts(storeId, limit, days);
   }
 }
 

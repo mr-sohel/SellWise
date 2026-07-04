@@ -32,3 +32,29 @@ export function useDashboard(storeId: string, range: string) {
     enabled: !!storeId,
   });
 }
+
+export interface DemandForecastItem {
+  product_id: string;
+  product_name: string;
+  category: string;
+  current_stock: number;
+  forecasts: Array<{
+    forecast_date: string;
+    predicted_qty: number;
+    lower_bound: number;
+    upper_bound: number;
+    model_used: string;
+  }>;
+}
+
+export function useDemandForecast(storeId: string, limit: number = 5, days: number = 30) {
+  return useQuery({
+    queryKey: ['analytics', 'demand-forecast', storeId, limit, days],
+    queryFn: async (): Promise<DemandForecastItem[]> => {
+      const { data } = await api.get(`/stores/${storeId}/analytics/demand-forecast`, { params: { limit, days } });
+      return data.data;
+    },
+    enabled: !!storeId,
+    staleTime: 5 * 60 * 1000,
+  });
+}

@@ -9,3 +9,4 @@ export * from './types/api';
 export * from './types/models';
 export * from './constants/order-status';
 export * from './constants/business';
+export * from './constants/rfm-segments';

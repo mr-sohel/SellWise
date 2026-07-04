@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ORDER_STATUSES } from '../constants/order-status';
 import { BUSINESS_TYPES, SALES_CHANNELS } from '../constants/business';
+import { RFM_SEGMENTS } from '../constants/rfm-segments';
 
 export const userSchema = z.object({
   id: z.string().uuid(),
@@ -60,6 +61,14 @@ export const customerSchema = z.object({
   updated_at: z.date(),
 });
 
+export const customerWithRfmSchema = customerSchema.extend({
+  segment: z.enum(RFM_SEGMENTS).nullable().optional(),
+  churn_probability: z.number().min(0).max(1).nullable().optional(),
+  recency_score: z.number().int().min(1).max(5).nullable().optional(),
+  frequency_score: z.number().int().min(1).max(5).nullable().optional(),
+  monetary_score: z.number().int().min(1).max(5).nullable().optional(),
+});
+
 export const orderItemModelSchema = z.object({
   id: z.string().uuid(),
   order_id: z.string().uuid(),
@@ -103,6 +112,7 @@ export type Store = z.infer<typeof storeSchema>;
 export type StoreMember = z.infer<typeof storeMemberSchema>;
 export type Product = z.infer<typeof productSchema>;
 export type Customer = z.infer<typeof customerSchema>;
+export type CustomerWithRfm = z.infer<typeof customerWithRfmSchema>;
 export type Order = z.infer<typeof orderSchema>;
 export type OrderItem = z.infer<typeof orderItemModelSchema>;
 export type Expense = z.infer<typeof expenseSchema>;

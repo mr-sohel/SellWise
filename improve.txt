@@ -1,7 +1,3 @@
-Okay, But there are many types of small business out there and they are our targeted subscriber like facebook electronic gadget seller, facebook clothing, small super shops who don't even have their own websites, how our app can work for everyone?
-
-
-
 Current ML Assessment
 Your current forecast model is basic but functional. It uses Facebook Prophet with only 3 things: historical sales, weekly seasonality, and Bangladesh holidays. For an SDP submission, it works — but for real-world Bangladeshi e-commerce, it's significantly underfitting.
 Key Gaps

@@ -1,10 +1,10 @@
 import { customerRepository } from '../repositories/customer.repository';
-import { Customer, CreateCustomerDTO, UpdateCustomerDTO, CustomerFiltersDTO, PaginatedResult } from '@sellwise/shared';
+import { Customer, CustomerWithRfm, CreateCustomerDTO, UpdateCustomerDTO, CustomerFiltersDTO, PaginatedResult } from '@sellwise/shared';
 import { NotFoundError } from '../errors/AppError';
 
 export class CustomerService {
-  async getCustomers(storeId: string, filters: CustomerFiltersDTO): Promise<PaginatedResult<Customer>> {
-    const { page, limit, search } = filters;
+  async getCustomers(storeId: string, filters: CustomerFiltersDTO): Promise<PaginatedResult<CustomerWithRfm>> {
+    const { page, limit, search, segment } = filters;
     const offset = (page - 1) * limit;
 
     let queryText = `
@@ -12,7 +12,9 @@ export class CustomerService {
       FROM customers c
       LEFT JOIN customer_rfm r ON c.id = r.customer_id AND c.store_id = r.store_id
       WHERE c.store_id = $1`;
-    let countQueryText = `SELECT COUNT(*) FROM customers c WHERE c.store_id = $1`;
+    let countQueryText = `SELECT COUNT(*) FROM customers c
+      LEFT JOIN customer_rfm r ON c.id = r.customer_id AND c.store_id = r.store_id
+      WHERE c.store_id = $1`;
 
     const params: any[] = [storeId];
     let paramIndex = 2;
@@ -25,13 +27,20 @@ export class CustomerService {
       paramIndex++;
     }
 
+    if (segment) {
+      queryText += ` AND r.segment = $${paramIndex}`;
+      countQueryText += ` AND r.segment = $${paramIndex}`;
+      params.push(segment);
+      paramIndex++;
+    }
+
     queryText += ` ORDER BY c.total_spent DESC, c.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     const queryParams = [...params, limit, offset];
 
     return this.findWithFilters(queryText, countQueryText, queryParams, params, page, limit);
   }
 
-  private async findWithFilters(queryText: string, countText: string, queryParams: any[], countParams: any[], page: number, limit: number) {
+  private async findWithFilters(queryText: string, countText: string, queryParams: any[], countParams: any[], page: number, limit: number): Promise<PaginatedResult<CustomerWithRfm>> {
     const { db } = await import('../config/db');
     const [dataResult, countResult] = await Promise.all([
       db.query(queryText, queryParams),
@@ -47,7 +56,7 @@ export class CustomerService {
     };
   }
 
-  async getCustomer(id: string, storeId: string): Promise<Customer> {
+  async getCustomer(id: string, storeId: string): Promise<CustomerWithRfm> {
     const customer = await customerRepository.findById(id);
     if (!customer || customer.store_id !== storeId) {
       throw new NotFoundError('Customer');

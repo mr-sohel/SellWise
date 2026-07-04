@@ -74,6 +74,7 @@ typings/
 .env.test
 .env.production
 .env.local
+packages/server/.env
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -120,6 +121,7 @@ venv/
 .venv/
 pip-log.txt
 pip-delete-this-directory.txt
+packages/ml-service/.venv/
 
 # Antigravity artifacts
 .gemini/
@@ -128,3 +130,26 @@ pip-delete-this-directory.txt
 *.md
 !README.md
 !*/README.md
+!AGENTS.md
+!CLAUDE.md
+!DESIGN.md
+!implementation_plan.md
+
+# Project-specific
+cookies.txt
+scripts.txt
+improve.txt
+
+# Docker
+docker-compose.override.yml
+
+# Build outputs
+packages/*/dist/
+packages/*/build/
+
+# IDE
+.vscode/
+.idea/
+
+
+*.sh

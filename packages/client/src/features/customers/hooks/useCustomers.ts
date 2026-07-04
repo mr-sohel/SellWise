@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../lib/api/client';
-import type { Customer, CreateCustomerDTO, UpdateCustomerDTO, CustomerFiltersDTO, PaginatedResult } from '@sellwise/shared';
+import type { CustomerWithRfm, CreateCustomerDTO, UpdateCustomerDTO, CustomerFiltersDTO, PaginatedResult } from '@sellwise/shared';
 
 export function useCustomers(storeId: string, filters: CustomerFiltersDTO) {
   return useQuery({
     queryKey: ['customers', storeId, filters],
-    queryFn: async (): Promise<PaginatedResult<Customer>> => {
+    queryFn: async (): Promise<PaginatedResult<CustomerWithRfm>> => {
       const { data } = await api.get(`/stores/${storeId}/customers`, { params: filters });
       return { data: data.data, meta: data.meta };
     },

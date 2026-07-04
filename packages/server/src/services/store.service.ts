@@ -2,7 +2,7 @@ import { storeRepository } from '../repositories/store.repository';
 import { userRepository } from '../repositories/user.repository';
 import { categoryRepository } from '../repositories/category.repository';
 import { db } from '../config/db';
-import { CreateStoreDTO, Store, CreateMemberDTO, CompleteOnboardingDTO, DEFAULT_CATEGORIES_BY_TYPE } from '@sellwise/shared';
+import { CreateStoreDTO, Store, CreateMemberDTO, CompleteOnboardingDTO, getCategoriesFromPresets, detectBusinessType } from '@sellwise/shared';
 import bcrypt from 'bcryptjs';
 import { ConflictError, NotFoundError, ForbiddenError } from '../errors/AppError';
 
@@ -31,17 +31,19 @@ export class StoreService {
     try {
       await client.query('BEGIN');
 
-      // Update store profile
+      // Detect business_type from selected category presets
+      const businessType = detectBusinessType(data.categoryPresetIds);
+
+      // Update store profile with detected business_type
       const store = await storeRepository.updateStoreProfile(storeId, {
-        business_type: data.business_type,
-        sales_channels: data.sales_channels,
+        business_type: businessType,
       }, client);
 
-      // Seed default categories for this business type
-      const defaultCategories = DEFAULT_CATEGORIES_BY_TYPE[data.business_type] || [];
+      // Seed categories from selected presets
+      const categories = getCategoriesFromPresets(data.categoryPresetIds);
       await categoryRepository.bulkCreate(
         storeId,
-        defaultCategories.map(name => ({ name, is_default: true })),
+        categories.map(name => ({ name, is_default: true })),
         client
       );
 
