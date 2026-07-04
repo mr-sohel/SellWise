@@ -5,6 +5,7 @@ import { useAuthStore } from '../../stores/auth.store';
 import { Search, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '../../components/ui/page-header';
 import { Badge } from '../../components/ui/badge';
+import { Skeleton } from '../../components/ui/skeleton';
 import { RFM_SEGMENTS, RFM_SEGMENT_LABELS, RFM_SEGMENT_COLORS } from '@sellwise/shared';
 import type { RfmSegment } from '@sellwise/shared';
 
@@ -30,12 +31,12 @@ export function CustomerListPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-8">
       <PageHeader title={t('common.customers')} />
 
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 w-full max-w-sm">
-          <Search className="h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 w-full sm:max-w-sm">
+          <Search className="h-4 w-4 text-muted-foreground shrink-0" />
           <input
             type="text"
             placeholder="Search by name, phone or email..."
@@ -51,7 +52,7 @@ export function CustomerListPage() {
             setSegmentFilter(e.target.value as RfmSegment | '');
             setPage(1);
           }}
-          className="px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+          className="px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring cursor-pointer appearance-none min-w-[160px]"
         >
           <option value="">All Segments</option>
           {RFM_SEGMENTS.map((seg) => (
@@ -62,29 +63,35 @@ export function CustomerListPage() {
         </select>
       </div>
 
-      <div className="bg-card border border-border rounded-xl shadow-vercel-2 overflow-hidden">
+      <div className="bg-card border border-border rounded-xl shadow-vercel-2 overflow-hidden w-full">
         {isLoading ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">Loading customers...</div>
+          <div className="p-4 space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         ) : result?.data.length === 0 ? (
           <div className="p-16 text-center">
             <h3 className="text-base font-medium text-foreground">No customers found</h3>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left text-sm min-w-[600px]">
               <thead className="bg-canvas-soft/50 border-b border-border">
                 <tr>
-                  <th className="px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">Name</th>
-                  <th className="px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">Contact</th>
-                  <th className="px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">Orders</th>
-                  <th className="px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">Segment (RFM)</th>
-                  <th className="px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right">Total Spent</th>
+                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Name</th>
+                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Contact</th>
+                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Orders</th>
+                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Segment (RFM)</th>
+                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Total Spent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {result?.data.map((customer) => (
                   <tr key={customer.id} className="hover:bg-canvas-soft/50 transition-colors">
-                    <td className="px-6 py-3 font-medium text-foreground">
+                    <td className="px-4 sm:px-6 py-3 font-medium text-foreground">
                       <div className="flex items-center gap-2">
                         {customer.name}
                         {customer.churn_probability != null && customer.churn_probability > 0.7 && (
@@ -97,12 +104,12 @@ export function CustomerListPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-3 text-muted-foreground">
+                    <td className="px-4 sm:px-6 py-3 text-muted-foreground">
                       <div>{customer.phone}</div>
                       {customer.email && <div className="text-xs">{customer.email}</div>}
                     </td>
-                    <td className="px-6 py-3 text-foreground">{customer.total_orders}</td>
-                    <td className="px-6 py-3">
+                    <td className="px-4 sm:px-6 py-3 text-foreground">{customer.total_orders}</td>
+                    <td className="px-4 sm:px-6 py-3">
                       {customer.segment ? (
                         <div className="flex flex-col gap-1 items-start">
                           <Badge variant={RFM_SEGMENT_COLORS[customer.segment as RfmSegment] || 'muted'}>
@@ -116,7 +123,7 @@ export function CustomerListPage() {
                         <span className="text-muted-foreground text-xs">Uncategorized</span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-right text-foreground font-medium">৳{customer.total_spent.toLocaleString()}</td>
+                    <td className="px-4 sm:px-6 py-3 text-right text-foreground font-medium whitespace-nowrap">৳{customer.total_spent.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -126,7 +133,7 @@ export function CustomerListPage() {
       </div>
 
       {result?.meta && result.meta.totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             Showing <span className="font-medium text-foreground">{(page - 1) * 10 + 1}</span> to <span className="font-medium text-foreground">{Math.min(page * 10, result.meta.totalCount)}</span> of <span className="font-medium text-foreground">{result.meta.totalCount}</span> results
           </p>

@@ -1,26 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
+import { tokenBlacklist } from '../config/redis';
 import { UnauthorizedError } from '../errors/AppError';
 
 export interface JwtPayload {
   userId: string;
+  jti?: string;
 }
 
-export function authenticate(req: Request, res: Response, next: NextFunction) {
-  // Check cookies first (we will store token in an http-only cookie)
-  // Need cookie-parser for req.cookies, but we can parse req.headers.cookie manually or add cookie-parser.
-  // For now, let's also support Authorization header (Bearer) as fallback/standard.
+export async function authenticate(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   const tokenFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 
-  // Parse cookie if available
-  let tokenFromCookie = null;
-  if (req.headers.cookie) {
+  // Use req.cookies if cookie-parser middleware is loaded, otherwise parse manually
+  let tokenFromCookie: string | null = null;
+  if (req.cookies?.token) {
+    tokenFromCookie = req.cookies.token;
+  } else if (req.headers.cookie) {
     const cookies = req.headers.cookie.split(';').map(c => c.trim());
     const tokenCookie = cookies.find(c => c.startsWith('token='));
     if (tokenCookie) {
-      tokenFromCookie = tokenCookie.split('=')[1];
+      const parts = tokenCookie.split('=');
+      tokenFromCookie = parts.slice(1).join('=');
     }
   }
 
@@ -32,6 +34,22 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+
+    // Check if token has been revoked (blacklisted)
+    if (decoded.jti) {
+      try {
+        const revoked = await Promise.race([
+          tokenBlacklist.get(decoded.jti),
+          new Promise<null>((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000)),
+        ]);
+        if (revoked) {
+          return next(new UnauthorizedError('Token has been revoked'));
+        }
+      } catch {
+        // Redis down or timeout — fail open for availability
+      }
+    }
+
     req.user = { id: decoded.userId };
     next();
   } catch (err) {

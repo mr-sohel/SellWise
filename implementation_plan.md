@@ -626,7 +626,8 @@ packages/server/migrations/
 ├── 1783010616872_create-inventory-alerts.ts
 ├── 1783010617322_create-customer-rfm.ts
 ├── 1783020000001_add-business-type-to-stores.ts
-└── 1783020000002_create-categories.ts
+├── 1783020000002_create-categories.ts
+└── 1783030000001_enable-rls-policies.ts
 ```
 
 **Commands:**
@@ -741,25 +742,31 @@ graph LR
     A["Request"] --> B["helmet()"]
     B --> C["cors()"]
     C --> D["express.json()"]
-    D --> E["requestId()"]
-    E --> F["requestLogger()"]
-    F --> G["rateLimiter()"]
-    G --> H["authenticate()"]
-    H --> I["requireRole()"]
-    I --> J["validate(schema)"]
-    J --> K["Controller"]
-    K --> L["Response"]
-    K --> M["errorHandler()"]
+    D --> E["cookieParser()"]
+    E --> F["requestId()"]
+    F --> G["requestLogger()"]
+    G --> H["rateLimiter()"]
+    H --> I["authenticate()"]
+    I --> J["requireStoreMembership()"]
+    J --> K["requireRole()"]
+    K --> L["validate(schema)"]
+    L --> M["Controller"]
+    M --> N["Response"]
+    M --> O["errorHandler()"]
 ```
 
 ```typescript
 // server/src/middleware/requestId.ts — Correlation ID for every request
 export function requestId(req: Request, _res: Response, next: NextFunction) {
-  req.id = req.headers['x-request-id'] as string || crypto.randomUUID();
+  req.id = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  // Validate storeId UUID format if present
+  if (req.params.storeId && !UUID_REGEX.test(req.params.storeId)) {
+    throw new ValidationError(/* invalid UUID */);
+  }
   next();
 }
 
-// server/src/middleware/requestLogger.ts — Structured logging
+// server/src/middleware/requestLogger.ts — Structured logging (Winston)
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
   res.on('finish', () => {
@@ -776,6 +783,13 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   next();
 }
 ```
+
+**Security middleware details:**
+- **`authenticate`**: Verifies JWT from cookie, checks Redis blacklist (2s timeout, fails open), includes `jti` claim for revocation
+- **`requireStoreMembership`**: Validates UUID format, checks `store_members` table, sets `req.storeRole`
+- **`requireRole`**: Reads from `req.storeRole` (no extra DB query)
+- **`authLimiter`**: Applied only to `/login` and `/signup` (10 req/15min)
+- **`revokeToken()`**: Adds JWT `jti` to Redis blacklist with TTL matching token expiry
 
 ---
 
@@ -923,22 +937,23 @@ sequenceDiagram
     Worker->>Service: generateForecasts(storeId)
 
     loop For each active product with sales history
-        Service->>DB: Aggregate daily sales history
+        Service->>DB: Aggregate daily sales history (capped at 180 days)
         Service->>Service: Fetch store business_type
 
         alt History < 7 days (No Forecast)
             Note over Service: Skip — not enough data
-        else History 7-29 days (Tier 1: SMA)
-            Service->>Service: Calculate 7-day Simple Moving Average
-            Service->>DB: Write SMA forecasts to `forecasts` table
+        else History 7-29 days (Tier 1: EWMA)
+            Service->>Service: Calculate EWMA (14-day window, alpha auto-selected by CV)
+            Service->>DB: Write EWMA forecasts to `forecasts` table
         else History >= 30 days (Tier 2: Prophet)
             Service->>ML: POST /forecast { product_id, history, business_type }
-            ML->>ML: Prophet().fit() with BD holidays + business-type seasonality
+            ML->>ML: Prophet().fit() with BD holidays + business-type seasonality + sparsity-aware regularization
             ML-->>Service: { forecasts }
             Service->>DB: Write Prophet forecasts to `forecasts` table
         end
     end
 
+    Service->>Service: Calculate MAPE accuracy (past forecasts vs actuals)
     Worker->>Queue: Mark job complete
 
     Note over Scheduler: 3:00 AM — Alert generation job triggers next
@@ -976,11 +991,10 @@ sequenceDiagram
     Service->>Service: Map to segments (Champion, Loyal, At Risk, Lost, New)
     Service->>DB: UPSERT INTO customer_rfm
 
-    Worker->>ML: POST /churn { store_id }
-    ML->>DB: Read customer purchase gaps, frequency
-    ML->>ML: LogisticRegression predict → churn_probability per customer
-    ML->>DB: UPDATE customer_rfm SET churn_probability
-    ML-->>Worker: { customers_scored: N }
+    Worker->>ML: POST /churn { store_id, customers: [...] }
+    ML->>ML: Ensemble: gap-ratio heuristic + LR with multi-signal pseudo-labels
+    ML->>ML: Weighted average (LR 20-50% based on agreement with heuristic)
+    ML-->>Worker: { predictions: [{ customer_id, churn_probability }] }
 ```
 
 **RFM Segment Mapping:**
@@ -1714,7 +1728,7 @@ A single forecast job looping over all stores will time out at scale.
 
 ### 17.5 Multi-Tenant Security Hardening (IDOR Prevention)
 Users must not access other stores by changing the `storeId` in the URL.
-**Implementation Rule:** Implement a `verifyStoreAccess` middleware that checks if `req.user.id` has a role in `store_members` for `req.params.storeId`. Cache the role in Redis for 1 hour to prevent excessive DB queries.
+**Implementation Rule:** Implemented via `requireStoreMembership` middleware that checks `store_members` table on every request. `authenticate` middleware checks JWT Redis blacklist (2s timeout). Store membership role cached in `req.storeRole` for downstream use by `requireRole`.
 
 ### 17.6 Soft Delete Edge Cases (ML Pipeline)
 Do not forecast demand or generate alerts for deleted products.

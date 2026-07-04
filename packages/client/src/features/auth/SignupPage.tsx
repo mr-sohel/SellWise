@@ -5,6 +5,7 @@ import type { SignupDTO } from '@sellwise/shared';
 import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import api from '../../lib/api/client';
+import { toast } from 'sonner';
 
 export function SignupPage() {
   const { setAuth, isAuthenticated } = useAuthStore();
@@ -31,7 +32,7 @@ export function SignupPage() {
       }
     } catch (error) {
       console.error('Signup failed', error);
-      alert('Signup failed. Email might already be in use.');
+      toast.error('Signup failed. Email might already be in use.');
     }
   };
 

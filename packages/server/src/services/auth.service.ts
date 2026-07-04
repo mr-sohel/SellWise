@@ -1,11 +1,14 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { env } from '../config/env';
 import { db } from '../config/db';
+import { tokenBlacklist } from '../config/redis';
 import { userRepository } from '../repositories/user.repository';
 import { storeRepository } from '../repositories/store.repository';
 import { LoginDTO, SignupDTO, User, UpdateProfileDTO, Store } from '@sellwise/shared';
 import { ConflictError, UnauthorizedError, NotFoundError } from '../errors/AppError';
+import logger from '../utils/logger';
 
 export class AuthService {
   async signup(data: SignupDTO): Promise<{ user: Omit<User, 'password_hash'>, store: Store, role: string, token: string }> {
@@ -103,9 +106,24 @@ export class AuthService {
   }
 
   private generateToken(userId: string): string {
-    return jwt.sign({ userId }, env.JWT_SECRET, {
+    const jti = crypto.randomUUID();
+    return jwt.sign({ userId, jti }, env.JWT_SECRET, {
       expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
+  }
+
+  async revokeToken(token: string): Promise<void> {
+    try {
+      const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string; jti?: string; exp?: number };
+      if (decoded.jti && decoded.exp) {
+        const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+        if (ttl > 0) {
+          await tokenBlacklist.set(decoded.jti, 'revoked', 'EX', ttl);
+        }
+      }
+    } catch {
+      // Token is already invalid, no need to blacklist
+    }
   }
 }
 

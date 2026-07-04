@@ -3,8 +3,16 @@ import { storeRepository } from '../repositories/store.repository';
 import { env } from '../config/env';
 import logger from '../utils/logger';
 
+/**
+ * Forecast service with two-tier approach:
+ * - Tier 1: Exponential Weighted Moving Average (EWMA) for < 30 days of data
+ * - Tier 2: Facebook Prophet for >= 30 days (via Python ML service)
+ *
+ * EWMA is preferred over SMA because it weights recent observations more heavily,
+ * making it more responsive to trend changes while still smoothing noise.
+ */
 export class ForecastService {
-  async generateForecasts(storeId: string): Promise<{ productsProcessed: number }> {
+  async generateForecasts(storeId: string): Promise<{ productsProcessed: number; accuracy?: number }> {
     const productIds = await forecastRepository.getActiveProductIds(storeId);
     let productsProcessed = 0;
 
@@ -20,37 +28,17 @@ export class ForecastService {
           continue; // Not enough data for any forecast
         }
 
-        // Fill missing days with 0 sales
-        const history: SalesHistory[] = [];
-        const firstDate = new Date(rawHistory[0].date);
-        firstDate.setUTCHours(0, 0, 0, 0);
-
-        const endDate = new Date();
-        endDate.setUTCHours(0, 0, 0, 0);
-
-        const historyMap = new Map<string, number>();
-        for (const h of rawHistory) {
-          const d = new Date(h.date);
-          historyMap.set(d.toISOString().split('T')[0], Number(h.total_qty));
-        }
-
-        let currentDate = new Date(firstDate);
-        while (currentDate <= endDate) {
-          const dateStr = currentDate.toISOString().split('T')[0];
-          history.push({
-            date: dateStr,
-            total_qty: historyMap.get(dateStr) || 0
-          });
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
+        // Fill missing days with 0 sales — but cap at 180 days to avoid
+        // extreme zero-inflation for products sold long ago with sporadic orders
+        const history: SalesHistory[] = this.fillMissingDays(rawHistory, 180);
 
         if (history.length < 7) {
           continue; // Not enough data for any forecast
         }
 
         if (history.length < 30) {
-          // Tier 1: Simple Moving Average (SMA)
-          await this.generateSMAForecast(storeId, productId, history);
+          // Tier 1: Exponential Weighted Moving Average
+          await this.generateEWMAForecast(storeId, productId, history);
         } else {
           // Tier 2: Call Python ML service for Prophet
           await this.generateProphetForecast(storeId, productId, history, businessType);
@@ -62,20 +50,85 @@ export class ForecastService {
       }
     }
 
-    return { productsProcessed };
+    // Calculate accuracy of past forecasts vs actuals
+    const accuracy = await this.calculateAccuracy(storeId);
+
+    return { productsProcessed, accuracy };
   }
 
-  private async generateSMAForecast(storeId: string, productId: string, history: SalesHistory[]): Promise<void> {
-    const windowSize = 7;
+  /**
+   * Fill missing days in sales history with zeros.
+   * Caps the maximum history length to prevent zero-inflation for sporadic products.
+   */
+  private fillMissingDays(rawHistory: SalesHistory[], maxDays: number = 180): SalesHistory[] {
+    const historyMap = new Map<string, number>();
+    for (const h of rawHistory) {
+      const d = new Date(h.date);
+      historyMap.set(d.toISOString().split('T')[0], Number(h.total_qty));
+    }
+
+    // Start from the most recent of: first sale date or maxDays ago
+    const firstDate = new Date(rawHistory[0].date);
+    firstDate.setUTCHours(0, 0, 0, 0);
+
+    const cutoffDate = new Date(firstDate);
+    cutoffDate.setDate(cutoffDate.getDate() + maxDays);
+
+    const startDate = cutoffDate > new Date() ? firstDate : cutoffDate;
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const endDate = new Date();
+    endDate.setUTCHours(0, 0, 0, 0);
+
+    const history: SalesHistory[] = [];
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      history.push({
+        date: dateStr,
+        total_qty: historyMap.get(dateStr) || 0
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return history;
+  }
+
+  /**
+   * Exponential Weighted Moving Average (EWMA) forecast.
+   *
+   * Unlike SMA which treats all window observations equally, EWMA applies
+   * exponential decay weights so recent observations matter more.
+   * Alpha (smoothing factor) is auto-selected based on data characteristics:
+   * - High variance → lower alpha (more smoothing)
+   * - Low variance → higher alpha (more responsive)
+   */
+  private async generateEWMAForecast(storeId: string, productId: string, history: SalesHistory[]): Promise<void> {
     const forecastDays = 30;
     const values = history.map(h => Number(h.total_qty));
 
-    // Calculate SMA
-    const sma = values.slice(-windowSize).reduce((a, b) => a + b, 0) / windowSize;
+    // Use last 14 days as EWMA window (or all data if < 14)
+    const windowSize = Math.min(14, values.length);
+    const window = values.slice(-windowSize);
 
-    // Calculate standard deviation for bounds
-    const variance = values.slice(-windowSize).reduce((sum, v) => sum + Math.pow(v - sma, 2), 0) / windowSize;
-    const stdDev = Math.sqrt(variance);
+    // Auto-select alpha based on coefficient of variation
+    const mean = window.reduce((a, b) => a + b, 0) / window.length;
+    const variance = window.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / window.length;
+    const cv = mean > 0 ? Math.sqrt(variance) / mean : 1;
+
+    // High variation → smooth more (lower alpha); Low variation → track closely (higher alpha)
+    const alpha = cv > 1.0 ? 0.2 : cv > 0.5 ? 0.3 : 0.5;
+
+    // Calculate EWMA
+    let ewma = window[0];
+    for (let i = 1; i < window.length; i++) {
+      ewma = alpha * window[i] + (1 - alpha) * ewma;
+    }
+
+    // Calculate prediction interval based on residual standard error
+    const residuals = window.map(v => v - ewma);
+    const sse = residuals.reduce((sum, r) => sum + r * r, 0);
+    const stdErr = Math.sqrt(sse / Math.max(window.length - 1, 1));
 
     const forecasts = [];
     const lastDate = new Date(history[history.length - 1].date);
@@ -84,12 +137,16 @@ export class ForecastService {
       const forecastDate = new Date(lastDate);
       forecastDate.setDate(forecastDate.getDate() + i);
 
+      // Widen interval for further-out forecasts (uncertainty grows with horizon)
+      const horizonFactor = 1 + (i / forecastDays) * 0.5;
+      const bound = 1.96 * stdErr * horizonFactor;
+
       forecasts.push({
         forecast_date: forecastDate.toISOString().split('T')[0],
-        predicted_qty: Math.max(0, Math.round(sma * 100) / 100),
-        lower_bound: Math.max(0, Math.round((sma - 1.96 * stdDev) * 100) / 100),
-        upper_bound: Math.round((sma + 1.96 * stdDev) * 100) / 100,
-        model_used: 'sma',
+        predicted_qty: Math.max(0, Math.round(ewma * 100) / 100),
+        lower_bound: Math.max(0, Math.round((ewma - bound) * 100) / 100),
+        upper_bound: Math.round((ewma + bound) * 100) / 100,
+        model_used: 'ewma',
       });
     }
 
@@ -117,8 +174,8 @@ export class ForecastService {
       clearTimeout(timeout);
 
       if (!response.ok) {
-        logger.error(`[ForecastService] ML service returned ${response.status}, falling back to SMA`);
-        await this.generateSMAForecast(storeId, productId, history);
+        logger.error(`[ForecastService] ML service returned ${response.status}, falling back to EWMA`);
+        await this.generateEWMAForecast(storeId, productId, history);
         return;
       }
 
@@ -134,9 +191,52 @@ export class ForecastService {
 
       await forecastRepository.upsertForecasts(storeId, productId, forecasts);
     } catch (error) {
-      logger.error(`[ForecastService] ML service call failed, falling back to SMA:`, error);
-      await this.generateSMAForecast(storeId, productId, history);
+      logger.error(`[ForecastService] ML service call failed, falling back to EWMA:`, error);
+      await this.generateEWMAForecast(storeId, productId, history);
     }
+  }
+
+  /**
+   * Calculate forecast accuracy (MAPE) by comparing past forecasts with actual sales.
+   * Only evaluates forecasts that are at least 3 days old (allowing actuals to accumulate).
+   */
+  private async calculateAccuracy(storeId: string): Promise<number | undefined> {
+    try {
+      const { rows } = await this.query(
+        `SELECT f.predicted_qty, SUM(oi.quantity) as actual_qty
+         FROM forecasts f
+         LEFT JOIN order_items oi ON oi.product_id = f.product_id
+         LEFT JOIN orders o ON oi.order_id = o.id
+           AND o.status NOT IN ('cancelled', 'returned')
+           AND DATE(o.order_date) = f.forecast_date
+         WHERE f.store_id = $1
+           AND f.forecast_date >= CURRENT_DATE - INTERVAL '30 days'
+           AND f.forecast_date < CURRENT_DATE - INTERVAL '3 days'
+           AND f.model_used IN ('ewma', 'prophet')
+         GROUP BY f.id, f.predicted_qty
+         HAVING SUM(oi.quantity) IS NOT NULL AND SUM(oi.quantity) > 0`,
+        [storeId]
+      );
+
+      if (rows.length === 0) return undefined;
+
+      // MAPE = mean(|actual - predicted| / actual)
+      const mape = rows.reduce((sum: number, r: any) => {
+        const actual = Number(r.actual_qty);
+        const predicted = Number(r.predicted_qty);
+        return sum + Math.abs(actual - predicted) / actual;
+      }, 0) / rows.length;
+
+      return Math.round(mape * 10000) / 100; // Return as percentage with 2 decimals
+    } catch (error) {
+      logger.error('[ForecastService] Failed to calculate accuracy:', error);
+      return undefined;
+    }
+  }
+
+  private async query(text: string, params?: any[]) {
+    const { db } = await import('../config/db');
+    return db.query(text, params);
   }
 
   async getForecasts(storeId: string, productId: string) {

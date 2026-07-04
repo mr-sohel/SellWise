@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { productController } from '../controllers/product.controller';
-import { authenticate } from '../middleware/authenticate';
 import { requireRole } from '../middleware/requireRole';
 import { validate } from '../middleware/validate';
 import { createProductSchema, updateProductSchema, productFiltersSchema } from '@sellwise/shared';
@@ -17,8 +16,7 @@ const bulkImportSchema = z.object({
 // Uses mergeParams to access :storeId from the parent router
 const router = Router({ mergeParams: true });
 
-// All product routes require authentication and store access
-router.use(authenticate);
+// All product routes require owner or manager role
 router.use(requireRole(['owner', 'manager']));
 
 router.get('/', validate(productFiltersSchema), productController.list);

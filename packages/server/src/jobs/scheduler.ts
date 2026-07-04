@@ -2,9 +2,10 @@ import { forecastQueue, alertsQueue, rfmQueue } from './queues';
 import './forecast.worker'; // Import to initialize worker
 import './alert.worker'; // Import to initialize worker
 import './rfm.worker'; // Import to initialize worker
+import logger from '../utils/logger';
 
 export async function setupSchedules() {
-  console.log('🗓️ Setting up BullMQ schedules...');
+  logger.info('Setting up BullMQ schedules...');
 
   // Remove existing repeatable jobs before adding new ones to prevent duplicates
   const existingForecastJobs = await forecastQueue.getJobSchedulers();

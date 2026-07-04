@@ -7,6 +7,7 @@ import { ArrowLeft, Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import type { CreateProductDTO } from '@sellwise/shared';
 import { createProductSchema } from '@sellwise/shared';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export function BulkImportPage() {
   const navigate = useNavigate();
@@ -59,11 +60,11 @@ export function BulkImportPage() {
 
     try {
       await importMutation.mutateAsync(parsedData);
-      alert('Products imported successfully!');
+      toast.success('Products imported successfully!');
       navigate('/products');
     } catch (err) {
       console.error(err);
-      alert('Failed to import products.');
+      toast.error('Failed to import products.');
     }
   };
 

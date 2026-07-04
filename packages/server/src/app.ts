@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import { env } from './config/env';
 import { requestId } from './middleware/requestId';
@@ -12,7 +13,7 @@ const app = express();
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  max: env.NODE_ENV === 'production' ? 200 : 2000,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -25,16 +26,39 @@ const authLimiter = rateLimit({
 });
 
 // Middleware Stack
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+}));
 app.use(cors({
-  origin: env.NODE_ENV === 'production' ? process.env.CLIENT_URL : 'http://localhost:5173',
+  origin: env.NODE_ENV === 'production'
+    ? env.CLIENT_URL!
+    : 'http://localhost:5173',
   credentials: true,
 }));
+app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));
 app.use(limiter);
 app.use(requestId);
 app.use(requestLogger);
-app.use('/api/v1/auth', authLimiter);
+app.use('/api/v1/auth/login', authLimiter);
+app.use('/api/v1/auth/signup', authLimiter);
 
 // Health check route
 app.get('/api/v1/health', (req, res) => {
@@ -43,7 +67,6 @@ app.get('/api/v1/health', (req, res) => {
     data: {
       status: 'up',
       timestamp: new Date().toISOString(),
-      environment: env.NODE_ENV
     },
     error: null,
   });

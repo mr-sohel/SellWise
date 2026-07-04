@@ -39,7 +39,7 @@ export function AlertsListPage() {
   const DEFAULT_SEVERITY = {
     icon: <CheckCircle className="h-4 w-4 text-success" />,
     borderColor: 'border-l-success',
-    bgColor: 'bg-canvas',
+    bgColor: 'bg-canvas-soft',
     textColor: 'text-foreground',
   };
 
@@ -47,16 +47,16 @@ export function AlertsListPage() {
   const getSeverityStyle = (severity: string) => (SEVERITY_CONFIG[severity] ?? DEFAULT_SEVERITY);
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto pb-8">
       <PageHeader
         title="Inventory Alerts"
         description="Smart recommendations based on predicted demand and sales velocity."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
               onClick={() => triggerAlerts()}
               disabled={isTriggering}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-card text-foreground rounded-full text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-border bg-card text-foreground rounded-full text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50 w-full sm:w-auto"
             >
               <RefreshCw className={`h-4 w-4 ${isTriggering ? 'animate-spin' : ''}`} />
               Scan Inventory
@@ -64,7 +64,7 @@ export function AlertsListPage() {
             <button
               onClick={() => markAllAsRead()}
               disabled={isMarkingAll || !alerts?.some(a => !a.is_read)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 w-full sm:w-auto"
             >
               <Check className="h-4 w-4" />
               Mark All Read
@@ -102,28 +102,29 @@ export function AlertsListPage() {
             return (
               <div
                 key={alert.id}
-                className={`flex items-start gap-4 p-4 rounded-xl border-l-4 border border-border shadow-vercel-1 transition-colors ${
-                  !alert.is_read ? `${severity.borderColor} ${severity.bgColor}` : 'bg-card border-border opacity-75'
+                className={`flex flex-col sm:flex-row items-start gap-4 p-4 rounded-xl border-l-4 border border-border shadow-vercel-1 transition-colors ${
+                  !alert.is_read ? `${severity.borderColor} ${severity.bgColor}` : 'bg-card border-border border-l-border opacity-75'
                 }`}
               >
-                <div className="mt-0.5 flex-shrink-0">
+                <div className="mt-0.5 flex-shrink-0 hidden sm:block">
                   {getIcon(alert.severity)}
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
+                <div className="flex-1 min-w-0 w-full">
+                  <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-1 sm:gap-4 mb-2 sm:mb-0">
                     <div>
                       <h4 className="text-sm font-medium capitalize flex items-center gap-2">
+                        <span className="sm:hidden">{getIcon(alert.severity)}</span>
                         {alert.alert_type.replace('_', ' ')}
                         {!alert.is_read && (
-                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary"></span>
+                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary shrink-0"></span>
                         )}
                       </h4>
                       <Link to={`/products/${alert.product_id}/edit`} className="text-sm text-link hover:underline underline-offset-4 font-medium">
                         {alert.product_name}
                       </Link>
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(alert.created_at).toLocaleString()}
                     </span>
                   </div>

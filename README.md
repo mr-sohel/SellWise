@@ -10,7 +10,7 @@ This repository contains the **Phase 1 (SDP)** implementation of the platform, s
 
 * **Frontend (`@sellwise/client`)**: React 19, Vite, TypeScript, Tailwind CSS v4, Zustand, TanStack Query, i18next (English & Bangla).
 * **Backend (`@sellwise/server`)**: Node.js, Express 5, TypeScript, PostgreSQL 16, Redis 7, BullMQ (background jobs), JWT (HTTP-only secure cookies).
-* **ML Service (`@sellwise/ml-service`)**: Python 3.11, FastAPI, Facebook Prophet (Demand Forecasting), Scikit-learn (Churn Prediction).
+* **ML Service (`@sellwise/ml-service`)**: Python 3.11, FastAPI, Facebook Prophet (Demand Forecasting with business-type-aware seasonality), Scikit-learn (Churn Prediction with ensemble heuristic + LR).
 * **Infrastructure**: Docker Compose, `node-pg-migrate` for versioned database schema control.
 
 ---
@@ -79,31 +79,33 @@ Once the database is running, apply the database migrations to build the schema:
 npm run migrate:up --workspace=@sellwise/server
 ```
 
-### 3. Run the ML Service (Python)
+### 3. Start All Services
 
-Open a new terminal, navigate to the ML service, install dependencies, and start the FastAPI server:
+Run the single startup script to launch all three services (Frontend, Backend, ML):
 ```bash
-cd packages/ml-service
-pip install -r requirements.txt
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+.\start-dev.ps1
 ```
-*(The ML API will run at `http://localhost:8000`)*
 
-### 4. Run the Backend (Express API)
+This starts:
+- **Frontend** → `http://localhost:5173`
+- **Backend** → `http://localhost:5000`
+- **ML Service** → `http://localhost:8000`
 
-Open a new terminal and start the Node.js server:
+### Alternative: Start Services Individually
+
 ```bash
-npm run dev:server
-```
-*(The Backend API will run at `http://localhost:5000`)*
-
-### 5. Run the Frontend (React SPA)
-
-Open a final terminal and start the Vite development server:
-```bash
+# Frontend (React)
 npm run dev:client
+
+# Backend (Express)
+npm run dev:server
+
+# ML Service (Python)
+cd packages/ml-service
+uv venv --allow-existing
+uv pip install -r requirements.txt
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-*(The Frontend UI will be accessible at `http://localhost:5173`)*
 
 ---
 
@@ -251,6 +253,25 @@ sellwise/
 
 ### Webhooks
 - `POST /api/v1/webhooks/orders` — External order ingestion (API key auth)
+
+---
+
+## Security Features
+
+SellWise implements defense-in-depth security for local development:
+
+| Layer | Implementation |
+|-------|---------------|
+| **Password Policy** | Minimum 8 chars, uppercase, lowercase, number (Zod enforced) |
+| **JWT Auth** | 96-char hex secret, 7-day expiry, HTTP-only secure cookies with `sameSite: 'lax'` |
+| **Token Revocation** | Logout revokes JWT server-side via Redis blacklist |
+| **Multi-Tenancy** | `requireStoreMembership` middleware validates user has role in `store_members` for each request |
+| **SQL Injection** | Repository column allowlists prevent malicious column names |
+| **Rate Limiting** | Global 2000 req/15min; auth endpoints 10 req/15min (login/signup) |
+| **Request Validation** | Zod schemas validate all inputs; UUID validation on route params |
+| **Security Headers** | Helmet with HSTS, CSP, and standard protections |
+| **Cookie Security** | `httpOnly`, `secure` (prod), `sameSite: 'lax'`, `path: '/'` |
+| **Container Security** | Non-root `appuser` in Docker images; DB/Redis ports bound to `127.0.0.1` |
 
 ---
 

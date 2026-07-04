@@ -6,6 +6,7 @@ import { createOrderSchema, SALES_CHANNEL_LABELS } from '@sellwise/shared';
 import { useCreateOrder } from './hooks/useOrders';
 import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ArrowLeft, Trash2, Plus, Search, X } from 'lucide-react';
 import { useProducts } from '../products/hooks/useProducts';
 import api from '../../lib/api/client';
@@ -136,10 +137,11 @@ export function CreateOrderPage() {
   const onSubmit = async (data: CreateOrderDTO) => {
     try {
       await createMutation.mutateAsync(data);
+      toast.success('Order created successfully');
       navigate('/orders');
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.error?.message || 'Failed to create order');
+      toast.error(error.response?.data?.error?.message || 'Failed to create order');
     }
   };
 
@@ -335,7 +337,7 @@ export function CreateOrderPage() {
                   <input type="number" {...register('discount', { valueAsNumber: true })} className="w-20 px-2 py-1 text-right border border-primary-foreground/20 rounded-md bg-foreground text-sm text-primary-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-foreground/30" />
                 </div>
 
-                <hr className="my-2 border-canvas/20" />
+                <hr className="my-2 border-primary-foreground/20" />
 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>

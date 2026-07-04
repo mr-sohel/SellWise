@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from prophet import Prophet
 from typing import List, Optional
 from ..models.schemas import SalesHistoryPoint, ForecastResultPoint
@@ -10,9 +11,9 @@ SEASONALITY_CONFIGS = {
         'weekly_seasonality': True,
         'daily_seasonality': False,
         'extra_regressors': [],
+        # Single e-commerce sale seasonality (covers 11.11, 12.12, and similar events)
         'custom_seasonalities': [
-            {'name': '11_11_sale', 'period': 365.25, 'fourier_order': 3},
-            {'name': '12_12_sale', 'period': 365.25, 'fourier_order': 3},
+            {'name': 'ecommerce_sale_season', 'period': 365.25, 'fourier_order': 5},
         ],
     },
     'small_shop': {
@@ -55,6 +56,9 @@ def generate_forecast(
     """
     Generates a demand forecast using Facebook Prophet.
     Supports business-type-aware seasonality tuning.
+
+    For sparse data (< 90 days), uses more conservative parameters
+    to avoid overfitting on limited observations.
     """
     # Convert input to DataFrame
     df = pd.DataFrame([{"ds": point.ds, "y": point.y} for point in history])
@@ -62,13 +66,35 @@ def generate_forecast(
     # Get config for business type
     config = SEASONALITY_CONFIGS.get(business_type, DEFAULT_CONFIG) if business_type else DEFAULT_CONFIG
 
-    # Initialize Prophet model with business-type-aware settings
+    # Count non-zero days to assess data density
+    non_zero_days = (df['y'] > 0).sum()
+    total_days = len(df)
+    sparsity = 1 - (non_zero_days / total_days) if total_days > 0 else 1
+
+    # Adjust parameters based on data characteristics
+    # - Sparse data: more regularization, fewer changepoints
+    # - Dense data: less regularization, more changepoints
+    if sparsity > 0.7:
+        # Very sparse: strong regularization
+        changepoint_prior = 0.01
+        seasonality_prior = 10.0
+    elif sparsity > 0.4:
+        # Moderately sparse
+        changepoint_prior = 0.03
+        seasonality_prior = 5.0
+    else:
+        # Dense data: standard parameters
+        changepoint_prior = 0.05
+        seasonality_prior = 3.0
+
+    # Initialize Prophet model
     model = Prophet(
         yearly_seasonality=config['yearly_seasonality'],
         weekly_seasonality=config['weekly_seasonality'],
         daily_seasonality=config['daily_seasonality'],
         interval_width=0.80,
-        changepoint_prior_scale=0.05,  # Regularize to prevent overfitting
+        changepoint_prior_scale=changepoint_prior,
+        seasonality_prior_scale=seasonality_prior,
     )
 
     # Add Bangladesh Holidays
@@ -101,6 +127,13 @@ def generate_forecast(
         yhat = max(0, float(row['yhat']))
         yhat_lower = max(0, float(row['yhat_lower']))
         yhat_upper = max(0, float(row['yhat_upper']))
+
+        # For very sparse data, tighten confidence intervals
+        # (Prophet tends to produce overly wide intervals with lots of zeros)
+        if sparsity > 0.7:
+            # Bring bounds closer to point estimate
+            yhat_lower = yhat_lower + (yhat - yhat_lower) * 0.3
+            yhat_upper = yhat_upper - (yhat_upper - yhat) * 0.3
 
         results.append(ForecastResultPoint(
             ds=row['ds'].date(),

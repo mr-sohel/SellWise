@@ -28,12 +28,19 @@ export abstract class BaseRepository<T> {
     return rows[0] || null;
   }
 
-  async delete(id: string, client?: PoolClient): Promise<boolean> {
-    const { rowCount } = await this.query(
-      `DELETE FROM ${this.tableName} WHERE id = $1`,
-      [id],
-      client
-    );
+  async delete(id: string, client?: PoolClient): Promise<boolean>;
+  async delete(id: string, storeId: string, client?: PoolClient): Promise<boolean>;
+  async delete(id: string, storeIdOrClient?: string | PoolClient, client?: PoolClient): Promise<boolean> {
+    let queryText = `DELETE FROM ${this.tableName} WHERE id = $1`;
+    const params: any[] = [id];
+
+    if (typeof storeIdOrClient === 'string') {
+      queryText += ` AND store_id = $2`;
+      params.push(storeIdOrClient);
+    }
+
+    const executor = (typeof storeIdOrClient === 'object' ? storeIdOrClient : client) || undefined;
+    const { rowCount } = await this.query(queryText, params, executor);
     return (rowCount ?? 0) > 0;
   }
 }

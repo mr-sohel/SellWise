@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createMemberSchema } from '@sellwise/shared';
 import type { CreateMemberDTO } from '@sellwise/shared';
 import { Badge } from '../../components/ui/badge';
+import { toast } from 'sonner';
 
 export function StaffManagementPage() {
   const { activeStoreId, user: currentUser, role: globalRole } = useAuthStore();
@@ -30,9 +31,9 @@ export function StaffManagementPage() {
   const handleRemove = (userId: string) => {
     if (window.confirm('Are you sure you want to revoke access for this employee?')) {
       removeStaffMutation.mutate(userId, {
-        onSuccess: () => alert('Staff member removed.'),
+        onSuccess: () => toast.success('Staff member removed.'),
         onError: (err: any) => {
-          alert(err.response?.data?.error?.message || 'Failed to remove staff member');
+          toast.error(err.response?.data?.error?.message || 'Failed to remove staff member');
         }
       });
     }
@@ -43,9 +44,10 @@ export function StaffManagementPage() {
       onSuccess: () => {
         setIsModalOpen(false);
         reset();
+        toast.success('Staff member added.');
       },
       onError: (err: any) => {
-        alert(err.response?.data?.error?.message || 'Failed to add staff member');
+        toast.error(err.response?.data?.error?.message || 'Failed to add staff member');
       }
     });
   };

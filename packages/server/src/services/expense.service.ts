@@ -21,7 +21,7 @@ export class ExpenseService {
 
   async deleteExpense(id: string, storeId: string): Promise<void> {
     const expense = await this.getExpense(id, storeId);
-    await expenseRepository.delete(expense.id);
+    await expenseRepository.delete(expense.id, storeId);
   }
 }
 

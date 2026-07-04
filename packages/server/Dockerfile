@@ -23,6 +23,8 @@ RUN npm run build --workspace=@sellwise/server
 # Production stage
 FROM node:20-alpine
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 WORKDIR /app
 
 COPY --from=builder /app/package.json ./
@@ -36,6 +38,10 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/server/migrations ./packages/server/migrations
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 ENV NODE_ENV=production
 

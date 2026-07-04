@@ -9,6 +9,8 @@ import { useAuthStore } from '../../stores/auth.store';
 import { CategoryPicker } from '../categories/CategoryPicker';
 import { ArrowLeft, Save } from 'lucide-react';
 import { ProductForecastChart } from './components/ProductForecastChart';
+import { toast } from 'sonner';
+import { Skeleton } from '../../components/ui/skeleton';
 
 export function EditProductPage() {
   const { t } = useTranslation();
@@ -65,17 +67,23 @@ export function EditProductPage() {
 
     updateProduct({ id, data }, {
       onSuccess: () => {
+        toast.success('Product updated successfully');
         navigate('/products');
       },
       onError: (error) => {
         console.error('Failed to update product:', error);
-        alert('Failed to update product. Please check your input and try again.');
+        toast.error('Failed to update product. Please check your input.');
       }
     });
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground text-sm">Loading product data...</div>;
+    return (
+      <div className="space-y-6 max-w-3xl">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    );
   }
 
   if (isError || !product) {

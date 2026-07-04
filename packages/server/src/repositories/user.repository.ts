@@ -37,16 +37,24 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   async update(id: string, data: Partial<User>, client?: PoolClient): Promise<User> {
+    const ALLOWED_COLUMNS = new Set([
+      'email', 'password_hash', 'preferred_lang'
+    ]);
+
     const fields = [];
     const values = [];
     let queryIndex = 1;
 
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
+      if (value !== undefined && ALLOWED_COLUMNS.has(key)) {
         fields.push(`${key} = $${queryIndex}`);
         values.push(value);
         queryIndex++;
       }
+    }
+
+    if (fields.length === 0) {
+      return this.findById(id, client) as Promise<User>;
     }
 
     values.push(id);

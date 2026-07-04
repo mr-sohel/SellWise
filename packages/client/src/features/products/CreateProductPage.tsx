@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { createProductSchema, type CreateProductDTO } from '@sellwise/shared';
 import { useCreateProduct } from './hooks/useProducts';
 import { useAuthStore } from '../../stores/auth.store';
@@ -42,11 +43,12 @@ export function CreateProductPage() {
   const onSubmit = (data: CreateProductDTO) => {
     createProduct(data, {
       onSuccess: () => {
+        toast.success('Product created successfully');
         navigate('/products');
       },
       onError: (error) => {
         console.error('Failed to create product:', error);
-        alert('Failed to create product. Please check your input and try again.');
+        toast.error('Failed to create product. Please check your input and try again.');
       }
     });
   };

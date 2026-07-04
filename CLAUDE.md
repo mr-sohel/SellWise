@@ -102,7 +102,7 @@ Request → Route/Controller → Service → Repository → Database
 
 - **`packages/shared`**: Single source of truth for TypeScript types, Zod schemas, and constants. Imported by both frontend and backend. **Must rebuild after changes:** `npm run build --workspace=@sellwise/shared`
 - **`packages/client`**: React 19 SPA. Uses TanStack Query for server state, Zustand for client state, React Hook Form + Zod for validation, and Tailwind CSS v4 + custom UI components. Grouped by feature (`features/products`, `features/orders`, `features/onboarding`, `features/categories`).
-- **`packages/server`**: Express 5 backend. Uses `pg` for raw SQL, `node-pg-migrate` for migrations, BullMQ for background jobs (using Redis), and Winston for structured logging. Custom JWTs must be stored in HTTP-only secure cookies.
+- **`packages/server`**: Express 5 backend. Uses `pg` for raw SQL, `node-pg-migrate` for migrations, BullMQ for background jobs (using Redis), and Winston for structured logging. Custom JWTs stored in HTTP-only secure cookies with Redis-based token revocation.
 - **`packages/ml-service`**: Python microservice running FastAPI and Facebook Prophet for demand forecasting. Supports business-type-aware seasonality tuning. Communicates with the backend via HTTP.
 
 ### 2. Strict Layer Rules
@@ -112,6 +112,21 @@ Request → Route/Controller → Service → Repository → Database
 | **Route / Controller** | HTTP boundary: parse request, call service, format response | Access database. Contain business logic |
 | **Service** | Business logic, validation rules, orchestration, transactions | Write SQL. Reference HTTP (`req`/`res`) |
 | **Repository** | SQL queries, data mapping | Contain business logic. Reference HTTP |
+
+### 2B. Middleware Chain (Security)
+
+Every protected request passes through this middleware chain:
+
+```
+helmet → cors → express.json → cookieParser → requestId → requestLogger → rateLimiter
+→ authenticate → requireStoreMembership → [optional: requireRole] → [optional: validate(schema)] → Controller
+```
+
+- **`authenticate`**: Verifies JWT from cookie, checks Redis blacklist (2s timeout, fails open), sets `req.user`
+- **`requireStoreMembership`**: Validates UUID format, checks `store_members` table, sets `req.storeRole`
+- **`requireRole(['owner', 'manager'])`**: Reads from `req.storeRole` (no extra DB query)
+- **`authLimiter`**: Applied only to `/login` and `/signup` (10 req/15min)
+- **Logout**: Revokes JWT server-side via Redis blacklist before clearing cookie
 
 ### 3. API Standards
 
@@ -154,7 +169,7 @@ export function detectBusinessType(presetIds: CategoryPresetId[]): BusinessType 
 
 **Onboarding flow:** After signup, users are redirected to `/onboarding` — a single page where they select product categories they sell. The system auto-detects `business_type` and pre-seeds categories. The `MainLayout` guard checks `store.business_type` — if null, redirects to onboarding.
 
-**Auth service return shape:** `authService.signup()` and `authService.login()` return `{ user, store, role, token }` — the `store` is a full Store object (not just `storeId`).
+**Auth service return shape:** `authService.signup()` and `authService.login()` return `{ user, store, role, token }` — the `store` is a full Store object (not just `storeId`). JWTs include `jti` claim for revocation. Logout calls `revokeToken(jti)` to blacklist the token in Redis.
 
 ### 5B. Demand Forecasting
 
@@ -164,12 +179,18 @@ export function detectBusinessType(presetIds: CategoryPresetId[]): BusinessType 
 - `days` (default 30): forecast horizon (7, 15, or 30)
 - Response: `{ top_products: [{ product_id, product_name, total_orders, total_units_sold, avg_daily_units, category, forecast: [{ date, predicted_qty, lower_bound, upper_bound }] }] }`
 
+**Forecasting Tiers:**
+- **Tier 1 (EWMA):** < 30 days history. Exponential Weighted Moving Average with 14-day window and auto-selected alpha (0.2-0.5) based on coefficient of variation. Uncertainty intervals widen with forecast horizon.
+- **Tier 2 (Prophet):** >= 30 days. Facebook Prophet with business-type-aware seasonality. Auto-selects regularization strength based on data sparsity (changepoint_prior 0.01-0.05). Falls back to EWMA on ML service failure (30s timeout).
+
+**Forecast Accuracy Tracking:** MAPE (Mean Absolute Percentage Error) calculated automatically when comparing past forecasts (3+ days old) against actual sales.
+
 **Forecast Generation Script:**
 ```bash
 npm run seed:forecasts --workspace=@sellwise/server  # Generate forecasts for seeded store
 ```
 - Runs `forecastService.generateForecasts()` for the first store
-- Uses SMA fallback (ML Prophet service not running by default)
+- Uses EWMA fallback (ML Prophet service not running by default)
 
 ### 5. Category System
 
@@ -183,11 +204,13 @@ Categories are stored in a `categories` table with `store_id`, `name`, `name_bn`
 
 ### 6. Database Critical Rules
 
-- **Multi-Tenant:** Always include `store_id` in queries.
+- **Multi-Tenant:** Always include `store_id` in queries. Repository `delete()` accepts optional `storeId`.
+- **SQL Injection Prevention:** `UserRepository.update()` uses `ALLOWED_COLUMNS` allowlist.
 - **Transactions & Locking:** Order creation must be an ACID transaction. **Stock uses `SELECT ... FOR UPDATE`** to prevent overselling. Items must be alphanumerically sorted by `product_id` before locking to prevent deadlocks.
 - **Snapshots:** `order_items` snapshot the product name, unit price, and cost price at the time of the order. They do not reference current product values.
 - **Soft Deletes:** Products use soft deletes (`is_active = false`). Never hard delete a product.
 - **Primary Keys:** Always use UUIDs, never auto-increment integers.
+- **UUID Validation:** Route params validated with UUID format check in `requestId` middleware.
 - **Webhook Security:** Use an `api_keys` table (linked to `store_id`) to securely manage and rotate credentials for webhook ingestion.
 - **Migrations:** DB schemas are managed using `node-pg-migrate` inside `packages/server/migrations`.
 
@@ -198,12 +221,16 @@ The Prophet service accepts `business_type` and configures seasonality according
 ```python
 # packages/ml-service/app/services/prophet_service.py
 SEASONALITY_CONFIGS = {
-    'facebook_seller': { 'yearly_seasonality': True, ... },  # Sale-day spikes
+    'facebook_seller': { 'yearly_seasonality': True, ..., 'custom_seasonalities': [{'name': 'ecommerce_sale_season', 'period': 365.25, 'fourier_order': 5}] },
     'small_shop': { 'yearly_seasonality': True, ... },       # Weekly + monsoon
     'online_store': { 'yearly_seasonality': True, ... },     # Yearly patterns
     'wholesaler': { 'yearly_seasonality': True, ... },       # Bulk patterns
 }
 ```
+
+**Sparsity-aware regularization:** Prophet automatically adjusts `changepoint_prior_scale` (0.01-0.05) and `seasonality_prior_scale` (3-10) based on data density (ratio of zero-sales days). Sparse data gets stronger regularization to prevent overfitting.
+
+**Churn prediction:** Uses an ensemble of gap-ratio heuristic + logistic regression. LR trains on multi-signal pseudo-labels (gap_ratio + recency/frequency quartiles + monetary percentile) to reduce tautological bias. Returns weighted average with 20-50% LR weight.
 
 **Data format:** Backend sends `{ ds: date, y: quantity }` to ML service. ML service returns `{ ds, yhat, yhat_lower, yhat_upper }`.
 
@@ -218,8 +245,8 @@ const sma = history.reduce((sum, h) => sum + Number(h.total_qty), 0);
 
 **Forecast tiers:**
 - `< 7 days` history: No forecast
-- `7-29 days`: Simple Moving Average (SMA)
-- `>= 30 days`: Prophet with business-type seasonality
+- `7-29 days`: Exponential Weighted Moving Average (EWMA) — 14-day window, alpha auto-selected by data variance
+- `>= 30 days`: Prophet with business-type seasonality and sparsity-aware regularization
 
 ### 8. Background Jobs (BullMQ)
 

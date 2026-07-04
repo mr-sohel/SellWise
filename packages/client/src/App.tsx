@@ -18,6 +18,7 @@ import { AlertsListPage } from './features/alerts/AlertsListPage'
 import { SettingsLayout } from './features/settings/SettingsLayout'
 import { StaffManagementPage } from './features/settings/StaffManagementPage'
 import { ProfileSettingsPage } from './features/settings/ProfileSettingsPage'
+import { Toaster } from './components/ui/sonner'
 
 const queryClient = new QueryClient()
 
@@ -56,6 +57,7 @@ function App() {
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
+      <Toaster position="bottom-right" />
     </QueryClientProvider>
   )
 }

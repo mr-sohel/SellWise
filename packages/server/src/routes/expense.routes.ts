@@ -1,13 +1,11 @@
 import { Router } from 'express';
 import { expenseController } from '../controllers/expense.controller';
-import { authenticate } from '../middleware/authenticate';
 import { requireRole } from '../middleware/requireRole';
 import { validate } from '../middleware/validate';
 import { createExpenseSchema, expenseFiltersSchema } from '@sellwise/shared';
 
 const router = Router({ mergeParams: true });
 
-router.use(authenticate);
 router.use(requireRole(['owner', 'manager']));
 
 router.get('/', validate(expenseFiltersSchema), expenseController.list);

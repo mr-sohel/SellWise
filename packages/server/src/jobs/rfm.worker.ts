@@ -23,18 +23,22 @@ export const rfmWorker = new Worker('rfm', async (job: Job) => {
 async function calculateRFM(storeId: string) {
   // 1. Calculate raw R, F, M values and avg gap between orders for each customer
   const { rows: customers } = await db.query(
-    `SELECT c.id,
-            EXTRACT(DAY FROM NOW() - MAX(o.order_date))::int as recency,
-            COUNT(o.id) as frequency,
-            COALESCE(SUM(o.total), 0) as monetary,
-            COALESCE(AVG(gap.days_gap), 0) as avg_gap_between_orders
+    `WITH customer_orders AS (
+       SELECT
+         customer_id,
+         order_date,
+         total,
+         EXTRACT(DAY FROM order_date - LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date))::int as days_gap
+       FROM orders
+       WHERE store_id = $1 AND status NOT IN ('cancelled', 'returned')
+     )
+     SELECT c.id,
+            EXTRACT(DAY FROM NOW() - MAX(co.order_date))::int as recency,
+            COUNT(co.order_date) as frequency,
+            COALESCE(SUM(co.total), 0) as monetary,
+            COALESCE(AVG(co.days_gap), 0) as avg_gap_between_orders
      FROM customers c
-     LEFT JOIN orders o ON c.id = o.customer_id AND o.status NOT IN ('cancelled', 'returned')
-     LEFT JOIN LATERAL (
-       SELECT EXTRACT(DAY FROM o2.order_date - LAG(o2.order_date) OVER (ORDER BY o2.order_date))::int as days_gap
-       FROM orders o2
-       WHERE o2.customer_id = c.id AND o2.store_id = $1 AND o2.status NOT IN ('cancelled', 'returned')
-     ) gap ON true
+     LEFT JOIN customer_orders co ON c.id = co.customer_id
      WHERE c.store_id = $1
      GROUP BY c.id`,
     [storeId]
@@ -51,7 +55,7 @@ async function calculateRFM(storeId: string) {
   }));
 
   // Score Recency (lower days = better = higher score)
-  scored.sort((a: any, b: any) => (a.recency ?? 9999) - (b.recency ?? 9999));
+  scored.sort((a: any, b: any) => Number(a.recency ?? 9999) - Number(b.recency ?? 9999));
   const rQuintile = Math.ceil(scored.length / 5) || 1;
   for (let i = 0; i < scored.length; i++) {
     scored[i].r_score = Math.min(5, Math.floor(i / rQuintile) + 1);
@@ -60,7 +64,7 @@ async function calculateRFM(storeId: string) {
   scored.forEach((s: any) => { s.r_score = 6 - s.r_score; });
 
   // Score Frequency (higher = better)
-  scored.sort((a: any, b: any) => (b.frequency ?? 0) - (a.frequency ?? 0));
+  scored.sort((a: any, b: any) => Number(b.frequency ?? 0) - Number(a.frequency ?? 0));
   const fQuintile = Math.ceil(scored.length / 5) || 1;
   for (let i = 0; i < scored.length; i++) {
     scored[i].f_score = Math.min(5, Math.floor(i / fQuintile) + 1);
@@ -68,7 +72,7 @@ async function calculateRFM(storeId: string) {
   scored.forEach((s: any) => { s.f_score = 6 - s.f_score; });
 
   // Score Monetary (higher = better)
-  scored.sort((a: any, b: any) => (b.monetary ?? 0) - (a.monetary ?? 0));
+  scored.sort((a: any, b: any) => Number(b.monetary ?? 0) - Number(a.monetary ?? 0));
   const mQuintile = Math.ceil(scored.length / 5) || 1;
   for (let i = 0; i < scored.length; i++) {
     scored[i].m_score = Math.min(5, Math.floor(i / mQuintile) + 1);
@@ -90,10 +94,10 @@ async function calculateRFM(storeId: string) {
         store_id: storeId,
         customers: scored.map((c: any) => ({
           customer_id: c.id,
-          recency_days: c.recency ?? 9999,
-          frequency_count: c.frequency ?? 0,
-          monetary_value: c.monetary ?? 0,
-          avg_gap_between_orders: c.avg_gap_between_orders ?? 0,
+          recency_days: Number(c.recency ?? 9999),
+          frequency_count: Number(c.frequency ?? 0),
+          monetary_value: Number(c.monetary ?? 0),
+          avg_gap_between_orders: Number(c.avg_gap_between_orders ?? 0),
         })),
       }),
     });

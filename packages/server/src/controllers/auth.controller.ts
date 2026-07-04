@@ -1,20 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
 import { ApiResponse } from '../utils/ApiResponse';
+import { env } from '../config/env';
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
 
 export class AuthController {
   async signup(req: Request, res: Response, next: NextFunction) {
     try {
       const { user, store, role, token } = await authService.signup(req.body);
 
-      // Set HTTP-only cookie
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-      });
-
+      res.cookie('token', token, COOKIE_OPTIONS);
       res.status(201).json(ApiResponse.success({ user, store, role }));
     } catch (error) {
       next(error);
@@ -25,14 +27,7 @@ export class AuthController {
     try {
       const { user, store, role, token } = await authService.login(req.body);
 
-      // Set HTTP-only cookie
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-      });
-
+      res.cookie('token', token, COOKIE_OPTIONS);
       res.status(200).json(ApiResponse.success({ user, store, role }));
     } catch (error) {
       next(error);
@@ -41,10 +36,23 @@ export class AuthController {
 
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
+      // Revoke the token server-side
+      const authHeader = req.headers.authorization;
+      const tokenFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+      let tokenFromCookie: string | null = null;
+      if (req.cookies?.token) {
+        tokenFromCookie = req.cookies.token;
+      }
+      const token = tokenFromCookie || tokenFromHeader;
+      if (token) {
+        await authService.revokeToken(token);
+      }
+
       res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        secure: env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
       });
       res.status(200).json(ApiResponse.success(null));
     } catch (error) {
@@ -54,7 +62,6 @@ export class AuthController {
 
   async me(req: Request, res: Response, next: NextFunction) {
     try {
-      // In a real app we'd fetch full user details from the DB here
       res.status(200).json(ApiResponse.success({ id: req.user?.id }));
     } catch (error) {
       next(error);

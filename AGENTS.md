@@ -79,6 +79,8 @@ throw new NotFoundError('Not found');
 - Use `SELECT ... FOR UPDATE` for stock locking
 - Batch bulk operations (100 rows per query)
 - Products use soft deletes (`is_active = false`)
+- Repository `delete()` accepts optional `storeId` for multi-tenant safety
+- `UserRepository.update()` uses column allowlist (`ALLOWED_COLUMNS`) to prevent SQL injection
 - **CRITICAL:** PostgreSQL returns numeric/decimal columns as **strings**. Always cast with `Number()` before arithmetic:
   ```typescript
   // WRONG — string concatenation
@@ -88,11 +90,25 @@ throw new NotFoundError('Not found');
   const sum = history.reduce((a, h) => a + Number(h.total_qty), 0);
   ```
 
-### Auth
+### Auth & Security
 - Return `{ user, store, role, token }` from auth service (NOT `storeId`)
-- Store JWT in HTTP-only secure cookies
-- Use `authenticate` middleware for protected routes
-- Use `requireRole(['owner', 'manager'])` for role-based access
+- Store JWT in HTTP-only secure cookies (`httpOnly`, `secure`, `sameSite: 'lax'`)
+- Logout revokes JWT server-side via Redis blacklist (`revokeToken()`)
+- Passwords: min 8 chars, uppercase, lowercase, number (enforced in Zod schemas)
+- JWT secret must be ≥ 64 chars; use `openssl rand -hex 48` to generate
+
+### Middleware Chain (per request)
+```
+helmet → cors → express.json → cookieParser → requestId → requestLogger → rateLimiter
+→ [auth routes: authLimiter] → [protected routes: authenticate → requireStoreMembership]
+→ [optional: requireRole] → [optional: validate(schema)] → Controller
+```
+
+### Multi-Tenancy Enforcement
+- `authenticate` verifies JWT, checks Redis blacklist (2s timeout, fails open), sets `req.user`
+- `requireStoreMembership` validates UUID format, checks `store_members` table, sets `req.storeRole`
+- `requireRole(['owner', 'manager'])` reads from `req.storeRole` (no extra DB query)
+- All store-scoped routes mount these at router level (see `packages/server/src/routes/index.ts`)
 
 ## Frontend (React) Conventions
 
@@ -157,8 +173,17 @@ app/
 ### Data Format
 Backend sends `{ ds: date, y: quantity }`. ML service returns `{ ds, yhat, yhat_lower, yhat_upper }`.
 
+### Forecasting Tiers
+- **Tier 1 (EWMA):** < 30 days of sales history. Uses Exponential Weighted Moving Average with auto-selected alpha based on data variance.
+- **Tier 2 (Prophet):** >= 30 days. Facebook Prophet with business-type-aware seasonality. Automatically falls back to EWMA on failure.
+
 ### Churn Prediction
 Backend sends `{ store_id, customers: [{ customer_id, recency_days, frequency_count, monetary_value, avg_gap_between_orders }] }`. ML service returns `{ store_id, predictions: [{ customer_id, churn_probability }] }`.
+
+Uses an ensemble approach:
+1. **Primary:** Gap-ratio heuristic (sigmoid curve centered at 2.5x average gap)
+2. **Secondary:** Logistic regression with multi-signal pseudo-labels (reduces tautological bias)
+3. **Ensemble:** Weighted average (LR gets 20-50% weight based on agreement with heuristic)
 
 ### Business-Type Awareness
 Always accept `business_type` in forecast requests and configure seasonality accordingly.
@@ -200,6 +225,10 @@ npm run test --workspace=@sellwise/server -- -t "test name"
 ```bash
 cd packages/ml-service && uv run pytest
 ```
+
+### Logging
+- Use Winston logger (`packages/server/src/utils/logger.ts`) — never `console.log`/`console.error`
+- Log errors with context: `{ requestId, userId, storeId, error }`
 
 ## Code Quality
 

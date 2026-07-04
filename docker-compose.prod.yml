@@ -22,13 +22,14 @@ services:
   redis:
     image: redis:7-alpine
     container_name: sellwise_redis_prod
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data_prod:/data
     networks:
       - sellwise_prod_network
     restart: always
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,8 +53,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=require
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=7d
       - ML_SERVICE_URL=http://ml-service:8000

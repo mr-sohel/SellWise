@@ -6,6 +6,8 @@ import { useAuthStore } from '../../stores/auth.store';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import api from '../../lib/api/client';
 
+import { toast } from 'sonner';
+
 export function LoginPage() {
   const { setAuth, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export function LoginPage() {
       }
     } catch (error) {
       console.error('Login failed', error);
-      alert('Login failed. Please check your credentials.');
+      toast.error('Login failed. Please check your credentials.');
     }
   };
 

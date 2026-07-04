@@ -17,7 +17,7 @@ export function PageHeader({ title, description, action, className }: PageHeader
           <p className="text-sm text-muted-foreground mt-1">{description}</p>
         )}
       </div>
-      {action && <div>{action}</div>}
+      {action && <div className="w-full sm:w-auto">{action}</div>}
     </div>
   );
 }
