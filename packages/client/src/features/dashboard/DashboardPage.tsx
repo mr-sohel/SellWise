@@ -4,7 +4,7 @@ import { useDashboard } from './hooks/useDashboard';
 import { useAuthStore } from '../../stores/auth.store';
 import { DemandForecastChart } from './components/DemandForecastChart';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Legend
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell
 } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Activity, CalendarDays } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
@@ -17,10 +17,10 @@ const chartConfig = {
   category: { label: "Category" },
 };
 
-const COLORS = ['var(--color-primary)', 'var(--color-success)', 'var(--color-cyan)', 'var(--color-violet)', 'var(--color-warning)'];
+const COLORS = ['var(--color-chart-1)', 'var(--color-chart-2)', 'var(--color-chart-3)', 'var(--color-chart-4)', 'var(--color-chart-5)'];
 
 export function DashboardPage() {
-  const { t } = useTranslation();
+  useTranslation();
   const { activeStoreId } = useAuthStore();
   const [range, setRange] = useState('30d');
 
@@ -28,27 +28,24 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="w-full space-y-8 max-w-[1600px] mx-auto pb-12 animate-pulse">
-        <div className="flex justify-between items-end mb-8">
+      <div className="w-full space-y-4 max-w-[1600px] mx-auto pb-12 animate-pulse">
+        <div className="flex justify-between items-end mb-6">
           <div className="space-y-2">
             <Skeleton className="h-10 w-48" />
             <Skeleton className="h-4 w-64" />
           </div>
           <Skeleton className="h-10 w-[300px] rounded-full" />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <Skeleton className="lg:col-span-8 h-[400px] rounded-2xl" />
-          <div className="lg:col-span-4 flex flex-col gap-6">
-            <Skeleton className="flex-1 rounded-2xl" />
-            <Skeleton className="flex-1 rounded-2xl" />
-            <Skeleton className="flex-1 rounded-2xl" />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <Skeleton className="md:col-span-6 xl:col-span-3 h-32 rounded-xl" />
+          <Skeleton className="md:col-span-6 xl:col-span-3 h-32 rounded-xl" />
+          <Skeleton className="md:col-span-12 xl:col-span-6 xl:row-span-2 h-72 rounded-xl" />
+          <Skeleton className="md:col-span-6 xl:col-span-3 h-32 rounded-xl" />
+          <Skeleton className="md:col-span-6 xl:col-span-3 h-32 rounded-xl" />
         </div>
-        <Skeleton className="h-[400px] w-full rounded-2xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-[400px] rounded-2xl" />
-          <Skeleton className="h-[400px] rounded-2xl" />
-          <Skeleton className="h-[400px] rounded-2xl" />
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 mt-4">
+          <Skeleton className="xl:col-span-8 h-[400px] rounded-xl" />
+          <Skeleton className="xl:col-span-4 h-[400px] rounded-xl" />
         </div>
       </div>
     );
@@ -75,57 +72,81 @@ export function DashboardPage() {
   }
 
   const isGrowthPositive = data.revenueGrowth >= 0;
-  const maxTopProductRevenue = Math.max(...data.topProducts.map(p => p.revenue), 1);
-  const maxWorstProductRevenue = Math.max(...(data.worstProducts?.map(p => p.revenue) || []), 1);
+  const maxTopProductRevenue = Math.max(...data.topProducts.map(p => Number(p.revenue)), 1);
+  const maxWorstProductRevenue = Math.max(...(data.worstProducts?.map(p => Number(p.revenue)) || []), 1);
 
   return (
-    <div className="w-full space-y-8 max-w-[1600px] mx-auto pb-12">
-      {/* Header section with gradient text */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <div className="w-full max-w-[1600px] mx-auto pb-12 animate-fade-in-up">
+      {/* Header section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
         <div>
-          <h1 className="text-4xl font-display-md tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground/70 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-display-md tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-foreground to-foreground/70 mb-2">
             Overview
           </h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" /> 
+          <p className="text-muted-foreground flex items-center gap-2 text-sm">
+            <CalendarDays className="h-4 w-4" />
             Store performance for the last {range.toUpperCase()}
           </p>
         </div>
-        
-        <div className="bg-canvas/50 backdrop-blur-xl p-1 rounded-full border border-border/50 shadow-sm">
+
+        <div className="glass-panel p-1 rounded-full border border-white/5 shadow-sm">
           <Tabs value={range} onValueChange={setRange}>
             <TabsList className="grid w-full grid-cols-4 rounded-full bg-transparent h-9">
-              <TabsTrigger value="7d" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm">7D</TabsTrigger>
-              <TabsTrigger value="30d" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm">30D</TabsTrigger>
-              <TabsTrigger value="90d" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm">90D</TabsTrigger>
-              <TabsTrigger value="1y" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm">1Y</TabsTrigger>
+              <TabsTrigger value="7d" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm">7D</TabsTrigger>
+              <TabsTrigger value="30d" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm">30D</TabsTrigger>
+              <TabsTrigger value="90d" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm">90D</TabsTrigger>
+              <TabsTrigger value="1y" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-xs sm:text-sm">1Y</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </div>
 
-      {/* Hero Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Main Revenue Hero Card */}
-        <Card className="lg:col-span-8 overflow-hidden bg-card/40 backdrop-blur-2xl border-border/60 shadow-vercel-3 group relative flex flex-col">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-          <CardHeader className="pb-2">
-            <CardTitle className="text-muted-foreground text-sm font-medium">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
-            <div className="flex items-baseline gap-4 mb-6">
-              <h2 className="text-5xl md:text-6xl font-bold tracking-tight text-foreground">
-                ৳{data.revenue.toLocaleString()}
-              </h2>
-              <div className={`flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-full ${isGrowthPositive ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
-                {isGrowthPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {Math.abs(data.revenueGrowth)}%
-              </div>
-            </div>
+      {/* Bento Grid Container */}
+      <div className="flex flex-col gap-4">
 
-            {/* Gorgeous Area Chart embedded in the hero card */}
-            <div className="flex-1 w-full -ml-4 mt-auto min-h-[220px]">
+        {/* Top Bento Section */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+          {/* Revenue KPI */}
+          <Card className="md:col-span-6 xl:col-span-3 glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 relative overflow-hidden rounded-xl animate-fade-in-up delay-100">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-chart-1/5 rounded-full blur-3xl opacity-50 transition-opacity duration-500" />
+            <CardContent className="p-6 h-full flex flex-col justify-between relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-sm text-muted-foreground font-medium">Total Revenue</p>
+                <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${isGrowthPositive ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+                  {isGrowthPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  {Math.abs(data.revenueGrowth)}%
+                </div>
+              </div>
+              <h3 className="text-3xl xl:text-4xl font-bold tracking-tight text-foreground">
+                ৳{Number(data.revenue).toLocaleString()}
+              </h3>
+            </CardContent>
+          </Card>
+
+          {/* Orders KPI */}
+          <Card className="md:col-span-6 xl:col-span-3 glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 relative overflow-hidden rounded-xl animate-fade-in-up delay-100">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-cyan/5 rounded-full blur-3xl opacity-50 transition-opacity duration-500" />
+            <CardContent className="p-6 h-full flex flex-col justify-between relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-sm text-muted-foreground font-medium">Total Orders</p>
+                <div className="h-8 w-8 bg-cyan/10 rounded-xl flex items-center justify-center border border-cyan/20">
+                  <ShoppingBag className="h-4 w-4 text-cyan" />
+                </div>
+              </div>
+              <h3 className="text-3xl xl:text-4xl font-bold tracking-tight text-foreground">
+                {Number(data.orders).toLocaleString()}
+              </h3>
+            </CardContent>
+          </Card>
+
+          {/* Revenue Trend Chart (Spans 2 rows on XL) */}
+          <Card className="md:col-span-12 xl:col-span-6 xl:row-span-2 glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 flex flex-col overflow-hidden rounded-xl animate-fade-in-up delay-200">
+            <CardHeader className="pb-0">
+              <CardTitle className="text-lg">Revenue Trend</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 p-0 mt-4 h-64 xl:h-auto w-full relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet/5 pointer-events-none" />
               <ChartContainer config={chartConfig} className="w-full h-full">
                 <AreaChart data={data.revenueTrend} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
                   <defs>
@@ -135,8 +156,8 @@ export function DashboardPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.4} />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     tickFormatter={(val) => new Date(String(val)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     stroke="var(--color-muted-foreground)"
                     fontSize={12}
@@ -145,181 +166,231 @@ export function DashboardPage() {
                     dy={10}
                     minTickGap={30}
                   />
-                  <YAxis 
+                  <YAxis
                     stroke="var(--color-muted-foreground)"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `৳${val}`}
-                    width={60}
+                    tickFormatter={(val) => `৳${Intl.NumberFormat('en-US', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 1 }).format(val)}`}
+                    width={55}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="var(--color-primary)" 
-                    strokeWidth={3} 
-                    fillOpacity={1} 
-                    fill="url(#colorRevenue)" 
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="var(--color-primary)"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorRevenue)"
                     activeDot={{ r: 6, strokeWidth: 0, fill: "var(--color-primary)" }}
                   />
                 </AreaChart>
               </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Secondary Stats Column */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <Card className="flex-1 bg-card/60 backdrop-blur-xl border-border/50 shadow-vercel-2 hover:shadow-vercel-3 transition-all">
-            <CardContent className="p-6 flex flex-col justify-center h-full">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-cyan/10 rounded-2xl flex items-center justify-center">
-                  <ShoppingBag className="h-6 w-6 text-cyan" style={{ color: 'var(--color-cyan)' }} />
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground font-medium mb-1">Total Orders</p>
-              <h3 className="text-4xl font-bold tracking-tight text-foreground">{data.orders.toLocaleString()}</h3>
             </CardContent>
           </Card>
 
-          <Card className="flex-1 bg-card/60 backdrop-blur-xl border-border/50 shadow-vercel-2 hover:shadow-vercel-3 transition-all">
-            <CardContent className="p-6 flex flex-col justify-center h-full">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-violet/10 rounded-2xl flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-violet" style={{ color: 'var(--color-violet)' }} />
+          {/* AOV KPI */}
+          <Card className="md:col-span-6 xl:col-span-3 glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 relative overflow-hidden rounded-xl animate-fade-in-up delay-200">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-violet/5 rounded-full blur-3xl opacity-50 transition-opacity duration-500" />
+            <CardContent className="p-6 h-full flex flex-col justify-between relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-sm text-muted-foreground font-medium">Avg Order Value</p>
+                <div className="h-8 w-8 bg-violet/10 rounded-xl flex items-center justify-center border border-violet/20">
+                  <DollarSign className="h-4 w-4 text-violet" />
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground font-medium mb-1">Avg Order Value</p>
-              <h3 className="text-4xl font-bold tracking-tight text-foreground">৳{data.averageOrderValue?.toLocaleString() || 0}</h3>
+              <h3 className="text-3xl xl:text-4xl font-bold tracking-tight text-foreground">
+                ৳{Number(data.averageOrderValue || 0).toLocaleString() || 0}
+              </h3>
             </CardContent>
           </Card>
 
-          <Card className="flex-1 bg-card/60 backdrop-blur-xl border-border/50 shadow-vercel-2 hover:shadow-vercel-3 transition-all relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-32 h-32 bg-success/5 rounded-full blur-3xl" />
-            <CardContent className="p-6 flex flex-col justify-center h-full relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-12 w-12 bg-success/10 rounded-2xl flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-success" />
+          {/* Health Score KPI */}
+          <Card className="md:col-span-6 xl:col-span-3 glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 relative overflow-hidden rounded-xl animate-fade-in-up delay-200">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-success/5 rounded-full blur-3xl opacity-50 transition-opacity duration-500" />
+            <CardContent className="p-6 h-full flex flex-col justify-between relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-sm text-muted-foreground font-medium">Health Score</p>
+                <div className="h-8 w-8 bg-success/10 rounded-xl flex items-center justify-center border border-success/20">
+                  <Activity className="h-4 w-4 text-success" />
                 </div>
-                <span className="text-xs font-semibold text-success bg-success/10 px-2 py-1 rounded-full">Good Standing</span>
               </div>
-              <p className="text-sm text-muted-foreground font-medium mb-1">Health Score</p>
-              <div className="flex items-end gap-2">
-                <h3 className="text-4xl font-bold tracking-tight text-foreground">{data.healthScore}</h3>
+              <div className="flex items-end gap-1">
+                <h3 className="text-3xl xl:text-4xl font-bold tracking-tight text-foreground">{data.healthScore}</h3>
                 <span className="text-muted-foreground font-medium mb-1.5">/100</span>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      {/* Demand Forecast */}
-      <div className="overflow-hidden w-full">
-        <DemandForecastChart />
-      </div>
+        {/* Middle Bento Section */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
 
-      {/* Bottom Grid: Pie Chart & Product Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Sales by Category (Pie) */}
-        <Card className="bg-card/40 backdrop-blur-xl border-border/50 shadow-vercel-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Category Distribution</CardTitle>
-            <CardDescription>Revenue split across product types</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full flex justify-center">
-              {data.categoryBreakdown.length > 0 ? (
-                <ChartContainer config={chartConfig} className="w-full h-full">
-                  <PieChart>
-                    <Pie
-                      data={data.categoryBreakdown}
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={4}
-                      dataKey="revenue"
-                      nameKey="category"
-                      strokeWidth={0}
-                    >
-                      {data.categoryBreakdown.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '13px' }} />
-                  </PieChart>
-                </ChartContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No data available</div>
+          {/* Demand Forecast (Wider in Bento) */}
+          <div className="xl:col-span-8 flex flex-col animate-fade-in-up delay-300">
+            <DemandForecastChart />
+          </div>
+
+          {/* Category Pie Chart */}
+          <Card className="xl:col-span-4 glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 rounded-xl flex flex-col overflow-hidden relative animate-fade-in-up delay-300">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-chart-1/5 rounded-full blur-3xl opacity-50 transition-opacity duration-500" />
+            <CardHeader className="pb-2 relative z-10">
+              <CardTitle className="text-lg">Sales by Category</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col items-center justify-center pb-6 relative z-10">
+              <div className="h-[220px] w-full relative flex items-center justify-center">
+                {data.categoryBreakdown.length > 0 ? (
+                  <>
+                    <ChartContainer config={chartConfig} className="w-full h-full absolute inset-0">
+                      <PieChart>
+                        <defs>
+                          {COLORS.map((color, index) => (
+                            <linearGradient key={`grad-${index}`} id={`pieGrad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={color} stopOpacity={1} />
+                              <stop offset="100%" stopColor={color} stopOpacity={0.7} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <Pie
+                          data={data.categoryBreakdown}
+                          innerRadius={65}
+                          outerRadius={85}
+                          paddingAngle={6}
+                          dataKey="revenue"
+                          nameKey="category"
+                          stroke="transparent"
+                          cornerRadius={8}
+                        >
+                          {data.categoryBreakdown.map((_entry, index) => (
+                            <Cell key={`cell-${index}`} fill={`url(#pieGrad-${index % COLORS.length})`} className="hover:opacity-80 transition-opacity" />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </PieChart>
+                    </ChartContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total</span>
+                      <span className="text-xl font-bold text-foreground mt-0.5">
+                        ৳{data.categoryBreakdown.reduce((sum, item) => sum + Number(item.revenue), 0).toLocaleString(undefined, { notation: 'compact', maximumFractionDigits: 1 })}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground text-sm">No data available</div>
+                )}
+              </div>
+
+              {/* Custom Legend */}
+              {data.categoryBreakdown.length > 0 && (
+                <div className="w-full mt-4 px-2 grid grid-cols-2 gap-x-2 gap-y-3">
+                  {data.categoryBreakdown.slice(0, 4).map((item, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-medium text-foreground truncate" title={item.category}>{item.category}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {Math.round((item.revenue / (data.categoryBreakdown.reduce((s, i) => s + Number(i.revenue), 0) || 1)) * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Top Products (Custom UI List) */}
-        <Card className="bg-card/40 backdrop-blur-xl border-border/50 shadow-vercel-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Top Performers</CardTitle>
-            <CardDescription>Highest revenue generating items</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-5 mt-2">
-              {data.topProducts.length > 0 ? (
-                data.topProducts.slice(0, 5).map((item, i) => (
-                  <div key={i} className="flex items-center gap-4 group">
-                    <div className="w-6 h-6 rounded-full bg-canvas-soft flex items-center justify-center text-xs text-muted-foreground font-mono font-medium group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between mb-1.5 items-end">
-                        <span className="text-sm font-medium text-foreground truncate pr-4">{item.productName}</span>
-                        <span className="text-sm font-semibold text-foreground whitespace-nowrap">৳{item.revenue.toLocaleString()}</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-canvas-soft rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${(item.revenue / maxTopProductRevenue) * 100}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center text-muted-foreground text-sm py-10">No data available</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Bottom Bento Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Top Products */}
+          <Card className="glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 rounded-xl relative overflow-hidden animate-fade-in-up delay-400">
+            <div className="absolute left-0 top-0 w-64 h-32 bg-chart-1/5 rounded-full blur-3xl opacity-30 pointer-events-none" />
+            <CardHeader className="pb-4 relative z-10">
+              <CardTitle className="text-lg flex items-center gap-2">
+                Top Performers
+                <span className="flex items-center justify-center bg-primary/10 text-primary text-[10px] uppercase font-bold px-2 py-0.5 rounded-full tracking-wider border border-primary/20">High Momentum</span>
+              </CardTitle>
+              <CardDescription>Highest revenue generating items</CardDescription>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="space-y-3">
+                {data.topProducts.length > 0 ? (
+                  data.topProducts.slice(0, 5).map((item, i) => {
+                    // Ranking colors for top 3
+                    const rankColors = [
+                      'bg-amber-500/10 text-amber-600 border border-amber-500/20', // 1st Gold
+                      'bg-slate-400/10 text-slate-500 border border-slate-400/20', // 2nd Silver
+                      'bg-orange-700/10 text-orange-600 border border-orange-700/20', // 3rd Bronze
+                    ];
+                    const rankStyle = i < 3 ? rankColors[i] : 'bg-canvas-soft text-muted-foreground border border-transparent';
 
-        {/* Worst Products (Custom UI List) */}
-        <Card className="bg-card/40 backdrop-blur-xl border-border/50 shadow-vercel-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Needs Attention</CardTitle>
-            <CardDescription>Lowest revenue generating items</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-5 mt-2">
-              {data.worstProducts && data.worstProducts.length > 0 ? (
-                data.worstProducts.slice(0, 5).map((item, i) => (
-                  <div key={i} className="flex items-center gap-4 group">
-                    <div className="w-6 h-6 rounded-full bg-canvas-soft flex items-center justify-center text-xs text-muted-foreground font-mono font-medium group-hover:bg-destructive/10 group-hover:text-destructive transition-colors">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between mb-1.5 items-end">
-                        <span className="text-sm font-medium text-foreground truncate pr-4">{item.productName}</span>
-                        <span className="text-sm font-semibold text-foreground whitespace-nowrap">৳{item.revenue.toLocaleString()}</span>
+                    return (
+                      <div key={i} className="flex items-center gap-4 group/item p-2 -mx-2 rounded-xl hover:bg-muted/50 transition-colors">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-mono font-bold shadow-sm transition-all ${rankStyle}`}>
+                          #{i + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between mb-1.5 items-end">
+                            <span className="text-sm font-medium text-foreground truncate pr-4 group-hover/item:text-primary transition-colors">{item.productName}</span>
+                            <span className="text-sm font-bold text-foreground whitespace-nowrap">৳{Number(item.revenue).toLocaleString()}</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-canvas-soft rounded-full overflow-hidden shadow-inner">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-primary to-cyan shadow-[0_0_10px_rgba(var(--color-primary),0.5)] transition-all duration-1000 ease-out"
+                              style={{ width: `${(item.revenue / maxTopProductRevenue) * 100}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="h-1.5 w-full bg-canvas-soft rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-destructive" style={{ width: `${(item.revenue / maxWorstProductRevenue) * 100}%` }} />
+                    );
+                  })
+                ) : (
+                  <div className="text-center text-muted-foreground text-sm py-10">No data available</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Worst Products */}
+          <Card className="glass-panel hover:shadow-vercel-4 hover:border-border/80 transition-all duration-300 rounded-xl relative overflow-hidden animate-fade-in-up delay-400">
+            <div className="absolute left-0 top-0 w-64 h-32 bg-destructive/5 rounded-full blur-3xl opacity-30 pointer-events-none" />
+            <CardHeader className="pb-4 relative z-10">
+              <CardTitle className="text-lg flex items-center gap-2">
+                Needs Attention
+                <span className="flex items-center justify-center bg-destructive/10 text-destructive text-[10px] uppercase font-bold px-2 py-0.5 rounded-full tracking-wider border border-destructive/20">At Risk</span>
+              </CardTitle>
+              <CardDescription>Lowest revenue generating items</CardDescription>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="space-y-3">
+                {data.worstProducts && data.worstProducts.length > 0 ? (
+                  data.worstProducts.slice(0, 5).map((item, i) => (
+                    <div key={i} className="flex items-center gap-4 group/item p-2 -mx-2 rounded-xl hover:bg-muted/50 transition-colors">
+                      <div className="w-8 h-8 rounded-xl bg-canvas-soft border border-transparent flex items-center justify-center text-xs text-muted-foreground font-mono font-bold group-hover/item:bg-destructive/5 group-hover/item:text-destructive group-hover/item:border-destructive/20 transition-all shadow-sm">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between mb-1.5 items-end">
+                          <span className="text-sm font-medium text-foreground truncate pr-4 group-hover/item:text-destructive transition-colors">{item.productName}</span>
+                          <span className="text-sm font-bold text-foreground whitespace-nowrap">৳{Number(item.revenue).toLocaleString()}</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-canvas-soft rounded-full overflow-hidden shadow-inner">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-destructive to-orange-500 shadow-[0_0_10px_rgba(var(--color-destructive),0.5)] transition-all duration-1000 ease-out"
+                            style={{ width: `${(item.revenue / maxWorstProductRevenue) * 100}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center text-muted-foreground text-sm py-10">No data available</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground text-sm py-10">No data available</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
       </div>
     </div>
   );

@@ -48,7 +48,7 @@ export function CreateOrderPage() {
     }
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control,
     name: 'items'
   });
@@ -122,7 +122,7 @@ export function CreateOrderPage() {
     // Find empty slot or append
     const emptyIndex = watchItems.findIndex(item => !item.product_id);
     if (emptyIndex >= 0) {
-      setValue(`items.${emptyIndex}.product_id`, product.id);
+      update(emptyIndex, { product_id: product.id, quantity: 1 });
     } else {
       append({ product_id: product.id, quantity: 1 });
     }
@@ -190,6 +190,7 @@ export function CreateOrderPage() {
                           <button
                             key={c.id}
                             type="button"
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => selectCustomer(c)}
                             className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
                           >
@@ -244,7 +245,7 @@ export function CreateOrderPage() {
                     </button>
                   )}
                 </div>
-                {showProductDropdown && productSearch && (
+                {showProductDropdown && (
                   <div className="absolute z-50 top-full mt-1 w-full bg-card border border-border rounded-lg shadow-vercel-5 py-1 max-h-64 overflow-auto">
                     {filteredProducts.length === 0 ? (
                       <div className="px-3 py-4 text-sm text-muted-foreground text-center">No products found</div>
@@ -253,6 +254,7 @@ export function CreateOrderPage() {
                         <button
                           key={p.id}
                           type="button"
+                          onMouseDown={(e) => e.preventDefault()}
                           onClick={() => addProduct(p)}
                           className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between"
                         >
@@ -286,7 +288,7 @@ export function CreateOrderPage() {
                           <div className="flex h-10 items-center gap-2 px-3 bg-canvas-soft border border-border rounded-md text-sm">
                             <span className="font-medium truncate">{product.name}</span>
                             <span className="text-muted-foreground">৳{product.selling_price}</span>
-                            <input type="hidden" {...register(`items.${index}.product_id`)} />
+                            <input type="hidden" {...register(`items.${index}.product_id`)} value={watchItems[index]?.product_id || ''} />
                           </div>
                         ) : (
                           <>
@@ -318,37 +320,37 @@ export function CreateOrderPage() {
 
           {/* Right Column: Order Summary */}
           <div className="space-y-6">
-            <div className="bg-foreground text-primary-foreground border border-border rounded-xl shadow-vercel-3 p-6">
+            <div className="bg-card border border-border rounded-xl shadow-vercel-2 p-6">
               <h2 className="text-base font-medium mb-4">Summary</h2>
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-primary-foreground/70">Subtotal</span>
-                  <span className="font-medium">৳{subtotal.toLocaleString()}</span>
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">৳{Number(subtotal).toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-primary-foreground/70">Delivery</span>
-                  <input type="number" {...register('delivery_charge', { valueAsNumber: true })} className="w-20 px-2 py-1 text-right border border-primary-foreground/20 rounded-md bg-foreground text-sm text-primary-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-foreground/30" />
+                  <span className="text-muted-foreground">Delivery</span>
+                  <input type="number" {...register('delivery_charge', { valueAsNumber: true })} className="w-24 px-3 py-1.5 text-right border border-input rounded-md bg-card text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-muted-foreground" />
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-primary-foreground/70">Discount</span>
-                  <input type="number" {...register('discount', { valueAsNumber: true })} className="w-20 px-2 py-1 text-right border border-primary-foreground/20 rounded-md bg-foreground text-sm text-primary-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-foreground/30" />
+                  <span className="text-muted-foreground">Discount</span>
+                  <input type="number" {...register('discount', { valueAsNumber: true })} className="w-24 px-3 py-1.5 text-right border border-input rounded-md bg-card text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-muted-foreground" />
                 </div>
 
-                <hr className="my-2 border-primary-foreground/20" />
+                <hr className="my-3 border-border" />
 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>৳{total.toLocaleString()}</span>
+                  <span>৳{Number(total).toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="mt-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Source</label>
-                  <select {...register('source')} className="flex h-10 w-full rounded-md border border-primary-foreground/20 bg-foreground px-3 py-2 text-sm text-primary-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-foreground/30 appearance-none">
+                  <select {...register('source')} className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-muted-foreground appearance-none">
                     {sourceOptions.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
@@ -359,7 +361,7 @@ export function CreateOrderPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-6 inline-flex items-center justify-center h-10 bg-card text-foreground rounded-full font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm"
+                className="w-full mt-6 inline-flex items-center justify-center h-10 bg-foreground text-primary-foreground rounded-full font-medium hover:opacity-90 disabled:opacity-50 transition-opacity text-sm"
               >
                 {isSubmitting ? 'Creating...' : 'Create Order'}
               </button>

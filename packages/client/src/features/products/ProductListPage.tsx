@@ -10,6 +10,7 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { CreateProductDrawer } from './CreateProductDrawer';
+import { useDebounce } from '../../hooks/useDebounce';
 
 export function ProductListPage() {
   const { t } = useTranslation();
@@ -18,9 +19,10 @@ export function ProductListPage() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
 
-  const { data: result, isLoading } = useProducts(storeId, { page, limit: 10, search });
+  const { data: result, isLoading } = useProducts(storeId, { page, limit: 10, search: debouncedSearch });
   const deleteMutation = useDeleteProduct(storeId);
 
   const handleDelete = async (id: string) => {
@@ -104,7 +106,7 @@ export function ProductListPage() {
                   <tr key={product.id} className="hover:bg-canvas-soft/50 transition-colors">
                     <td className="px-6 sm:px-8 py-5 font-medium text-foreground">{product.name}</td>
                     <td className="px-6 sm:px-8 py-5 text-muted-foreground font-mono text-xs whitespace-nowrap">{product.sku || '-'}</td>
-                    <td className="px-6 sm:px-8 py-5 text-right text-foreground whitespace-nowrap">৳{product.selling_price.toLocaleString()}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right text-foreground whitespace-nowrap">৳{Number(product.selling_price).toLocaleString()}</td>
                     <td className="px-6 sm:px-8 py-5 text-right whitespace-nowrap">
                       <Badge variant={product.stock_quantity <= product.low_stock_threshold ? 'destructive' : 'success'}>
                         {product.stock_quantity} {product.unit}

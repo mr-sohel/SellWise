@@ -51,18 +51,23 @@ Write-Host "ML Service is ready!" -ForegroundColor Green
 # 5. Start Server and Client (ML is already running)
 Write-Host "Starting services (Ctrl+C to stop all)..." -ForegroundColor Cyan
 Write-Host "   - Frontend UI: http://localhost:5173" -ForegroundColor White
-Write-Host "   - Backend API: http://localhost:5000/api/v1/health" -ForegroundColor White
+Write-Host "   - Backend API: http://localhost:5005/api/v1/health" -ForegroundColor White
 Write-Host "   - ML Service:  http://127.0.0.1:8000/health (already running)" -ForegroundColor White
 Write-Host ""
 
-# Cleanup function to stop ML process tree on exit
-$cleanup = {
-    param($mlPid)
-    taskkill /PID $mlPid /T /F 2>$null
+# Cleanup function to stop ML process tree
+function Cleanup-Processes {
+    Write-Host "`nStopping ML Service..." -ForegroundColor Yellow
+    taskkill /PID $mlProcess.Id /T /F 2>$null
+    Write-Host "Services stopped." -ForegroundColor Cyan
 }
-Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action { & $cleanup $mlProcess.Id } | Out-Null
 
-# Run Server and Client together
-npx concurrently --kill-others --names "SERVER,CLIENT" -c "bgBlue.bold,bgGreen.bold" `
-    "npm run dev:server" `
-    "npm run dev:client"
+try {
+    # Run Server and Client together
+    npx concurrently --kill-others --names "SERVER,CLIENT" -c "bgBlue.bold,bgGreen.bold" `
+        "npm run dev:server" `
+        "npm run dev:client"
+}
+finally {
+    Cleanup-Processes
+}

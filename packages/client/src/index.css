@@ -1,73 +1,67 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Outfit:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* ── Upscaled Typography Scale for Consistency ── */
+  /* ── Typography Scale ── */
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
   --text-base: 1.0625rem;
 
-  /* ── Vercel Canvas / Surface ── */
-  --color-background: #fafafa;
-  --color-foreground: #171717;
-  --color-card: #ffffff;
+  /* ── Vercel Style Surface ── */
+  --color-background: #fafafa; /* canvas-soft for page background */
+  --color-foreground: #171717; /* ink */
+  
+  --color-card: #ffffff; /* canvas */
   --color-card-foreground: #171717;
+  
   --color-popover: #ffffff;
   --color-popover-foreground: #171717;
 
-  /* ── Vercel Primary (Ink) ── */
-  --color-primary: #171717;
+  /* ── Primary & Accent Colors ── */
+  --color-primary: #171717; /* Ink - main CTA */
   --color-primary-foreground: #ffffff;
 
-  /* ── Vercel Secondary (Canvas) ── */
-  --color-secondary: #ffffff;
+  --color-secondary: #ffffff; /* Canvas */
   --color-secondary-foreground: #171717;
 
-  /* ── Vercel Muted ── */
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #666666;
+  --color-muted: #f5f5f5; /* canvas-soft-2 */
+  --color-muted-foreground: #888888; /* mute */
 
-  /* ── Vercel Accent ── */
-  --color-accent: #fafafa;
+  --color-accent: #f5f5f5;
   --color-accent-foreground: #171717;
 
-  /* ── Vercel Destructive / Error ── */
-  --color-destructive: #ee0000;
+  --color-destructive: #ee0000; /* Error */
   --color-destructive-foreground: #ffffff;
 
-  /* ── Vercel Border / Input / Ring ── */
-  --color-border: #ebebeb;
+  --color-border: #ebebeb; /* Hairline */
   --color-input: #ebebeb;
-  --color-ring: #171717;
+  --color-ring: #0070f3; /* Focus ring uses link color */
 
-  /* ── Vercel Semantic ── */
-  --color-success: #0070f3;
+  /* ── Semantics ── */
+  --color-success: #0070f3; /* Vercel uses blue for success */
   --color-success-foreground: #ffffff;
-  --color-warning: #f5a623;
-  --color-warning-foreground: #171717;
+  --color-warning: #f5a623; 
+  --color-warning-foreground: #ffffff;
   --color-link: #0070f3;
   --color-link-deep: #0761d1;
 
-  /* ── Vercel Extended Palette ── */
+  /* ── Extended Palette ── */
   --color-canvas-soft: #fafafa;
   --color-canvas-soft-2: #f5f5f5;
-  --color-body: #333333;
-  --color-mute: #666666;
-  --color-hairline: #ebebeb;
-  --color-hairline-strong: #a1a1a1;
-
-  --color-error-soft: #f7d4d6;
-  --color-error-deep: #c50000;
-  --color-warning-soft: #ffefcf;
-  --color-warning-deep: #ab570a;
-  --color-link-bg-soft: #d3e5ff;
-
+  --color-body: #4d4d4d;
+  --color-mute: #888888;
+  
   --color-violet: #7928ca;
   --color-violet-soft: #d8ccf1;
-  --color-violet-deep: #4c2889;
   --color-cyan: #50e3c2;
   --color-cyan-soft: #aaffec;
-  --color-cyan-deep: #29bc9b;
+
+  /* ── Chart Palette ── */
+  --color-chart-1: #0070f3; /* Vercel Blue */
+  --color-chart-2: #7928ca; /* Violet */
+  --color-chart-3: #38bdf8; /* Light Blue */
+  --color-chart-4: #818cf8; /* Indigo */
+  --color-chart-5: #c084fc; /* Purple */
 }
 
 /* ── Base Styles ── */
@@ -81,12 +75,11 @@ html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 17px; /* Globally scales up all rem-based typography and spacing */
+  font-size: 17px;
 }
 
 body {
   background-color: var(--color-background);
-  background-image: radial-gradient(circle at top left, var(--color-canvas-soft), var(--color-background) 70%);
   color: var(--color-foreground);
   font-size: 16px;
   line-height: 24px;
@@ -94,73 +87,99 @@ body {
   letter-spacing: 0;
 }
 
-/* ── Typography ── */
+/* ── Typography (Display Fonts) ── */
+.font-display-xl,
+.font-display-lg,
+.font-display-md,
+.font-display-sm {
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+}
+
 .font-display-xl {
   font-size: 48px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 48px;
-  letter-spacing: -2.4px;
+  letter-spacing: -1.5px;
 }
 
 .font-display-lg {
   font-size: 32px;
   font-weight: 600;
   line-height: 40px;
-  letter-spacing: -1.28px;
+  letter-spacing: -1px;
 }
 
 .font-display-md {
   font-size: 24px;
   font-weight: 600;
   line-height: 32px;
-  letter-spacing: -0.96px;
+  letter-spacing: -0.5px;
 }
 
 .font-display-sm {
   font-size: 20px;
   font-weight: 600;
   line-height: 28px;
-  letter-spacing: -0.6px;
+  letter-spacing: -0.3px;
 }
 
-/* ── Stacked Shadow System ── */
-.shadow-vercel-1 {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+/* ── Shadows and Glows ── */
+.shadow-vercel-1 { box-shadow: 0 0 0 1px #00000014; }
+.shadow-vercel-2 { box-shadow: 0 1px 1px #00000005, 0 2px 2px #0000000a, 0 0 0 1px #00000014; }
+.shadow-vercel-3 { box-shadow: 0 2px 2px #0000000a, 0 8px 8px -8px #0000000a, 0 0 0 1px #00000014; }
+.shadow-vercel-4 { box-shadow: 0 2px 2px #0000000a, 0 8px 16px -4px #0000000a, 0 0 0 1px #00000014; }
+.shadow-vercel-5 { box-shadow: 0 1px 1px #00000005, 0 8px 16px -4px #0000000a, 0 24px 32px -8px #0000000f, 0 0 0 1px #00000014; }
+
+.shadow-glow {
+  box-shadow: 0 0 30px -5px rgba(0, 0, 0, 0.08), 0 10px 20px -5px rgba(0, 0, 0, 0.04);
 }
 
-.shadow-vercel-2 {
-  box-shadow:
-    0px 1px 1px rgba(0, 0, 0, 0.02),
-    0px 2px 2px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(0, 0, 0, 0.08);
+/* ── Glassmorphism Utilities ── */
+.glass-panel {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 1px #00000005, 0 2px 2px #0000000a, 0 0 0 1px #00000014;
 }
 
-.shadow-vercel-3 {
-  box-shadow:
-    0px 2px 2px rgba(0, 0, 0, 0.04),
-    0px 8px 8px -8px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(0, 0, 0, 0.08);
+.glass-sidebar {
+  background: var(--color-background);
+  border-right: 1px solid var(--color-border);
 }
 
-.shadow-vercel-4 {
-  box-shadow:
-    0px 2px 2px rgba(0, 0, 0, 0.04),
-    0px 8px 16px -4px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(0, 0, 0, 0.08);
+/* ── Animations ── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.shadow-vercel-5 {
-  box-shadow:
-    0px 1px 1px rgba(0, 0, 0, 0.02),
-    0px 8px 16px -4px rgba(0, 0, 0, 0.04),
-    0px 24px 32px -8px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.08);
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
 
 /* ── Selection ── */
 ::selection {
-  background-color: #171717;
-  color: #f2f2f2;
+  background-color: var(--color-primary);
+  color: #ffffff;
 }
 
 @layer base {

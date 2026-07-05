@@ -98,6 +98,10 @@ const PRODUCTS: ProductDef[] = [
   { name: 'Manfrotto PIXI Mini Tripod', name_bn: 'ম্যানফ্রোটো PIXI মিনি ট্রাইপড', sku: 'CM-006', category: 'Cameras', cost: 2000, price: 3299, stock: 20, threshold: 5, unit: 'pcs' },
   { name: 'Canon EF 50mm f/1.8 STM Lens', name_bn: 'ক্যানন 50mm f/1.8 লেন্স', sku: 'CM-007', category: 'Cameras', cost: 18000, price: 24999, stock: 4, threshold: 1, unit: 'pcs' },
   { name: 'Camera Bag (Large)', name_bn: 'ক্যামেরা ব্যাগ', sku: 'CM-008', category: 'Cameras', cost: 1500, price: 2499, stock: 25, threshold: 5, unit: 'pcs' },
+
+  // ── Smartwatches & Wearables (Viral Product Test) ────────────────────────
+  { name: 'Apple Watch Series 9 (45mm)', name_bn: 'অ্যাপল ওয়াচ সিরিজ 9', sku: 'SW-001', category: 'Phone Accessories', cost: 45000, price: 54999, stock: 150, threshold: 20, unit: 'pcs' },
+  { name: 'Amazfit GTR 4 Smartwatch', name_bn: 'অ্যামেজফিট জিটিআর ৪', sku: 'SW-002', category: 'Phone Accessories', cost: 14000, price: 18999, stock: 45, threshold: 10, unit: 'pcs' },
 ];
 
 // ─── realistic Bangladeshi customers ─────────────────────────────────────────
@@ -285,7 +289,9 @@ async function seed() {
     let orderSeq = 1000;
     for (const batch of orderBatches) {
       const orderDate = daysAgo(batch.day);
-      const shuffled = [...dbProducts].sort(() => Math.random() - 0.5);
+      // Exclude Apple Watch from random 12-month pool to keep its data clean
+      const regularProducts = dbProducts.filter(p => p.sku !== 'SW-001');
+      const shuffled = [...regularProducts].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, batch.numItems);
 
       let subtotal = 0;
@@ -329,7 +335,57 @@ async function seed() {
 
       orderCount++;
     }
-    console.log(`Inserted ${orderCount} orders.`);
+    console.log(`Inserted ${orderCount} normal orders.`);
+
+    // ── Inject Viral Product Trend ───────────────────────────────────────
+    console.log('Injecting viral trend for Apple Watch Series 9...');
+    const viralProduct = dbProducts.find(p => p.sku === 'SW-001');
+    if (viralProduct) {
+      let viralOrderCount = 0;
+      // Generate 60 days of data to trigger Prophet and ensure 0% sparsity
+      for (let day = 60; day >= -2; day--) {
+        // Base volume: very low for the first 40 days, then massive exponential spike that STAYS high
+        let baseVolume = 1;
+        if (day <= 20) {
+           // Cap the day variable for math purposes to prevent negative bases causing NaN
+           const mathDay = Math.max(day, -2);
+           baseVolume = Math.pow((25 - mathDay), 2) * 2;
+        }
+        const dailyOrders = Math.floor(baseVolume + ri(0, 5));
+
+        for (let i = 0; i < dailyOrders; i++) {
+          const orderDate = daysAgo(day);
+          const customer = pick(dbCustomers);
+          const qty = ri(1, 2);
+          const subtotal = viralProduct.selling_price * qty;
+          const deliveryCharge = ri(60, 150);
+          const total = subtotal + deliveryCharge;
+
+          const { rows: orderRows } = await client.query(
+            `INSERT INTO orders (store_id, customer_id, order_number, status, source, total, delivery_charge, discount, notes, order_date, created_at, updated_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11) RETURNING id`,
+            [
+              storeId, customer.id,
+              `SW-V${orderSeq++}`,
+              'delivered',
+              'Online',
+              total, deliveryCharge, 0,
+              'Viral trend order',
+              orderDate, orderDate,
+            ]
+          );
+
+          await client.query(
+            `INSERT INTO order_items (order_id, product_id, product_name, unit_price, cost_price, quantity, created_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+            [orderRows[0].id, viralProduct.id, viralProduct.name, viralProduct.selling_price, viralProduct.cost_price, qty, orderDate]
+          );
+          viralOrderCount++;
+          orderCount++;
+        }
+      }
+      console.log(`Injected ${viralOrderCount} viral orders for ${viralProduct.name} over the last 60 days.`);
+    }
 
     // Update customer aggregates
     await client.query(`

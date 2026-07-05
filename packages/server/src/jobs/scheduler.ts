@@ -33,8 +33,8 @@ export async function setupSchedules() {
     repeat: { pattern: '0 3 * * *' }
   });
 
-  // Weekly Customer RFM/Churn calculation (Sunday at 4:00 AM)
+  // Daily Customer RFM/Churn calculation (Every day at 5:00 AM - off-peak, after forecasts/alerts)
   await rfmQueue.add('rfm:calculate', {}, {
-    repeat: { pattern: '0 4 * * 0' }
+    repeat: { pattern: '0 5 * * *' }
   });
 }

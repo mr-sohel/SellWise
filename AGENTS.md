@@ -1,243 +1,119 @@
 # AGENTS.md
 
-This file provides coding conventions and guidelines for AI agents working on the SellWise codebase.
+SellWise: AI Sales Analytics & Inventory SaaS for small sellers in Bangladesh. Monorepo (`npm workspaces`).
 
-## General Principles
+## Packages
 
-- Follow existing patterns and conventions in the codebase
-- Never hardcode secrets, keys, or credentials
-- Preserve existing comments and docstrings
-- Handle errors at the controller/middleware level
-- Add pagination to list endpoints
-- Log errors with context using Winston
+| Package | Path | Stack | Dev command |
+|---------|------|-------|-------------|
+| `@sellwise/shared` | `packages/shared/` | TS, Zod | `npm run build --workspace=@sellwise/shared` |
+| `@sellwise/client` | `packages/client/` | React 19, Vite, Tailwind v4 | `npm run dev:client` |
+| `@sellwise/server` | `packages/server/` | Express 5, PostgreSQL, Redis, BullMQ | `npm run dev:server` |
+| `@sellwise/ml-service` | `packages/ml-service/` | Python, FastAPI, Prophet, scikit-learn | `uv run uvicorn app.main:app --port 8000 --reload` |
 
-## TypeScript Conventions
+Backend runs on port **5005** (not 5000). ML on 8000. Frontend on 5173.
 
-### Imports
-- Use `import type` for type-only imports (required by `verbatimModuleSyntax: true`)
-- Import from `@sellwise/shared` for types, schemas, and constants
-- Never import from compiled `dist/` directories in source files
+## Critical Gotchas
 
-```typescript
-// Correct
-import type { CreateOrderDTO, Product } from '@sellwise/shared';
-import { BUSINESS_TYPES, CATEGORY_PRESETS, detectBusinessType } from '@sellwise/shared';
+1. **`verbatimModuleSyntax: true`** (client + shared tsconfig). Always use `import type` for type-only imports — missing it crashes the Vite dev server.
+2. **Rebuild shared after edits**: `npm run build --workspace=@sellwise/shared`. Client and server won't see changes until you do.
+3. **PostgreSQL returns numeric/decimal columns as strings**. Wrap in `Number()` before any arithmetic — `reduce((a, b) => a + Number(b.val), 0)`, not `+ b.val`.
+4. **`text-canvas` does not exist** in the Tailwind theme. Use `text-primary-foreground` for primary CTAs.
+5. **`useFieldArray` in React Hook Form**: use `update()` not `setValue()`. For hidden inputs in arrays, pass `value={watch(...)}`.
+6. **Zustand persist hydration**: strip DB JOIN fields via `cleanStore` + `partialize` to avoid hydration bugs.
+7. **`useDebounce` required** for any API search input — never fire raw keystrokes to the backend.
 
-// Wrong
-import { CreateOrderDTO, Product } from '@sellwise/shared';
+## Backend Architecture
+
+Layered: `Route/Controller → Service → Repository → DB`. No DB access in controllers; no HTTP references in repos.
+
+**4-file pattern per resource**:
+```
+routes/resource.routes.ts
+controllers/resource.controller.ts
+services/resource.service.ts
+repositories/resource.repository.ts
 ```
 
-### Shared Package
-After modifying any file in `packages/shared/`, rebuild before the client or server can pick up changes:
-```bash
-npm run build --workspace=@sellwise/shared
-```
+**Error handling**: throw custom errors from `src/errors/AppError.ts` (`NotFoundError`, `ConflictError`, `ValidationError`, `ForbiddenError`, `UnauthorizedError`). Never throw raw HTTP errors.
 
-## Backend (Express) Conventions
+**Response envelope**: use `ApiResponse.success(data)` from `src/utils/ApiResponse.ts`.
 
-### File Structure
-Follow the 4-file pattern for each resource:
-```
-routes/resource.routes.ts     # Route definitions
-controllers/resource.controller.ts  # Request handlers
-services/resource.service.ts  # Business logic
-repositories/resource.repository.ts  # Database queries
-```
-
-### Layer Rules
-| Layer | Responsibility | MUST NOT |
-|-------|---------------|----------|
-| **Route / Controller** | HTTP boundary: parse request, call service, format response | Access database. Contain business logic |
-| **Service** | Business logic, validation rules, orchestration, transactions | Write SQL. Reference HTTP (`req`/`res`) |
-| **Repository** | SQL queries, data mapping | Contain business logic. Reference HTTP |
-
-### Error Handling
-Services should throw custom errors, not HTTP errors:
-```typescript
-import { NotFoundError, ConflictError, ValidationError } from '../errors/AppError';
-
-// In service
-throw new NotFoundError('Product not found');
-throw new ConflictError('Email already in use');
-```
-
-### Response Format
-Always use the `ApiResponse` utility:
-```typescript
-import { ApiResponse } from '../utils/ApiResponse';
-
-// Success
-res.status(200).json(ApiResponse.success(data));
-
-// Error (handled by global error handler)
-throw new NotFoundError('Not found');
-```
-
-### Database
-- Always include `store_id` in queries (multi-tenant)
-- Use UUIDs for primary keys
-- Use `SELECT ... FOR UPDATE` for stock locking
-- Batch bulk operations (100 rows per query)
-- Products use soft deletes (`is_active = false`)
-- Repository `delete()` accepts optional `storeId` for multi-tenant safety
-- `UserRepository.update()` uses column allowlist (`ALLOWED_COLUMNS`) to prevent SQL injection
-- **CRITICAL:** PostgreSQL returns numeric/decimal columns as **strings**. Always cast with `Number()` before arithmetic:
-  ```typescript
-  // WRONG — string concatenation
-  const sum = history.reduce((a, h) => a + h.total_qty, 0);
-
-  // CORRECT — numeric addition
-  const sum = history.reduce((a, h) => a + Number(h.total_qty), 0);
-  ```
-
-### Auth & Security
-- Return `{ user, store, role, token }` from auth service (NOT `storeId`)
-- Store JWT in HTTP-only secure cookies (`httpOnly`, `secure`, `sameSite: 'lax'`)
-- Logout revokes JWT server-side via Redis blacklist (`revokeToken()`)
-- Passwords: min 8 chars, uppercase, lowercase, number (enforced in Zod schemas)
-- JWT secret must be ≥ 64 chars; use `openssl rand -hex 48` to generate
-
-### Middleware Chain (per request)
+**Middleware chain** (per request):
 ```
 helmet → cors → express.json → cookieParser → requestId → requestLogger → rateLimiter
-→ [auth routes: authLimiter] → [protected routes: authenticate → requireStoreMembership]
+→ [auth: authLimiter] → [protected: authenticate → requireStoreMembership]
 → [optional: requireRole] → [optional: validate(schema)] → Controller
 ```
 
-### Multi-Tenancy Enforcement
-- `authenticate` verifies JWT, checks Redis blacklist (2s timeout, fails open), sets `req.user`
-- `requireStoreMembership` validates UUID format, checks `store_members` table, sets `req.storeRole`
-- `requireRole(['owner', 'manager'])` reads from `req.storeRole` (no extra DB query)
-- All store-scoped routes mount these at router level (see `packages/server/src/routes/index.ts`)
+**Auth**: JWT in HTTP-only secure cookies. `authenticate` verifies JWT, checks Redis blacklist (2s timeout, fails open). Logout revokes via `revokeToken()`.
 
-## Frontend (React) Conventions
+**Multi-tenancy**: always include `store_id` in queries. `requireStoreMembership` validates `store_members` table, sets `req.storeRole`. `requireRole(['owner', 'manager'])` reads from `req.storeRole` (no extra DB call).
 
-### File Structure
-Group by feature:
-```
-features/
-  featureName/
-    FeaturePage.tsx         # Main page component
-    hooks/useFeature.ts     # TanStack Query hooks
-    components/             # Feature-specific components
-```
+**Database rules**:
+- UUIDs for PKs, `SELECT ... FOR UPDATE` for stock locking, batch bulk ops (100 rows)
+- Products: soft delete (`is_active = false`)
+- Order creation MUST be ACID — lock stock, snapshot prices in `order_items`
+- `UserRepository.update()` uses column allowlist (`ALLOWED_COLUMNS`)
 
-### State Management
-- **Server state:** TanStack Query (`useQuery`, `useMutation`)
-- **Client state:** Zustand stores (`useAuthStore`)
-- **Form state:** React Hook Form + Zod validation
+**Logging**: Winston from `src/utils/logger.ts` — never `console.log`/`console.error`.
 
-### UI Components
-- Use shared components from `components/ui/` (Button, Card, Badge, etc.)
-- Follow Vercel design tokens defined in `index.css`
-- Use `bg-foreground` + `text-primary-foreground` for primary CTAs
-- **Never use `text-canvas`** — it doesn't exist. Use `text-primary-foreground` instead
+## Frontend Architecture
 
-### Forms
-```typescript
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { createProductSchema, type CreateProductDTO } from '@sellwise/shared';
+**State**: TanStack Query (server state), Zustand (client state), React Hook Form + Zod (forms).
 
-const { register, handleSubmit, formState: { errors } } = useForm<CreateProductDTO>({
-  resolver: zodResolver(createProductSchema) as any,
-  defaultValues: { ... },
-});
-```
+**API calls**: `import api from '../../lib/api/client'` — base URL is `http://localhost:5005/api/v1`.
 
-### API Calls
-```typescript
-import api from '../../lib/api/client';
+**Tailwind v4 tokens** (Vercel-style): `bg-foreground`, `text-primary-foreground`, `bg-canvas-soft`, `bg-card`, `border-border`. Defined in `src/index.css`.
 
-// GET
-const { data } = await api.get(`/stores/${storeId}/products`);
+**Forms**: `zodResolver(schema) as any` cast required with React Hook Form.
 
-// POST
-const { data } = await api.post(`/stores/${storeId}/orders`, orderData);
+## ML Service
 
-// PATCH
-const { data } = await api.patch(`/stores/${storeId}/orders/${id}/status`, { status });
-```
+**Forecasting tiers**: <30 days → EWMA (auto-alpha), ≥30 days → Prophet (business-type seasonality, sparsity-aware). Falls back to EWMA on failure.
 
-## ML Service (Python) Conventions
+**Data contract**: Backend sends `{ ds, y }`, ML returns `{ ds, yhat, yhat_lower, yhat_upper }`.
 
-### File Structure
-```
-app/
-  main.py                  # FastAPI app setup
-  routers/                 # API endpoints
-  services/                # Business logic (Prophet, churn)
-  models/schemas.py        # Pydantic request/response schemas
-```
+**Churn**: gap-ratio heuristic + logistic regression ensemble. Backend sends RFM features, ML returns `{ customer_id, churn_probability }`.
 
-### Data Format
-Backend sends `{ ds: date, y: quantity }`. ML service returns `{ ds, yhat, yhat_lower, yhat_upper }`.
+**Business type**: always accept `business_type` in forecast requests — configures seasonality.
 
-### Forecasting Tiers
-- **Tier 1 (EWMA):** < 30 days of sales history. Uses Exponential Weighted Moving Average with auto-selected alpha based on data variance.
-- **Tier 2 (Prophet):** >= 30 days. Facebook Prophet with business-type-aware seasonality. Automatically falls back to EWMA on failure.
+## Commands
 
-### Churn Prediction
-Backend sends `{ store_id, customers: [{ customer_id, recency_days, frequency_count, monetary_value, avg_gap_between_orders }] }`. ML service returns `{ store_id, predictions: [{ customer_id, churn_probability }] }`.
-
-Uses an ensemble approach:
-1. **Primary:** Gap-ratio heuristic (sigmoid curve centered at 2.5x average gap)
-2. **Secondary:** Logistic regression with multi-signal pseudo-labels (reduces tautological bias)
-3. **Ensemble:** Weighted average (LR gets 20-50% weight based on agreement with heuristic)
-
-### Business-Type Awareness
-Always accept `business_type` in forecast requests and configure seasonality accordingly.
-
-## Database Migrations
-
-### Creating Migrations
 ```bash
+# Full dev startup (Docker + build shared + migrate + ML + server + client)
+.\start-dev.ps1
+
+# Individual
+npm run dev:server          # Express on :5005
+npm run dev:client          # Vite on :5173
+cd packages/ml-service && uv run uvicorn app.main:app --port 8000 --reload
+
+# Build & verify
+npm run build --workspace=@sellwise/shared   # MUST run after shared edits
+npm run typecheck           # all workspaces
+npm run lint                # all workspaces (oxlint for client)
+
+# Tests
+npm run test --workspace=@sellwise/server              # Jest
+npm run test --workspace=@sellwise/server -- -t "name" # single test
+cd packages/ml-service && uv run pytest                # Pytest
+
+# DB
+npm run migrate:up --workspace=@sellwise/server
 npm run migrate:create --workspace=@sellwise/server -- --name migration-name
+npm run seed --workspace=@sellwise/server
+npm run seed:forecasts --workspace=@sellwise/server
+
+# ML service setup
+cd packages/ml-service && uv venv --allow-existing && uv pip install -r requirements.txt
 ```
 
-### Naming Convention
-Use descriptive names: `add-business-type-to-stores`, `create-categories`
+## Pre-Commit Checklist
 
-### Migration File
-```typescript
-import { ColumnDefinitions, MigrationBuilder } from 'node-pg-migrate';
+1. `npm run typecheck`
+2. `npm run lint`
+3. `npm run build --workspace=@sellwise/shared`
+4. `npm run build --workspace=@sellwise/client`
 
-export const shorthands: ColumnDefinitions | undefined = undefined;
-
-export async function up(pgm: MigrationBuilder): Promise<void> {
-  // Forward migration
-}
-
-export async function down(pgm: MigrationBuilder): Promise<void> {
-  // Rollback migration
-}
-```
-
-## Testing
-
-### Backend (Jest)
-```bash
-npm run test --workspace=@sellwise/server
-npm run test --workspace=@sellwise/server -- -t "test name"
-```
-
-### ML Service (Pytest)
-```bash
-cd packages/ml-service && uv run pytest
-```
-
-### Logging
-- Use Winston logger (`packages/server/src/utils/logger.ts`) — never `console.log`/`console.error`
-- Log errors with context: `{ requestId, userId, storeId, error }`
-
-## Code Quality
-
-### Before Committing
-1. Run typecheck: `npm run typecheck`
-2. Run lint: `npm run lint`
-3. Build shared package: `npm run build --workspace=@sellwise/shared`
-4. Build client: `npm run build --workspace=@sellwise/client`
-
-### Lint Warnings
-- `react(only-export-components)` warnings are expected for component files that also export utilities
-- These are safe to ignore
+`react(only-export-components)` lint warnings are expected for component files that also export utilities — safe to ignore.

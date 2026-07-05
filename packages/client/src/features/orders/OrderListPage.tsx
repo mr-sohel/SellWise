@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/ui/page-header';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../components/ui/dropdown-menu';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const statusVariant: Record<string, 'success' | 'destructive' | 'warning' | 'info' | 'muted'> = {
   delivered: 'success',
@@ -22,9 +23,10 @@ export function OrderListPage() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [status, setStatus] = useState('');
 
-  const { data: result, isLoading } = useOrders(storeId, { page, limit: 10, search, status });
+  const { data: result, isLoading } = useOrders(storeId, { page, limit: 10, search: debouncedSearch, status });
 
   return (
     <div className="w-full space-y-6 max-w-[1600px] mx-auto pb-8">
@@ -102,7 +104,7 @@ export function OrderListPage() {
                       <div className="text-xs text-muted-foreground">{order.customer_phone}</div>
                     </td>
                     <td className="px-6 sm:px-8 py-5 text-muted-foreground whitespace-nowrap">{new Date(order.order_date).toLocaleDateString()}</td>
-                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{order.total.toLocaleString()}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{Number(order.total).toLocaleString()}</td>
                     <td className="px-6 sm:px-8 py-5 text-center">
                       <Badge variant={statusVariant[order.status] || 'muted'}>
                         {order.status}

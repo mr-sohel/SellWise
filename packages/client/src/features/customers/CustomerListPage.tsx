@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCustomers } from './hooks/useCustomers';
+import { useCustomers, useRecalculateRFM } from './hooks/useCustomers';
 import { useAuthStore } from '../../stores/auth.store';
-import { Search, AlertTriangle } from 'lucide-react';
+import { Search, AlertTriangle, RefreshCw } from 'lucide-react';
 import { PageHeader } from '../../components/ui/page-header';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { RFM_SEGMENTS, RFM_SEGMENT_LABELS, RFM_SEGMENT_COLORS } from '@sellwise/shared';
 import type { RfmSegment } from '@sellwise/shared';
+import { useDebounce } from '../../hooks/useDebounce';
+import { toast } from 'sonner';
 
 export function CustomerListPage() {
   const { t } = useTranslation();
@@ -16,14 +18,26 @@ export function CustomerListPage() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [segmentFilter, setSegmentFilter] = useState<RfmSegment | ''>('');
 
   const { data: result, isLoading } = useCustomers(storeId, {
     page,
     limit: 10,
-    search,
+    search: debouncedSearch,
     segment: segmentFilter || undefined,
   });
+
+  const recalculateMutation = useRecalculateRFM(storeId);
+
+  const handleRecalculate = async () => {
+    try {
+      await recalculateMutation.mutateAsync();
+      toast.success('RFM recalculation queued. Segments will update shortly.');
+    } catch {
+      toast.error('Failed to trigger RFM recalculation');
+    }
+  };
 
   const formatSegment = (segment?: string) => {
     if (!segment) return 'Uncategorized';
@@ -32,7 +46,19 @@ export function CustomerListPage() {
 
   return (
     <div className="w-full space-y-6 max-w-[1600px] mx-auto pb-8">
-      <PageHeader title={t('common.customers')} />
+      <PageHeader
+        title={t('common.customers')}
+        action={
+          <button
+            onClick={handleRecalculate}
+            disabled={recalculateMutation.isPending}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-border bg-card text-foreground rounded-full text-sm font-medium hover:bg-muted disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            <RefreshCw className={`h-4 w-4 ${recalculateMutation.isPending ? 'animate-spin' : ''}`} />
+            Recalculate RFM
+          </button>
+        }
+      />
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-full shadow-vercel-1 w-full sm:max-w-sm">
@@ -123,7 +149,7 @@ export function CustomerListPage() {
                         <span className="text-muted-foreground text-xs">Uncategorized</span>
                       )}
                     </td>
-                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{customer.total_spent.toLocaleString()}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{Number(customer.total_spent).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

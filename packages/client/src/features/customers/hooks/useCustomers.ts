@@ -38,3 +38,16 @@ export function useUpdateCustomer(storeId: string) {
     },
   });
 }
+
+export function useRecalculateRFM(storeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/stores/${storeId}/customers/recalculate-rfm`);
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers', storeId] });
+    },
+  });
+}

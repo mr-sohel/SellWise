@@ -11,6 +11,20 @@ export const rfmWorker = new Worker('rfm', async (job: Job) => {
     const { rows: stores } = await db.query('SELECT id FROM stores');
 
     for (const store of stores) {
+      // Staleness check: skip if RFM was calculated in the last 20 hours
+      const { rows: [{ fresh }] } = await db.query(
+        `SELECT EXISTS(
+           SELECT 1 FROM customer_rfm
+           WHERE store_id = $1 AND updated_at > NOW() - INTERVAL '20 hours'
+         ) as fresh`,
+        [store.id]
+      );
+
+      if (fresh) {
+        logger.info(`[Worker: RFM/Churn] Skipping store ${store.id} — RFM is fresh (< 20h old)`);
+        continue;
+      }
+
       logger.info(`[Worker: RFM/Churn] Training historical Churn Model for store ${store.id}`);
       await trainMLChurnModel(store.id);
 
@@ -133,7 +147,8 @@ async function calculateRFM(storeId: string) {
       `INSERT INTO customer_rfm (customer_id, store_id, recency_score, frequency_score, monetary_score, segment, churn_probability)
        VALUES ${values.join(', ')}
        ON CONFLICT (customer_id)
-       DO UPDATE SET recency_score = EXCLUDED.recency_score, frequency_score = EXCLUDED.frequency_score,
+       DO UPDATE SET store_id = EXCLUDED.store_id,
+                     recency_score = EXCLUDED.recency_score, frequency_score = EXCLUDED.frequency_score,
                      monetary_score = EXCLUDED.monetary_score, segment = EXCLUDED.segment,
                      churn_probability = EXCLUDED.churn_probability, updated_at = CURRENT_TIMESTAMP`,
       params

@@ -12,5 +12,6 @@ router.get('/', validate(customerFiltersSchema), customerController.list);
 router.post('/', validate(createCustomerSchema), customerController.create);
 router.get('/:id', customerController.get);
 router.put('/:id', validate(updateCustomerSchema), customerController.update);
+router.post('/recalculate-rfm', customerController.recalculateRFM);
 
 export default router;

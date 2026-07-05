@@ -181,6 +181,11 @@ export class ForecastService {
 
       const result = await response.json() as { forecast: Array<{ ds: string; yhat: number; yhat_lower: number; yhat_upper: number }> };
 
+      // Temporary debug log for Apple Watch
+      if (productId === '5140d39f-cc76-43e5-8f65-2dcde6876c12' || history[history.length - 1].total_qty > 1000) {
+        logger.info(`[ForecastService] Received from ML for viral product: ${JSON.stringify(result.forecast.slice(0, 2))}`);
+      }
+
       const forecasts = result.forecast.map(f => ({
         forecast_date: f.ds,
         predicted_qty: Math.max(0, f.yhat),

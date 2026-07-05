@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { storeController } from '../controllers/store.controller';
 import { authenticate } from '../middleware/authenticate';
+import { requireStoreMembership } from '../middleware/requireStoreMembership';
 import { requireRole } from '../middleware/requireRole';
 import { validate } from '../middleware/validate';
 import { createStoreSchema, createMemberSchema, completeOnboardingSchema } from '@sellwise/shared';
@@ -12,6 +13,9 @@ router.use(authenticate);
 
 router.post('/', validate(createStoreSchema), storeController.create);
 router.get('/', storeController.list);
+
+// Store-scoped routes require membership check before role check
+router.use('/:storeId', requireStoreMembership);
 
 // Onboarding
 router.patch('/:storeId/onboarding', requireRole(['owner']), validate(completeOnboardingSchema), storeController.completeOnboarding);

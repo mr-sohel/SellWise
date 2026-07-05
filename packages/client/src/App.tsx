@@ -18,6 +18,10 @@ import { AlertsListPage } from './features/alerts/AlertsListPage'
 import { SettingsLayout } from './features/settings/SettingsLayout'
 import { StaffManagementPage } from './features/settings/StaffManagementPage'
 import { ProfileSettingsPage } from './features/settings/ProfileSettingsPage'
+import { HelpPage } from './features/info/HelpPage'
+import { PrivacyPage } from './features/info/PrivacyPage'
+import { TermsPage } from './features/info/TermsPage'
+import { FaqPage } from './features/info/FaqPage'
 import { Toaster } from './components/ui/sonner'
 
 const queryClient = new QueryClient()
@@ -45,6 +49,12 @@ function App() {
             <Route path="/expenses" element={<ExpenseListPage />} />
             <Route path="/reports" element={<ReportGeneratorPage />} />
             <Route path="/alerts" element={<AlertsListPage />} />
+
+            {/* Informational Pages */}
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
 
             <Route path="/settings" element={<SettingsLayout />}>
               <Route index element={<Navigate to="/settings/profile" replace />} />

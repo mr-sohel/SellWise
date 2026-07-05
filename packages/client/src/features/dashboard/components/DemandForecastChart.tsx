@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { TrendingUp, Package } from 'lucide-react';
 
-const COLORS = ['#0070f3', '#171717', '#50e3c2', '#7928ca', '#f5a623'];
+const COLORS = ['var(--color-chart-1)', 'var(--color-chart-2)', 'var(--color-chart-3)', 'var(--color-chart-4)', 'var(--color-chart-5)'];
 
 const DAY_OPTIONS = [
   { value: 7, label: '7D' },
@@ -21,9 +21,9 @@ export function DemandForecastChart() {
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border p-6 rounded-xl shadow-vercel-2">
+      <div className="glass-panel border-white/5 p-6 rounded-xl shadow-vercel-2 h-full">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-base font-medium text-foreground">Demand Forecast</h3>
+          <h3 className="text-lg font-medium text-foreground">Demand Forecast</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
@@ -36,9 +36,9 @@ export function DemandForecastChart() {
 
   if (isError || !products || products.length === 0) {
     return (
-      <div className="bg-card border border-border p-6 rounded-xl shadow-vercel-2">
+      <div className="glass-panel border-white/5 p-6 rounded-xl shadow-vercel-2 h-full">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-base font-medium text-foreground">Demand Forecast</h3>
+          <h3 className="text-lg font-medium text-foreground">Demand Forecast</h3>
         </div>
         <div className="h-40 flex items-center justify-center text-muted-foreground text-sm">
           No forecast data available. Forecasts are generated nightly.
@@ -48,11 +48,11 @@ export function DemandForecastChart() {
   }
 
   return (
-    <div className="bg-card border border-border p-6 rounded-xl shadow-vercel-2">
+    <div className="glass-panel border-white/5 p-6 rounded-xl shadow-vercel-2 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-base font-medium text-foreground">Demand Forecast</h3>
+          <h3 className="text-lg font-medium text-foreground">Demand Forecast</h3>
           <p className="text-sm text-muted-foreground mt-0.5">Predicted demand for top selling products</p>
         </div>
         <div className="flex bg-canvas-soft rounded-full p-0.5 border border-border">
@@ -88,7 +88,7 @@ export function DemandForecastChart() {
           return (
             <div
               key={product.product_id}
-              className="relative p-4 rounded-xl border border-border hover:border-muted-foreground/20 transition-colors"
+              className="relative p-4 rounded-xl border border-white/10 bg-background/50 hover:bg-background/80 hover:border-white/20 transition-all shadow-sm"
             >
               {/* Rank badge */}
               <div className="absolute -top-2 -left-2 bg-foreground text-primary-foreground text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
@@ -123,11 +123,13 @@ export function DemandForecastChart() {
                       labelFormatter={(val) => new Date(String(val)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       formatter={(val) => [`${Math.round(Number(val))} units`, 'Demand']}
                       contentStyle={{
-                        backgroundColor: '#ffffff',
-                        borderColor: '#ebebeb',
-                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-card)',
+                        borderColor: 'var(--color-border)',
+                        borderRadius: '12px',
                         fontSize: '12px',
-                        padding: '6px 10px',
+                        padding: '8px 12px',
+                        color: 'var(--color-foreground)',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
                       }}
                     />
                     <Area

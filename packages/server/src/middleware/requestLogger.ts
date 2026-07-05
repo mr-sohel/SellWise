@@ -12,7 +12,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
       status: res.statusCode,
       durationMs: duration,
       userId: req.user?.id,
-      storeId: req.params.storeId,
+      storeId: req.params?.storeId,
     });
   });
   next();

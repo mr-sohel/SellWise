@@ -32,7 +32,7 @@ export function ReportGeneratorPage() {
       startY: 55,
       head: [['Metric', 'Value']],
       body: [
-        ['Total Revenue', `BDT ${data.revenue.toLocaleString()}`],
+        ['Total Revenue', `BDT ${Number(data.revenue).toLocaleString()}`],
         ['Total Orders', data.orders.toString()],
         ['Revenue Growth', `${data.revenueGrowth}%`],
         ['Health Score', `${data.healthScore}/100`],
@@ -47,7 +47,7 @@ export function ReportGeneratorPage() {
     const productData = data.topProducts.map(p => [
       p.productName,
       p.unitsSold.toString(),
-      `BDT ${p.revenue.toLocaleString()}`
+      `BDT ${Number(p.revenue).toLocaleString()}`
     ]);
 
     autoTable(doc, {
@@ -66,7 +66,7 @@ export function ReportGeneratorPage() {
       startY: topProdY + 20,
       head: [['Metric', 'Value']],
       body: [
-        ['Total Inventory Value', `BDT ${data.inventoryStatus.totalValue.toLocaleString()}`],
+        ['Total Inventory Value', `BDT ${Number(data.inventoryStatus.totalValue).toLocaleString()}`],
         ['Inventory Turnover Rate', data.inventoryStatus.turnoverRate.toString()],
       ],
       theme: 'grid',
@@ -142,7 +142,7 @@ export function ReportGeneratorPage() {
 
         {data && (
           <div className="text-sm text-body pt-4 border-t border-border">
-            <strong>Preview:</strong> This report will include {data.orders} orders totaling ৳{data.revenue.toLocaleString()} in revenue for the selected period.
+            <strong>Preview:</strong> This report will include {data.orders} orders totaling ৳{Number(data.revenue).toLocaleString()} in revenue for the selected period.
           </div>
         )}
       </div>

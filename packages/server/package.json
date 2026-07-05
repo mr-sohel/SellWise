@@ -13,7 +13,10 @@
     "migrate:up": "node-pg-migrate --tsx -m migrations -j ts up",
     "migrate:down": "node-pg-migrate --tsx -m migrations -j ts down",
     "migrate:create": "node-pg-migrate --tsx -m migrations -j ts create",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:enhanced": "tsx src/scripts/seed-enhanced.ts",
+    "seed:rfm": "tsx src/scripts/seed-rfm.ts",
+    "seed:forecasts": "tsx src/scripts/generate-forecasts.ts"
   },
   "dependencies": {
     "@sellwise/shared": "*",

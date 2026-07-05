@@ -15,6 +15,13 @@ async function bootstrap() {
     // Initialize BullMQ schedules and workers
     await setupSchedules();
 
+    // Trigger initial RFM calculation if customer_rfm is empty
+    const { rows: [{ count }] } = await db.query('SELECT COUNT(*) FROM customer_rfm');
+    if (Number(count) === 0) {
+      logger.info('customer_rfm table is empty — triggering initial RFM calculation');
+      await rfmQueue.add('rfm:calculate', {});
+    }
+
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${env.PORT}`);
     });

@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useExpenses, useDeleteExpense, useCreateExpense } from './hooks/useExpenses';
 import { useAuthStore } from '../../stores/auth.store';
 import { Trash2, Plus, MoreHorizontal } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreateExpenseDTO } from '@sellwise/shared';
+import type { CreateExpenseDTO, ExpenseFiltersDTO } from '@sellwise/shared';
 import { createExpenseSchema } from '@sellwise/shared';
 import { PageHeader } from '../../components/ui/page-header';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -12,12 +12,30 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
+type TimeFilter = '7d' | '15d' | '30d' | 'all';
+
 export function ExpenseListPage() {
   const { activeStoreId } = useAuthStore();
   const storeId = activeStoreId || '';
 
   const [page, setPage] = useState(1);
-  const { data: result, isLoading } = useExpenses(storeId, { page, limit: 10 });
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+
+  const filters = useMemo(() => {
+    const base: ExpenseFiltersDTO = { page, limit: 10 };
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      const days = timeFilter === '7d' ? 7 : timeFilter === '15d' ? 15 : 30;
+      const start = new Date(now);
+      start.setDate(start.getDate() - days);
+      start.setHours(0, 0, 0, 0);
+      base.start_date = start;
+      base.end_date = now;
+    }
+    return base;
+  }, [page, timeFilter]);
+
+  const { data: result, isLoading } = useExpenses(storeId, filters);
   const deleteMutation = useDeleteExpense(storeId);
   const createMutation = useCreateExpense(storeId);
 
@@ -108,6 +126,29 @@ export function ExpenseListPage() {
         }
       />
 
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 p-1 bg-card border border-border rounded-full shadow-vercel-1">
+          {([
+            { value: '7d' as TimeFilter, label: '7 Days' },
+            { value: '15d' as TimeFilter, label: '15 Days' },
+            { value: '30d' as TimeFilter, label: '30 Days' },
+            { value: 'all' as TimeFilter, label: 'All Time' },
+          ]).map((option) => (
+            <button
+              key={option.value}
+              onClick={() => { setTimeFilter(option.value); setPage(1); }}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer ${
+                timeFilter === option.value
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="bg-card border border-border rounded-xl shadow-vercel-2 overflow-hidden w-full">
         {isLoading ? (
           <div className="p-4 space-y-4">
@@ -139,7 +180,7 @@ export function ExpenseListPage() {
                     <td className="px-6 sm:px-8 py-5 text-muted-foreground whitespace-nowrap">{new Date(expense.expense_date).toLocaleDateString()}</td>
                     <td className="px-6 sm:px-8 py-5 font-medium text-foreground">{expense.category}</td>
                     <td className="px-6 sm:px-8 py-5 text-muted-foreground max-w-[200px] truncate">{expense.notes || '-'}</td>
-                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{expense.amount.toLocaleString()}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{Number(expense.amount).toLocaleString()}</td>
                     <td className="px-6 sm:px-8 py-5 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
