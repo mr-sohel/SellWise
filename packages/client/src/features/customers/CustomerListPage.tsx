@@ -31,7 +31,7 @@ export function CustomerListPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-8">
+    <div className="w-full space-y-6 max-w-[1600px] mx-auto pb-8">
       <PageHeader title={t('common.customers')} />
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -78,20 +78,20 @@ export function CustomerListPage() {
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-sm min-w-[600px]">
+            <table className="w-full text-left text-base min-w-[600px]">
               <thead className="bg-canvas-soft/50 border-b border-border">
                 <tr>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Name</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Contact</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Orders</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Segment (RFM)</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Total Spent</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Name</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Contact</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Orders</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Segment (RFM)</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Total Spent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {result?.data.map((customer) => (
                   <tr key={customer.id} className="hover:bg-canvas-soft/50 transition-colors">
-                    <td className="px-4 sm:px-6 py-3 font-medium text-foreground">
+                    <td className="px-6 sm:px-8 py-5 font-medium text-foreground">
                       <div className="flex items-center gap-2">
                         {customer.name}
                         {customer.churn_probability != null && customer.churn_probability > 0.7 && (
@@ -104,12 +104,12 @@ export function CustomerListPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-muted-foreground">
+                    <td className="px-6 sm:px-8 py-5 text-muted-foreground">
                       <div>{customer.phone}</div>
                       {customer.email && <div className="text-xs">{customer.email}</div>}
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-foreground">{customer.total_orders}</td>
-                    <td className="px-4 sm:px-6 py-3">
+                    <td className="px-6 sm:px-8 py-5 text-foreground">{customer.total_orders}</td>
+                    <td className="px-6 sm:px-8 py-5">
                       {customer.segment ? (
                         <div className="flex flex-col gap-1 items-start">
                           <Badge variant={RFM_SEGMENT_COLORS[customer.segment as RfmSegment] || 'muted'}>
@@ -123,7 +123,7 @@ export function CustomerListPage() {
                         <span className="text-muted-foreground text-xs">Uncategorized</span>
                       )}
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-right text-foreground font-medium whitespace-nowrap">৳{customer.total_spent.toLocaleString()}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{customer.total_spent.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

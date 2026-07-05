@@ -2,6 +2,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from ..models.schemas import ForecastRequest, ForecastResponse, BacktestResponse
 from ..services.prophet_service import generate_forecast, backtest_forecast
+from ..services.ewma_service import generate_ewma_forecast
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -9,12 +10,21 @@ logger = logging.getLogger(__name__)
 @router.post("/forecast", response_model=ForecastResponse)
 async def create_forecast(request: ForecastRequest):
     try:
-        # Generate forecast using the prophet service with business-type-aware seasonality
-        predictions = generate_forecast(
-            request.history,
-            request.periods,
-            business_type=request.business_type,
-        )
+        # Tier 1 (EWMA) vs Tier 2 (Prophet) logic
+        if len(request.history) < 30:
+            logger.info(f"Using EWMA for store {request.store_id}, product {request.product_id} (< 30 days history)")
+            predictions = generate_ewma_forecast(request.history, request.periods)
+        else:
+            try:
+                # Generate forecast using the prophet service with business-type-aware seasonality
+                predictions = generate_forecast(
+                    request.history,
+                    request.periods,
+                    business_type=request.business_type,
+                )
+            except Exception as e:
+                logger.warning(f"Prophet failed, falling back to EWMA: {e}")
+                predictions = generate_ewma_forecast(request.history, request.periods)
 
         return ForecastResponse(
             store_id=request.store_id,

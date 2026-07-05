@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/auth.store';
 import { LogOut, Home, Box, ShoppingCart, Users, Receipt, BarChart3, Settings, Bell, Menu, X, Search, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Footer } from './Footer';
+import { useProducts } from '../../features/products/hooks/useProducts';
+import { useCustomers } from '../../features/customers/hooks/useCustomers';
+import { useOrders } from '../../features/orders/hooks/useOrders';
 
 import {
   DropdownMenu,
@@ -39,6 +43,11 @@ export function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { data: products } = useProducts(store?.id || '', { search: searchQuery, limit: 3 });
+  const { data: customers } = useCustomers(store?.id || '', { search: searchQuery, limit: 3 });
+  const { data: orders } = useOrders(store?.id || '', { search: searchQuery, limit: 3 });
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -89,8 +98,8 @@ export function MainLayout() {
 
       {/* Sidebar - Desktop & Mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 bg-card border-r border-border flex flex-col shrink-0 transition-all duration-300 ease-in-out md:translate-x-0 md:static ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 bg-card/90 backdrop-blur-md border border-border/50 shadow-vercel-3 rounded-2xl flex flex-col shrink-0 transition-all duration-300 ease-in-out md:translate-x-0 md:static md:my-4 md:ml-4 md:h-[calc(100vh-2rem)] ${
+          isMobileMenuOpen ? 'translate-x-0 m-4 h-[calc(100vh-2rem)]' : '-translate-x-full'
         } ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-border overflow-hidden">
@@ -125,7 +134,7 @@ export function MainLayout() {
                 key={to}
                 to={to}
                 title={isSidebarCollapsed ? label : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${
+                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-all ${
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-body hover:bg-muted hover:text-foreground'
@@ -144,7 +153,7 @@ export function MainLayout() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-background">
         {/* Header */}
-        <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 md:px-6 shrink-0 z-30 shadow-vercel-1">
+        <header className="h-16 border-b md:border border-border/50 bg-card/70 backdrop-blur-md sticky top-0 md:top-4 flex items-center justify-between px-4 md:px-6 shrink-0 z-30 shadow-sm md:shadow-vercel-3 transition-all duration-300 md:rounded-2xl md:mx-6 lg:mx-8">
           <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -198,7 +207,7 @@ export function MainLayout() {
             {/* Command Palette Trigger */}
             <button
               onClick={() => setIsCommandOpen(true)}
-              className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground bg-muted/50 hover:bg-muted border border-border rounded-md transition-colors w-48 lg:w-64"
+              className="hidden md:flex items-center gap-2 px-3 py-2 text-base text-muted-foreground bg-muted/50 hover:bg-muted border border-border rounded-md transition-colors w-48 lg:w-64"
             >
               <Search size={14} />
               <span className="flex-1 text-left">Search...</span>
@@ -248,16 +257,83 @@ export function MainLayout() {
         </header>
 
         {/* Content */}
-        <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto relative">
-          <Outlet />
+        <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto relative flex flex-col items-center scrollbar-thin">
+          <div className="w-full max-w-[1600px] flex-1 flex flex-col">
+            <Outlet />
+          </div>
+          <div className="w-full max-w-[1600px] mt-12">
+            <Footer />
+          </div>
         </div>
       </main>
 
       {/* Command Palette */}
       <CommandDialog open={isCommandOpen} onOpenChange={setIsCommandOpen}>
-        <CommandInput placeholder="Type a command or search..." />
+        <CommandInput 
+          placeholder="Type a command or search products, customers..." 
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+               const firstProduct = products?.data?.[0];
+               const firstOrder = orders?.data?.[0];
+               if (firstProduct && (firstProduct.sku === searchQuery || firstProduct.name.toLowerCase().includes(searchQuery.toLowerCase()))) {
+                 navigate(`/products/${firstProduct.id}/edit`);
+                 setIsCommandOpen(false);
+               } else if (firstOrder && (firstOrder.order_number === searchQuery || firstOrder.total.toString() === searchQuery)) {
+                 navigate(`/orders`);
+                 setIsCommandOpen(false);
+               }
+            }
+          }}
+        />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
+          
+          {searchQuery.length > 1 && (products?.data?.length ?? 0) > 0 && (
+            <CommandGroup heading="Products (Database)">
+              {products?.data.map(p => (
+                <CommandItem key={p.id} value={`product ${p.name} ${p.sku}`} onSelect={() => { navigate(`/products/${p.id}/edit`); setIsCommandOpen(false); }}>
+                  <Box className="mr-2 h-4 w-4 text-primary shrink-0" />
+                  <span className="flex-1 truncate">{p.name}</span>
+                  <div className="flex flex-col items-end shrink-0 ml-4">
+                    <span className="text-foreground text-sm font-medium">৳{p.selling_price}</span>
+                    <span className={`text-xs font-medium ${p.stock_quantity <= p.low_stock_threshold ? 'text-destructive' : 'text-success'}`}>
+                      {p.stock_quantity} in stock
+                    </span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {searchQuery.length > 1 && (customers?.data?.length ?? 0) > 0 && (
+            <CommandGroup heading="Customers (Database)">
+              {customers?.data.map(c => (
+                <CommandItem key={c.id} value={`customer ${c.name} ${c.phone}`} onSelect={() => { navigate(`/customers`); setIsCommandOpen(false); }}>
+                  <Users className="mr-2 h-4 w-4 text-primary" />
+                  <span className="flex-1">{c.name}</span>
+                  <span className="text-muted-foreground text-xs">{c.phone}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {searchQuery.length > 1 && (orders?.data?.length ?? 0) > 0 && (
+            <CommandGroup heading="Orders (Database)">
+              {orders?.data.map(o => (
+                <CommandItem key={o.id} value={`order ${o.order_number} ${o.total}`} onSelect={() => { navigate(`/orders`); setIsCommandOpen(false); }}>
+                  <ShoppingCart className="mr-2 h-4 w-4 text-primary shrink-0" />
+                  <span className="flex-1 truncate">#{o.order_number}</span>
+                  <div className="flex flex-col items-end shrink-0 ml-4">
+                    <span className="text-foreground text-sm font-medium">৳{o.total}</span>
+                    <span className="text-muted-foreground text-xs capitalize">{o.status}</span>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
           <CommandGroup heading="Navigation">
             {navItems.map(item => (
               <CommandItem

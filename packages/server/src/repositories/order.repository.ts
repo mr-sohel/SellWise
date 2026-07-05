@@ -100,8 +100,8 @@ export class OrderRepository extends BaseRepository<Order> {
 
     if (search) {
       const searchPattern = `%${search}%`;
-      queryText += ` AND (o.order_number ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex})`;
-      countQueryText += ` AND (o.order_number ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex})`;
+      queryText += ` AND (o.order_number ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex} OR o.total::text ILIKE $${paramIndex})`;
+      countQueryText += ` AND (o.order_number ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.name ILIKE $${paramIndex} OR o.total::text ILIKE $${paramIndex})`;
       params.push(searchPattern);
       paramIndex++;
     }

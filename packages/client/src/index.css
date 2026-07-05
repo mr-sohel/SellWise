@@ -2,6 +2,11 @@
 @import "tailwindcss";
 
 @theme {
+  /* ── Upscaled Typography Scale for Consistency ── */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+
   /* ── Vercel Canvas / Surface ── */
   --color-background: #fafafa;
   --color-foreground: #171717;
@@ -19,8 +24,8 @@
   --color-secondary-foreground: #171717;
 
   /* ── Vercel Muted ── */
-  --color-muted: #fafafa;
-  --color-muted-foreground: #888888;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #666666;
 
   /* ── Vercel Accent ── */
   --color-accent: #fafafa;
@@ -46,8 +51,8 @@
   /* ── Vercel Extended Palette ── */
   --color-canvas-soft: #fafafa;
   --color-canvas-soft-2: #f5f5f5;
-  --color-body: #4d4d4d;
-  --color-mute: #888888;
+  --color-body: #333333;
+  --color-mute: #666666;
   --color-hairline: #ebebeb;
   --color-hairline-strong: #a1a1a1;
 
@@ -76,10 +81,12 @@ html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 17px; /* Globally scales up all rem-based typography and spacing */
 }
 
 body {
   background-color: var(--color-background);
+  background-image: radial-gradient(circle at top left, var(--color-canvas-soft), var(--color-background) 70%);
   color: var(--color-foreground);
   font-size: 16px;
   line-height: 24px;
@@ -154,4 +161,26 @@ body {
 ::selection {
   background-color: #171717;
   color: #f2f2f2;
+}
+
+@layer base {
+  html, body {
+    @apply text-foreground bg-background antialiased;
+    letter-spacing: -0.015em;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold text-foreground;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+
+  /* Universal accessible focus states */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background transition-shadow;
+  }
 }

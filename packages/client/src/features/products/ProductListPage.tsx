@@ -35,7 +35,7 @@ export function ProductListPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-8">
+    <div className="w-full space-y-6 max-w-[1600px] mx-auto pb-8">
       <CreateProductDrawer open={isCreateDrawerOpen} onOpenChange={setIsCreateDrawerOpen} />
 
       <PageHeader
@@ -89,28 +89,28 @@ export function ProductListPage() {
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-sm min-w-[700px]">
+            <table className="w-full text-left text-base min-w-[700px]">
               <thead className="bg-canvas-soft/50 border-b border-border">
                 <tr>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Name</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">SKU</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Price</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Stock</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap"></th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Name</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">SKU</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Price</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Stock</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {result?.data.map((product) => (
                   <tr key={product.id} className="hover:bg-canvas-soft/50 transition-colors">
-                    <td className="px-4 sm:px-6 py-3 font-medium text-foreground">{product.name}</td>
-                    <td className="px-4 sm:px-6 py-3 text-muted-foreground font-mono text-xs whitespace-nowrap">{product.sku || '-'}</td>
-                    <td className="px-4 sm:px-6 py-3 text-right text-foreground whitespace-nowrap">৳{product.selling_price.toLocaleString()}</td>
-                    <td className="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
+                    <td className="px-6 sm:px-8 py-5 font-medium text-foreground">{product.name}</td>
+                    <td className="px-6 sm:px-8 py-5 text-muted-foreground font-mono text-xs whitespace-nowrap">{product.sku || '-'}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right text-foreground whitespace-nowrap">৳{product.selling_price.toLocaleString()}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right whitespace-nowrap">
                       <Badge variant={product.stock_quantity <= product.low_stock_threshold ? 'destructive' : 'success'}>
                         {product.stock_quantity} {product.unit}
                       </Badge>
                     </td>
-                    <td className="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
+                    <td className="px-6 sm:px-8 py-5 text-right whitespace-nowrap">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors focus-visible:outline-none">

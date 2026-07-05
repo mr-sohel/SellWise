@@ -15,7 +15,7 @@ export function SettingsLayout() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="w-full space-y-6 max-w-[1600px] mx-auto">
       <div>
         <h1 className="font-display-md text-foreground">Settings</h1>
         <p className="text-sm text-body mt-1">Manage your account and store preferences.</p>

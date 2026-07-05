@@ -47,7 +47,7 @@ export function AlertsListPage() {
   const getSeverityStyle = (severity: string) => (SEVERITY_CONFIG[severity] ?? DEFAULT_SEVERITY);
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-8">
+    <div className="w-full space-y-6 max-w-[1600px] mx-auto pb-8">
       <PageHeader
         title="Inventory Alerts"
         description="Smart recommendations based on predicted demand and sales velocity."

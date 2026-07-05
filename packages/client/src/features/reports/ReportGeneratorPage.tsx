@@ -99,7 +99,7 @@ export function ReportGeneratorPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="w-full space-y-6 max-w-[1600px] mx-auto">
       <PageHeader title="Reports" />
 
       <div className="bg-card border border-border p-8 rounded-xl shadow-vercel-3 space-y-8">

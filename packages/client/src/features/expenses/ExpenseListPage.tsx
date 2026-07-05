@@ -55,7 +55,7 @@ export function ExpenseListPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-8">
+    <div className="w-full space-y-6 max-w-[1600px] mx-auto pb-8">
       <PageHeader
         title="Expenses"
         action={
@@ -123,24 +123,24 @@ export function ExpenseListPage() {
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-sm min-w-[500px]">
+            <table className="w-full text-left text-base min-w-[500px]">
               <thead className="bg-canvas-soft/50 border-b border-border">
                 <tr>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Date</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Category</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Notes</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Amount</th>
-                  <th className="px-4 sm:px-6 py-3 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap"></th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Date</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Category</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Notes</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap">Amount</th>
+                  <th className="px-6 sm:px-8 py-5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground text-right whitespace-nowrap"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {result?.data.map((expense) => (
                   <tr key={expense.id} className="hover:bg-canvas-soft/50 transition-colors">
-                    <td className="px-4 sm:px-6 py-3 text-muted-foreground whitespace-nowrap">{new Date(expense.expense_date).toLocaleDateString()}</td>
-                    <td className="px-4 sm:px-6 py-3 font-medium text-foreground">{expense.category}</td>
-                    <td className="px-4 sm:px-6 py-3 text-muted-foreground max-w-[200px] truncate">{expense.notes || '-'}</td>
-                    <td className="px-4 sm:px-6 py-3 text-right text-foreground font-medium whitespace-nowrap">৳{expense.amount.toLocaleString()}</td>
-                    <td className="px-4 sm:px-6 py-3 text-right">
+                    <td className="px-6 sm:px-8 py-5 text-muted-foreground whitespace-nowrap">{new Date(expense.expense_date).toLocaleDateString()}</td>
+                    <td className="px-6 sm:px-8 py-5 font-medium text-foreground">{expense.category}</td>
+                    <td className="px-6 sm:px-8 py-5 text-muted-foreground max-w-[200px] truncate">{expense.notes || '-'}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right text-foreground font-medium whitespace-nowrap">৳{expense.amount.toLocaleString()}</td>
+                    <td className="px-6 sm:px-8 py-5 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="p-1.5 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors focus-visible:outline-none">

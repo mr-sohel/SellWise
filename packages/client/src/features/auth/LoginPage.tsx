@@ -39,14 +39,14 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-canvas-soft px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <h1 className="font-display-lg text-foreground mb-2">SellWise</h1>
           <p className="text-sm text-body">Welcome back! Please login to your account.</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl shadow-vercel-4 p-8">
+        <div className="bg-card/70 backdrop-blur-md border border-border rounded-xl shadow-vercel-4 p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>

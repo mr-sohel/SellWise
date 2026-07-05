@@ -52,8 +52,8 @@ export function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-canvas-soft px-4">
-      <div className="w-full max-w-3xl">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="w-full max-w-3xl relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-display-xl text-foreground mb-2">Welcome to SellWise</h1>
@@ -61,7 +61,7 @@ export function OnboardingPage() {
         </div>
 
         {/* Category Grid */}
-        <div className="bg-card border border-border rounded-xl shadow-vercel-4 p-8">
+        <div className="bg-card/70 backdrop-blur-md border border-border rounded-xl shadow-vercel-4 p-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {CATEGORY_PRESETS.map((preset) => {
               const isSelected = selected.includes(preset.id);
