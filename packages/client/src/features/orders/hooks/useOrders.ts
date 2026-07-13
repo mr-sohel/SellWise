@@ -13,6 +13,17 @@ export function useOrders(storeId: string, filters: OrderFiltersDTO) {
   });
 }
 
+export function useOrder(storeId: string, orderId: string) {
+  return useQuery({
+    queryKey: ['order', storeId, orderId],
+    queryFn: async (): Promise<any> => {
+      const { data } = await api.get(`/stores/${storeId}/orders/${orderId}`);
+      return data.data;
+    },
+    enabled: !!storeId && !!orderId,
+  });
+}
+
 export function useCreateOrder(storeId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -34,8 +45,9 @@ export function useUpdateOrderStatus(storeId: string) {
       const response = await api.patch(`/stores/${storeId}/orders/${id}/status`, data);
       return response.data.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['orders', storeId] });
+      queryClient.invalidateQueries({ queryKey: ['order', storeId, variables.id] });
     },
   });
 }

@@ -2,7 +2,7 @@ import { db } from '../config/db';
 import { env } from '../config/env';
 import logger from '../utils/logger';
 
-const TARGET_EMAIL = 'sohel@gmail.com';
+const TARGET_EMAIL = 'akash@gmail.com';
 
 async function trainMLChurnModel(storeId: string) {
   const { rows: historicalCustomers } = await db.query(

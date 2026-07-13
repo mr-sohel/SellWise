@@ -4,7 +4,7 @@ import { RFM_SEGMENTS } from '../constants/rfm-segments';
 export const createCustomerSchema = z.object({
   name: z.string().min(1, 'Customer name is required').max(255),
   phone: z.string().min(1, 'Phone number is required').max(50),
-  email: z.string().email('Invalid email').optional().nullable(),
+  email: z.union([z.string().email('Invalid email'), z.literal('')]).optional().nullable(),
   address: z.string().optional().nullable(),
 });
 

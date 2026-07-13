@@ -13,7 +13,10 @@ docker-compose up -d postgres redis
 echo -e "\033[0;33mWaiting for Database to accept connections...\033[0m"
 sleep 5
 
-# 3. Build Shared Package & Run Migrations
+# 3. Install Dependencies, Build Shared Package & Run Migrations
+echo -e "\033[0;33mInstalling NPM dependencies...\033[0m"
+npm install
+
 echo -e "\033[0;33mBuilding shared package...\033[0m"
 npm run build:shared
 
