@@ -69,7 +69,7 @@ improve.txt
 docker-compose.override.yml
 
 # Documentation
-*.md
+
 !README.md
 !*/README.md
 !AGENTS.md
