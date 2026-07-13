@@ -6,16 +6,36 @@ This repository contains the **Phase 1 (SDP)** implementation of the platform, s
 
 ---
 
-## Tech Stack & Architecture
+## 🎯 The Problem & Our Solution
 
-* **Frontend (`@sellwise/client`)**: React 19, Vite, TypeScript, Tailwind CSS v4, Zustand, TanStack Query, i18next (English & Bangla).
-* **Backend (`@sellwise/server`)**: Node.js, Express 5, TypeScript, PostgreSQL 16, Redis 7, BullMQ (background jobs), JWT (HTTP-only secure cookies).
-* **ML Service (`@sellwise/ml-service`)**: Python 3.11, FastAPI, Facebook Prophet (Demand Forecasting with business-type-aware seasonality), Scikit-learn (Churn Prediction with ensemble heuristic + LR).
-* **Infrastructure**: Docker Compose, `node-pg-migrate` for versioned database schema control.
+Small online business owners often struggle with manual inventory tracking, estimating future product demand, and understanding customer behavior. **SellWise** aims to fill the gap left by expensive ERPs or overly simplistic spreadsheet methods by offering:
+
+- **Proactive Inventory Alerts:** Stops products from going out of stock without warning.
+- **Demand Forecasting:** Uses Machine Learning to estimate what will sell in the next 7, 14, and 30 days so capital isn't tied up in unsold stock.
+- **Customer Intelligence:** Identifies valuable buyers and customers at risk of churning through RFM (Recency, Frequency, Monetary) analysis.
+- **All-in-One Dashboard:** Combines sales analytics, inventory management, and customer relations in a single, non-technical interface.
 
 ---
 
-## Business Type System
+## 🏗️ Architecture & Tech Stack
+
+SellWise is built with an **Enterprise SaaS architecture**, ensuring scalability, strict separation of concerns, and type safety across the board.
+
+### The Stack
+* **Frontend (`@sellwise/client`)**: React 19, Vite, TypeScript, Tailwind CSS v4, Zustand, TanStack Query, i18next (English & Bangla).
+* **Backend (`@sellwise/server`)**: Node.js, Express 5, TypeScript, PostgreSQL 16, Redis 7, BullMQ (background jobs), JWT (HTTP-only secure cookies).
+* **ML Service (`@sellwise/ml-service`)**: Python 3.11, FastAPI, Facebook Prophet (Demand Forecasting), Scikit-learn (Churn Prediction).
+* **Infrastructure**: Docker Compose, `node-pg-migrate` for versioned database schema control.
+
+### Key Architectural Patterns
+* **Clean Architecture Backend:** Strict separation of concerns utilizing a `Routes → Controllers → Services → Repositories` layer pattern.
+* **Standardized API Envelopes:** Every endpoint returns a predictable `{ success, data, error, meta }` format to the frontend.
+* **Shared Schemas:** `Zod` validation schemas are shared between the frontend and backend in a `@sellwise/shared` workspace, ensuring a single source of truth.
+* **Asynchronous Workers:** Heavy operations (Demand Forecasting, Inventory Alerts, RFM Analysis) are decoupled from the main API and processed reliably in the background using **BullMQ** and **Redis**.
+
+---
+
+## 🏢 Business Type System
 
 SellWise adapts to different business types through a **category-focused onboarding wizard**. During signup, users select what they sell (product categories), and the system auto-detects the business type and pre-seeds relevant categories.
 
@@ -43,7 +63,7 @@ Sales channels (Facebook, WhatsApp, Walk-in, Website) can be configured later in
 
 ---
 
-## Prerequisites
+## 🛠️ Prerequisites
 
 Ensure you have the following installed on your local machine:
 - **Node.js** (v20+)
@@ -52,7 +72,7 @@ Ensure you have the following installed on your local machine:
 
 ---
 
-## Quick Start Guide
+## 🚀 Quick Start Guide
 
 ### 1. Installation & Environment Setup
 
@@ -82,13 +102,21 @@ npm run migrate:up --workspace=@sellwise/server
 ### 3. Start All Services
 
 Run the single startup script to launch all three services (Frontend, Backend, ML):
-```bash
+
+**Windows:**
+```powershell
 .\start-dev.ps1
+```
+
+**macOS/Linux:**
+```bash
+chmod +x start-dev.sh
+./start-dev.sh
 ```
 
 This starts:
 - **Frontend** → `http://localhost:5173`
-- **Backend** → `http://localhost:5000`
+- **Backend API** → `http://localhost:5005` *(Note: Running on port 5005)*
 - **ML Service** → `http://localhost:8000`
 
 ### Alternative: Start Services Individually
@@ -109,7 +137,7 @@ uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-## Seed Data (Bangladeshi Electronics)
+## 🌱 Seed Data (Bangladeshi Electronics)
 
 The seed script creates realistic demo data for a Bangladeshi gadget shop:
 
@@ -132,7 +160,7 @@ npm run seed:forecasts --workspace=@sellwise/server
 
 ---
 
-## Test Credentials & Usage
+## 🔑 Test Credentials & Usage
 
 Since this is a private repository and isolated local database environment, **there are no pre-seeded credentials**.
 
@@ -147,7 +175,7 @@ To test the application:
 
 ---
 
-## Running Automated Tests
+## 🧪 Running Automated Tests
 
 We use **Jest** for backend integration tests and **Pytest** for the ML service unit tests.
 
@@ -161,102 +189,45 @@ npm run test --workspace=@sellwise/server
 Navigate to the ML service directory and run Pytest:
 ```bash
 cd packages/ml-service
-python -m pytest
+uv run pytest
 ```
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```text
 sellwise/
 ├── packages/
-│   ├── shared/              # Shared TS types, Zod schemas, constants (business types, categories)
+│   ├── shared/              # Shared TS types, Zod schemas, constants
 │   ├── client/              # React frontend application
 │   │   ├── src/
-│   │   │   ├── features/
-│   │   │   │   ├── onboarding/    # Business type wizard
-│   │   │   │   ├── categories/    # Category picker component
-│   │   │   │   ├── products/      # Product management
-│   │   │   │   ├── orders/        # Order management (search-as-you-type)
-│   │   │   │   ├── customers/     # Customer management
-│   │   │   │   ├── dashboard/     # Dashboard with analytics
-│   │   │   │   ├── expenses/      # Expense tracking
-│   │   │   │   ├── alerts/        # Inventory alerts
-│   │   │   │   ├── reports/       # Report generation
-│   │   │   │   └── settings/      # Store & profile settings
-│   │   │   ├── components/ui/     # Shared UI components (Button, Card, Badge, etc.)
-│   │   │   └── stores/           # Zustand state management
+│   │   │   ├── features/    # Domain-driven features (onboarding, products, orders, etc.)
+│   │   │   ├── components/  # Shared UI components
+│   │   │   └── stores/      # Zustand state management
 │   ├── server/              # Express.js backend API + BullMQ workers
 │   │   ├── migrations/      # Database migrations (node-pg-migrate)
 │   │   └── src/
-│   │       ├── routes/      # API routes (auth, stores, products, orders, categories, etc.)
-│   │       ├── controllers/ # Request handlers
-│   │       ├── services/    # Business logic
-│   │       ├── repositories/# Database queries
-│   │       └── jobs/        # BullMQ background workers
+│   │       ├── routes/      # API routes definitions
+│   │       ├── controllers/ # HTTP request/response handlers
+│   │       ├── services/    # Core business logic & orchestration
+│   │       ├── repositories/# Database interaction & raw SQL queries
+│   │       └── jobs/        # BullMQ background workers (Forecast, Alerts, RFM)
 │   └── ml-service/          # Python FastAPI ML microservice
 │       ├── app/
-│       │   ├── routers/     # API endpoints (forecast, churn)
-│       │   ├── services/    # Prophet forecasting, churn prediction
-│       │   └── models/      # Pydantic schemas
+│       │   ├── routers/     # API endpoints
+│       │   ├── services/    # Prophet forecasting, Churn prediction algorithms
+│       │   └── models/      # Pydantic validation schemas
 │       └── requirements.txt
 ├── docker-compose.yml       # Local Infra (PostgreSQL + Redis)
+├── start-dev.ps1            # Windows all-in-one startup script
+├── start-dev.sh             # macOS/Linux all-in-one startup script
 └── README.md
 ```
 
 ---
 
-## API Endpoints
-
-### Authentication
-- `POST /api/v1/auth/signup` — Create account
-- `POST /api/v1/auth/login` — Login
-- `POST /api/v1/auth/logout` — Logout
-
-### Store Management
-- `GET /api/v1/stores` — List user's stores
-- `POST /api/v1/stores` — Create store
-- `PATCH /api/v1/stores/:storeId/onboarding` — Complete onboarding (accepts `categoryPresetIds`, auto-detects business_type)
-- `PATCH /api/v1/stores/:storeId/profile` — Update store profile
-
-### Categories
-- `GET /api/v1/stores/:storeId/categories` — List categories
-- `POST /api/v1/stores/:storeId/categories` — Create category
-- `PATCH /api/v1/stores/:storeId/categories/:categoryId` — Update category
-- `DELETE /api/v1/stores/:storeId/categories/:categoryId` — Delete category (non-default only)
-
-### Products
-- `GET /api/v1/stores/:storeId/products` — List products (with search, category filter)
-- `POST /api/v1/stores/:storeId/products` — Create product
-- `PUT /api/v1/stores/:storeId/products/:id` — Update product
-- `DELETE /api/v1/stores/:storeId/products/:id` — Soft delete product
-- `POST /api/v1/stores/:storeId/products/bulk` — Bulk import
-
-### Orders
-- `GET /api/v1/stores/:storeId/orders` — List orders (with search, status filter)
-- `POST /api/v1/stores/:storeId/orders` — Create order (with customer upsert)
-- `PATCH /api/v1/stores/:storeId/orders/:id/status` — Update order status
-
-### Customers
-- `GET /api/v1/stores/:storeId/customers` — List customers (with search, segment filter)
-- `POST /api/v1/stores/:storeId/customers` — Create customer
-- `PUT /api/v1/stores/:storeId/customers/:id` — Update customer
-
-### Analytics
-- `GET /api/v1/stores/:storeId/analytics/dashboard` — Dashboard KPIs
-- `GET /api/v1/stores/:storeId/analytics/category-breakdown` — Sales by category
-- `GET /api/v1/stores/:storeId/analytics/demand-forecast?limit=5&days=30` — Top products by demand forecast
-
-### Forecasts
-- `GET /api/v1/stores/:storeId/products/:productId/forecast` — Get demand forecast for a product
-
-### Webhooks
-- `POST /api/v1/webhooks/orders` — External order ingestion (API key auth)
-
----
-
-## Security Features
+## 🛡️ Security Features
 
 SellWise implements defense-in-depth security for local development:
 
@@ -270,10 +241,8 @@ SellWise implements defense-in-depth security for local development:
 | **Rate Limiting** | Global 2000 req/15min; auth endpoints 10 req/15min (login/signup) |
 | **Request Validation** | Zod schemas validate all inputs; UUID validation on route params |
 | **Security Headers** | Helmet with HSTS, CSP, and standard protections |
-| **Cookie Security** | `httpOnly`, `secure` (prod), `sameSite: 'lax'`, `path: '/'` |
-| **Container Security** | Non-root `appuser` in Docker images; DB/Redis ports bound to `127.0.0.1` |
 
 ---
 
-## License
+## 📜 License
 *Proprietary / All Rights Reserved* - Designed for University SDP Evaluation.
