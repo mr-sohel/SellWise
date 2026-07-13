@@ -632,9 +632,9 @@ packages/server/migrations/
 
 **Commands:**
 ```bash
-pnpm --filter server migrate:up      # Run all pending migrations
-pnpm --filter server migrate:down    # Rollback last migration
-pnpm --filter server migrate:create  # Create a new migration file
+npm run migrate:up --workspace=@sellwise/server      # Run all pending migrations
+npm run migrate:down --workspace=@sellwise/server    # Rollback last migration
+npm run migrate:create --workspace=@sellwise/server  # Create a new migration file
 ```
 
 **Why this matters:**
@@ -1321,7 +1321,6 @@ sellwise/
 │   └── workflows/
 │       ├── ci.yml                        # Lint + Type-check + Test on PR
 │       └── deploy.yml                    # Deploy on merge to main
-├── pnpm-workspace.yaml
 ├── turbo.json                            # Turborepo build orchestration (optional)
 ├── .gitignore
 ├── .env.example
@@ -1485,13 +1484,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter shared build          # Build shared types first
-      - run: pnpm --filter server lint            # ESLint
-      - run: pnpm --filter server typecheck       # tsc --noEmit
-      - run: pnpm --filter client lint
-      - run: pnpm --filter client typecheck
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build --workspace=@sellwise/shared          # Build shared types first
+      - run: npm run lint --workspace=@sellwise/server           # ESLint
+      - run: npm run typecheck --workspace=@sellwise/server      # tsc --noEmit
+      - run: npm run lint --workspace=@sellwise/client
+      - run: npm run typecheck --workspace=@sellwise/client
   
   test:
     runs-on: ubuntu-latest
@@ -1505,11 +1506,13 @@ jobs:
         ports: ['6379:6379']
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter shared build
-      - run: pnpm --filter server test            # Jest + supertest
-      - run: pnpm --filter ml-service test        # pytest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build --workspace=@sellwise/shared
+      - run: npm run test --workspace=@sellwise/server            # Jest + supertest
+      - run: npm run test --workspace=@sellwise/ml-service        # pytest
 ```
 
 ---
@@ -1526,10 +1529,10 @@ jobs:
 | M2 (Frontend) | Init `packages/client` with Vite + React + TypeScript + TailwindCSS v4. Set up TanStack Query, Zustand, react-router, axios client with JWT interceptor |
 | M3 (ML) | Init `packages/ml-service` with FastAPI + pydantic. Set up `/health` endpoint, psycopg2 pool, logging |
 | M4 (UI/UX) | Figma wireframes: Login, Dashboard, Products, Orders. Define design system: colors, typography, spacing scale |
-| M5 (DevOps) | Init pnpm workspace + `packages/shared`. Create `docker-compose.yml` (Postgres 16 + Redis 7 + Adminer). Set up GitHub repo, branch protection, CI workflow. Write all database migrations (001-008) |
+| M5 (DevOps) | Init npm workspace + `packages/shared`. Create `docker-compose.yml` (Postgres 16 + Redis 7 + Adminer). Set up GitHub repo, branch protection, CI workflow. Write all database migrations (001-008) |
 | ALL | Agree on coding conventions: file naming, import ordering, commit message format |
 
-**Deliverable**: All services run locally with `docker-compose up` + `pnpm dev`. Shared types importable. DB migrations work. CI pipeline runs on PRs.
+**Deliverable**: All services run locally with `docker-compose up` + `npm run dev`. Shared types importable. DB migrations work. CI pipeline runs on PRs.
 
 ---
 
@@ -1655,7 +1658,7 @@ jobs:
 ### Automated Tests
 ```bash
 # Backend integration tests (Jest + supertest)
-pnpm --filter server test
+npm run test --workspace=@sellwise/server
 
 # Test cases:
 # - Auth: signup → login → access protected route → invalid token rejected
@@ -1669,11 +1672,11 @@ pnpm --filter server test
 cd packages/ml-service && uv run pytest
 
 # Frontend type-checking
-pnpm --filter client typecheck
+npm run typecheck --workspace=@sellwise/client
 
 # Linting
-pnpm --filter server lint
-pnpm --filter client lint
+npm run lint --workspace=@sellwise/server
+npm run lint --workspace=@sellwise/client
 ```
 
 ### Manual Verification
