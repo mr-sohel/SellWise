@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useOrders } from './hooks/useOrders';
+import { useOrders, useUpdateOrderStatus } from './hooks/useOrders';
 import { useAuthStore } from '../../stores/auth.store';
 import { Link } from 'react-router-dom';
+import { ORDER_STATUS_TRANSITIONS, type OrderStatus } from '@sellwise/shared';
 import { Plus, Search, Eye, MoreHorizontal } from 'lucide-react';
 import { PageHeader } from '../../components/ui/page-header';
 import { Badge } from '../../components/ui/badge';
@@ -18,7 +19,7 @@ const statusVariant: Record<string, 'success' | 'destructive' | 'warning' | 'inf
 };
 
 export function OrderListPage() {
-  const { activeStoreId } = useAuthStore();
+  const { activeStoreId, role } = useAuthStore();
   const storeId = activeStoreId || '';
 
   const [page, setPage] = useState(1);
@@ -27,6 +28,8 @@ export function OrderListPage() {
   const [status, setStatus] = useState('');
 
   const { data: result, isLoading } = useOrders(storeId, { page, limit: 10, search: debouncedSearch, status });
+  const updateStatusMutation = useUpdateOrderStatus(storeId);
+  const canUpdateStatus = role === 'owner' || role === 'manager';
 
   return (
     <div className="w-full space-y-6 max-w-[1600px] mx-auto pb-8">
@@ -124,6 +127,21 @@ export function OrderListPage() {
                               View Details
                             </Link>
                           </DropdownMenuItem>
+                          
+                          {canUpdateStatus && ORDER_STATUS_TRANSITIONS[order.status as OrderStatus]?.length > 0 && (
+                            <>
+                              <div className="h-px bg-border my-1" />
+                              {ORDER_STATUS_TRANSITIONS[order.status as OrderStatus].map((nextStatus) => (
+                                <DropdownMenuItem 
+                                  key={nextStatus}
+                                  onClick={() => updateStatusMutation.mutate({ id: order.id, data: { status: nextStatus } })}
+                                  className="capitalize"
+                                >
+                                  Mark as {nextStatus}
+                                </DropdownMenuItem>
+                              ))}
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>

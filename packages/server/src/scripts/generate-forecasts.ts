@@ -2,7 +2,7 @@ import { forecastService } from '../services/forecast.service';
 import { db } from '../config/db';
 
 async function generate() {
-  const storeId = '5dd99099-1def-40c6-87de-1632f51c5a5d';
+  const storeId = '38a5c61f-4b03-40d0-a63d-093f46dc4279';
   console.log(`Generating forecasts for store ${storeId}...`);
   const result = await forecastService.generateForecasts(storeId);
   console.log(`Done. Products processed: ${result.productsProcessed}`);

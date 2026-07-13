@@ -10,6 +10,7 @@ import { EditProductPage } from './features/products/EditProductPage'
 import { BulkImportPage } from './features/products/BulkImportPage'
 import { OrderListPage } from './features/orders/OrderListPage'
 import { CreateOrderPage } from './features/orders/CreateOrderPage'
+import { OrderDetailsPage } from './features/orders/OrderDetailsPage'
 import { CustomerListPage } from './features/customers/CustomerListPage'
 import { ExpenseListPage } from './features/expenses/ExpenseListPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
@@ -45,6 +46,7 @@ function App() {
             <Route path="/products/import" element={<BulkImportPage />} />
             <Route path="/orders" element={<OrderListPage />} />
             <Route path="/orders/new" element={<CreateOrderPage />} />
+            <Route path="/orders/:id" element={<OrderDetailsPage />} />
             <Route path="/customers" element={<CustomerListPage />} />
             <Route path="/expenses" element={<ExpenseListPage />} />
             <Route path="/reports" element={<ReportGeneratorPage />} />

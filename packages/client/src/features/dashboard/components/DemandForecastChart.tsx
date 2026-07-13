@@ -4,7 +4,7 @@ import { useAuthStore } from '../../../stores/auth.store';
 import {
   AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from 'recharts';
-import { TrendingUp, Package } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Package } from 'lucide-react';
 
 const COLORS = ['var(--color-chart-1)', 'var(--color-chart-2)', 'var(--color-chart-3)', 'var(--color-chart-4)', 'var(--color-chart-5)'];
 
@@ -83,7 +83,19 @@ export function DemandForecastChart() {
           .map((product, i) => {
             const totalDemand = product._totalDemand;
             const avgDaily = product.forecasts.length > 0 ? totalDemand / product.forecasts.length : 0;
-          const color = COLORS[i % COLORS.length];
+            const color = COLORS[i % COLORS.length];
+
+            const firstVal = Number(product.forecasts[0]?.predicted_qty || 0);
+            const lastVal = Number(product.forecasts[product.forecasts.length - 1]?.predicted_qty || 0);
+            let TrendIcon = Minus;
+            let trendColor = "text-muted-foreground";
+            if (lastVal > firstVal) {
+              TrendIcon = TrendingUp;
+              trendColor = "text-emerald-500";
+            } else if (lastVal < firstVal) {
+              TrendIcon = TrendingDown;
+              trendColor = "text-red-500";
+            }
 
           return (
             <div
@@ -148,7 +160,7 @@ export function DemandForecastChart() {
               {/* Stats row */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5">
-                  <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                  <TrendIcon className={`h-3 w-3 ${trendColor}`} />
                   <span className="text-foreground font-medium">{Math.round(totalDemand)}</span>
                   <span className="text-muted-foreground">units / {days}d</span>
                 </div>

@@ -1,248 +1,126 @@
-# SellWise
+# SellWise: AI Sales Analytics & Inventory SaaS
 
-**SellWise** is an AI-Powered Sales Analytics & Inventory Management SaaS designed specifically for small online businesses and sellers in Bangladesh. It helps sellers track orders, manage inventory, forecast demand using Machine Learning, and understand customer behavior — effectively replacing manual Excel workflows.
+SellWise is a modern Software-as-a-Service (SaaS) application designed specifically for small sellers. It helps business owners manage their inventory, track sales, and use Artificial Intelligence to predict future demand and identify customers who might stop buying from them (churn).
 
-This repository contains the **Phase 1 (SDP)** implementation of the platform, structured as an enterprise-grade `npm` workspaces monorepo.
-
----
-
-## 🎯 The Problem & Our Solution
-
-Small online business owners often struggle with manual inventory tracking, estimating future product demand, and understanding customer behavior. **SellWise** aims to fill the gap left by expensive ERPs or overly simplistic spreadsheet methods by offering:
-
-- **Proactive Inventory Alerts:** Stops products from going out of stock without warning.
-- **Demand Forecasting:** Uses Machine Learning to estimate what will sell in the next 7, 14, and 30 days so capital isn't tied up in unsold stock.
-- **Customer Intelligence:** Identifies valuable buyers and customers at risk of churning through RFM (Recency, Frequency, Monetary) analysis.
-- **All-in-One Dashboard:** Combines sales analytics, inventory management, and customer relations in a single, non-technical interface.
+The project is structured as a **Monorepo** using `npm workspaces`, which means all the different parts of the application live in a single repository but are separated into logical packages.
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## 1. Project Architecture (The Big Picture)
 
-SellWise is built with an **Enterprise SaaS architecture**, ensuring scalability, strict separation of concerns, and type safety across the board.
+The system is divided into four main packages:
+1. **`@sellwise/shared`:** Contains TypeScript types, Zod validation schemas, and constants shared between the frontend and backend.
+2. **`@sellwise/client`:** The frontend web application built with React.
+3. **`@sellwise/server`:** The backend API built with Node.js and Express.
+4. **`@sellwise/ml-service`:** A standalone Python API for running Machine Learning algorithms.
 
-### The Stack
-* **Frontend (`@sellwise/client`)**: React 19, Vite, TypeScript, Tailwind CSS v4, Zustand, TanStack Query, i18next (English & Bangla).
-* **Backend (`@sellwise/server`)**: Node.js, Express 5, TypeScript, PostgreSQL 16, Redis 7, BullMQ (background jobs), JWT (HTTP-only secure cookies).
-* **ML Service (`@sellwise/ml-service`)**: Python 3.11, FastAPI, Facebook Prophet (Demand Forecasting), Scikit-learn (Churn Prediction).
-* **Infrastructure**: Docker Compose, `node-pg-migrate` for versioned database schema control.
-
-### Key Architectural Patterns
-* **Clean Architecture Backend:** Strict separation of concerns utilizing a `Routes → Controllers → Services → Repositories` layer pattern.
-* **Standardized API Envelopes:** Every endpoint returns a predictable `{ success, data, error, meta }` format to the frontend.
-* **Shared Schemas:** `Zod` validation schemas are shared between the frontend and backend in a `@sellwise/shared` workspace, ensuring a single source of truth.
-* **Asynchronous Workers:** Heavy operations (Demand Forecasting, Inventory Alerts, RFM Analysis) are decoupled from the main API and processed reliably in the background using **BullMQ** and **Redis**.
+All packages work together to deliver a seamless user experience. The frontend talks to the backend via REST API, and the backend delegates heavy predictive tasks to the ML service.
 
 ---
 
-## 🏢 Business Type System
+## 2. Backend Core Logic & Coding Pattern
 
-SellWise adapts to different business types through a **category-focused onboarding wizard**. During signup, users select what they sell (product categories), and the system auto-detects the business type and pre-seeds relevant categories.
+**Tech Stack:** Node.js, Express 5, PostgreSQL (Database), Redis (Caching & Job Queues), BullMQ.
 
-### Category Presets (Onboarding)
+The backend strictly follows a **Layered Architecture**. This is crucial for keeping the code clean, testable, and scalable. For every resource (e.g., Orders, Products, Customers), there are four files:
 
-| Preset | Default Categories |
-|--------|-------------------|
-| 📱 **Gadgets & Electronics** | Mobile Phones, Phone Accessories, Computers & Laptops, Audio & Speakers, Cameras |
-| 👕 **Clothing & Fashion** | Men's Clothing, Women's Clothing, Shoes, Bags & Accessories, Traditional Wear |
-| 💄 **Beauty & Personal Care** | Skincare, Makeup, Haircare, Fragrances, Personal Care |
-| 🏠 **Home & Kitchen** | Kitchenware, Furniture, Home Decor, Bedding, Lighting |
-| 🛒 **Grocery & Super Shop** | Rice & Grains, Oil & Spices, Snacks & Beverages, Dairy & Eggs, Cleaning Supplies |
-| ⚽ **Sports & Outdoors** | Fitness Equipment, Sportswear, Outdoor Gear, Cycling, Cricket |
-| 📚 **Books & Stationery** | Books, Pens & Pencils, Office Supplies, Art Supplies, Bags & Pouches |
-| 💊 **Health & Medicine** | Vitamins & Supplements, First Aid, Personal Hygiene, Medical Devices, Baby Care |
-| 🚗 **Auto & Accessories** | Car Parts, Bike Accessories, Car Electronics, Car Care, Helmets |
-| 🏪 **General Store** | Mixed Items, Seasonal Products, Gift Items, Toys, Pet Supplies |
+1. **Routes (`routes/*.routes.ts`):** 
+   - *What it does:* Defines the API endpoints (e.g., `GET /orders`, `POST /orders`).
+   - *Core logic:* Runs middlewares like authentication (`authenticate`), checks permissions (`requireRole`), validates incoming data using Zod (`validate(schema)`), and then passes the request to the controller.
 
-### Business Type Auto-Detection
+2. **Controllers (`controllers/*.controller.ts`):** 
+   - *What it does:* Handles the HTTP Request and Response.
+   - *Core logic:* Extracts data from `req.body` or `req.params`, calls the Service layer to do the actual work, and then formats the successful response using a standard `ApiResponse.success(data)` envelope. **No database queries are ever written here.**
 
-- **Grocery selected** → `small_shop` (weekly rush, monsoon dips)
-- **Any other selection** → `online_store` (yearly seasonality, weekly patterns)
+3. **Services (`services/*.service.ts`):** 
+   - *What it does:* The "Brain" of the backend. Contains all the business logic.
+   - *Core logic:* This is where complex workflows happen. For example, in `order.service.ts` when creating an order, it locks the product row (`SELECT ... FOR UPDATE`), checks stock, deducts stock, creates the order header, creates order items, and updates the customer's total spent—all within an ACID transaction (`BEGIN` ... `COMMIT`). If anything fails, it rolls back.
 
-Sales channels (Facebook, WhatsApp, Walk-in, Website) can be configured later in Settings.
+4. **Repositories (`repositories/*.repository.ts`):** 
+   - *What it does:* The only place where Database (SQL) queries exist.
+   - *Core logic:* Methods like `findById`, `create`, or `update` are defined here. It never knows about HTTP requests, making it purely focused on PostgreSQL operations.
+
+**Multi-tenancy & Auth:** Every store's data is isolated. A `store_id` is required in almost every query to ensure a user can never see another shop's data. Authentication uses secure HTTP-only cookies with JWTs.
 
 ---
 
-## 🛠️ Prerequisites
+## 3. Deep Dive: Key Workflows (Add Product & Create Order)
 
-Ensure you have the following installed on your local machine:
-- **Node.js** (v20+)
-- **Python** (v3.11+)
-- **Docker** and **Docker Compose**
+### Add Product Workflow
+When a user adds a new product, it follows a strict flow to ensure data integrity:
+1. **Frontend (Client):** The user fills out the Add Product form. `React Hook Form` handles the state, and `Zod` instantly validates rules (e.g., selling price must be greater than cost price, stock cannot be negative).
+2. **API Call:** When submitted, `TanStack Query`'s `useMutation` sends a `POST` request to `/api/v1/stores/:storeId/products`.
+3. **Backend Middleware:** The router catches the request. `authenticate` verifies the JWT cookie. `requireStoreMembership` ensures the user belongs to the store. `validate` runs the Zod schema again on the server side to prevent malicious API requests.
+4. **Service & Database:** The `product.service.ts` receives the data. It calls `product.repository.ts` to execute an `INSERT` SQL query. If successful, the new product is saved.
+5. **UI Update:** The frontend receives a success response. `TanStack Query` automatically invalidates the `['products']` cache, causing the product list to instantly refresh and show the newly added product!
 
----
-
-## 🚀 Quick Start Guide
-
-### 1. Installation & Environment Setup
-
-Clone the repository and install all Node.js workspace dependencies:
-
-```bash
-npm install
-```
-
-Set up your environment variables:
-```bash
-cp .env.example .env
-```
-
-### 2. Start Infrastructure & Run Migrations
-
-Start the local PostgreSQL and Redis instances using Docker:
-```bash
-docker-compose up -d postgres redis
-```
-
-Once the database is running, apply the database migrations to build the schema:
-```bash
-npm run migrate:up --workspace=@sellwise/server
-```
-
-### 3. Start All Services
-
-Run the single startup script to launch all three services (Frontend, Backend, ML):
-
-**Windows:**
-```powershell
-.\start-dev.ps1
-```
-
-**macOS/Linux:**
-```bash
-chmod +x start-dev.sh
-./start-dev.sh
-```
-
-This starts:
-- **Frontend** → `http://localhost:5173`
-- **Backend API** → `http://localhost:5005` *(Note: Running on port 5005)*
-- **ML Service** → `http://localhost:8000`
-
-### Alternative: Start Services Individually
-
-```bash
-# Frontend (React)
-npm run dev:client
-
-# Backend (Express)
-npm run dev:server
-
-# ML Service (Python)
-cd packages/ml-service
-uv venv --allow-existing
-uv pip install -r requirements.txt
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+### Create Order Workflow (ACID Transaction)
+Creating an order is the most complex workflow because it must perfectly balance inventory and money. 
+1. **Frontend:** The POS (Point of Sale) style form allows adding multiple products. It debounces customer phone number searches to prevent spamming the backend API. When submitted, the frontend calculates totals based on delivery charges and discounts.
+2. **Backend Transaction Initiation:** In `order.service.ts`, we start a database transaction using `client.query('BEGIN')`. This ensures that if any part fails, nothing is saved (preventing half-created orders).
+3. **Customer Resolution:** The system checks if the customer exists by phone number. If yes, it links the order. If no, it creates a new customer record on the fly (`upsertByPhone`).
+4. **Stock Locking & Validation:** For every item in the order, the database executes a `SELECT ... FOR UPDATE` query. This puts a "lock" on the product row, preventing two cashiers from selling the exact same final item at the exact same millisecond. It verifies enough stock exists.
+5. **Deduction & Creation:** The service deducts the stock, creates the main Order Header, and then creates Order Items (saving a snapshot of the price so if prices change later, old orders aren't affected).
+6. **Commit:** Finally, it updates the customer's total spent stats and runs `client.query('COMMIT')` to permanently save everything.
 
 ---
 
-## 🌱 Seed Data (Bangladeshi Electronics)
+## 4. Security: Authentication & Validation
 
-The seed script creates realistic demo data for a Bangladeshi gadget shop:
+Security is a massive priority in this application. It uses a robust, two-layered security model:
 
-| Resource | Count | Details |
-|----------|-------|---------|
-| Products | 51 | Across 5 categories (Mobile Phones, Phone Accessories, Computers & Laptops, Audio & Speakers, Cameras) |
-| Customers | 40 | Bangladeshi names with realistic phone/address data |
-| Orders | 800 | Spread over 12 months with seasonal patterns |
-| Expenses | 192 | Across 6 expense categories |
+### A. Authentication & Authorization (JWT + Cookies)
+The system does not use easily-stolen `localStorage` for authentication tokens. 
+- **HTTP-Only Cookies:** When a user logs in, the server generates a JSON Web Token (JWT) and sends it back inside an `httpOnly`, `secure`, and `sameSite` cookie. This means malicious JavaScript (XSS attacks) cannot steal the token.
+- **Middleware Chain:** Every protected API route runs through a strict middleware chain:
+  1. `authenticate`: Verifies the JWT signature and ensures the token hasn't been blacklisted in Redis (for instantaneous logouts).
+  2. `requireStoreMembership`: Verifies in the database that the authenticated user actually belongs to the `store_id` they are trying to access. This prevents "Tenant Isolation" breaches (User A viewing Shop B's data).
+  3. `requireRole`: Optional middleware that restricts sensitive actions (like deleting products) to only users with the `owner` or `manager` role.
 
-Run the seed script:
-```bash
-npm run seed --workspace=@sellwise/server
-```
-
-Generate demand forecasts (requires seed data):
-```bash
-npm run seed:forecasts --workspace=@sellwise/server
-```
+### B. Validation (Zod Everywhere)
+To prevent bad data from crashing the server or corrupting the database, the app uses **Zod** for end-to-end type-safe validation.
+- **Single Source of Truth:** The validation schemas are defined once in the `@sellwise/shared` package.
+- **Frontend Validation:** When a user fills a form, `React Hook Form` uses the shared Zod schema. If they enter a negative quantity, the form shows an error and refuses to submit, saving an unnecessary API call.
+- **Backend Validation:** Even if an attacker bypasses the frontend and sends a raw HTTP request, the backend router runs `validate(schema)` using the exact same Zod schema. If the data doesn't match the rules, the server immediately rejects the request with a `400 Bad Request` before it ever reaches the controller or database.
 
 ---
 
-## 🔑 Test Credentials & Usage
+## 5. How the Machine Learning (ML) Works
 
-Since this is a private repository and isolated local database environment, **there are no pre-seeded credentials**.
+**Tech Stack:** Python, FastAPI, Prophet, Scikit-Learn.
 
-To test the application:
-1. Navigate to **`http://localhost:5173/signup`**.
-2. Create a new account (e.g., `admin@sellwise.com` / `password123`).
-3. Complete the onboarding wizard (select product categories you sell).
-4. You will be redirected to the dashboard with pre-configured categories.
-5. *Note: As the first user, you act as the Store Owner.*
+The ML service runs independently on port 8000. The backend communicates with it to fetch analytics. It focuses on two massive AI features:
 
-*Alternatively, run the seed script to get 51 products, 40 customers, and 800 orders of realistic demo data.*
+### A. Demand Forecasting (Predicting Future Sales)
+The ML service predicts how many units of a product will sell in the next 30 days.
+- **How it works:** It uses two different mathematical models depending on the data.
+- **Prophet Algorithm:** If a product has a long history (≥ 30 days of sales), it uses Meta's Prophet model. Prophet is highly advanced and automatically learns weekly/monthly seasonalities (e.g., higher sales on weekends or during holidays).
+- **EWMA (Exponentially Weighted Moving Average):** If a product is new (< 30 days of history), Prophet wouldn't have enough data. The system intelligently falls back to EWMA, which gives more weight to recent sales to predict immediate future demand.
 
----
-
-## 🧪 Running Automated Tests
-
-We use **Jest** for backend integration tests and **Pytest** for the ML service unit tests.
-
-### Backend Tests
-Ensure your Docker containers (PostgreSQL & Redis) are running, then execute:
-```bash
-npm run test --workspace=@sellwise/server
-```
-
-### ML Service Tests
-Navigate to the ML service directory and run Pytest:
-```bash
-cd packages/ml-service
-uv run pytest
-```
+### B. Customer Churn Prediction (Who is leaving?)
+This algorithm predicts the probability (0% to 100%) that a customer will stop buying from the store.
+- **How it works:** It uses an Ensemble Model (combining two logic systems).
+- **Primary Heuristic (Gap Ratio):** It calculates the average days a customer usually waits between purchases. If they normally buy every 10 days, but it has been 25 days, the gap ratio is 2.5. The higher the ratio, the higher the churn probability.
+- **Secondary Machine Learning (Logistic Regression):** If the store has enough data, it trains a Logistic Regression model using RFM data: **R**ecency (days since last order), **F**requency (total orders), and **M**onetary (total spent). It scales these features and predicts churn behavior based on historical lost customers.
 
 ---
 
-## 📂 Project Structure
+## 6. Frontend Architecture & Everything Else
 
-```text
-sellwise/
-├── packages/
-│   ├── shared/              # Shared TS types, Zod schemas, constants
-│   ├── client/              # React frontend application
-│   │   ├── src/
-│   │   │   ├── features/    # Domain-driven features (onboarding, products, orders, etc.)
-│   │   │   ├── components/  # Shared UI components
-│   │   │   └── stores/      # Zustand state management
-│   ├── server/              # Express.js backend API + BullMQ workers
-│   │   ├── migrations/      # Database migrations (node-pg-migrate)
-│   │   └── src/
-│   │       ├── routes/      # API routes definitions
-│   │       ├── controllers/ # HTTP request/response handlers
-│   │       ├── services/    # Core business logic & orchestration
-│   │       ├── repositories/# Database interaction & raw SQL queries
-│   │       └── jobs/        # BullMQ background workers (Forecast, Alerts, RFM)
-│   └── ml-service/          # Python FastAPI ML microservice
-│       ├── app/
-│       │   ├── routers/     # API endpoints
-│       │   ├── services/    # Prophet forecasting, Churn prediction algorithms
-│       │   └── models/      # Pydantic validation schemas
-│       └── requirements.txt
-├── docker-compose.yml       # Local Infra (PostgreSQL + Redis)
-├── start-dev.ps1            # Windows all-in-one startup script
-├── start-dev.sh             # macOS/Linux all-in-one startup script
-└── README.md
-```
+**Tech Stack:** React 19, Vite, Tailwind CSS v4, TanStack Query, Zustand, React Hook Form, Zod.
 
----
+The frontend is designed to be blazing fast and highly modern, utilizing a Vercel-style aesthetic with CSS variables (e.g., `bg-background`, `text-primary-foreground`) defined in `index.css`.
 
-## 🛡️ Security Features
+### Core Tools & How They Are Used:
+1. **TanStack Query (Server State):** 
+   - *Usage:* Used for all data fetching (e.g., `useOrders`, `useProducts`). It caches API responses, automatically handles loading states, and refetches data when needed. This is why the app feels so fast—if you revisit a page, the data is already cached.
+2. **Zustand (Client State):** 
+   - *Usage:* Used for global state that doesn't come from the database. For example, `useAuthStore` keeps track of the currently logged-in user, their role, and the active store. It uses local storage persistence so you stay logged in after refreshing.
+3. **React Hook Form & Zod:** 
+   - *Usage:* Used for all forms (like the Create Order page). Zod defines the strict rules (e.g., "Quantity must be > 0"). React Hook Form binds these rules to the inputs, ensuring no bad data is ever sent to the backend. It does this without re-rendering the whole page on every keystroke, keeping performance high.
 
-SellWise implements defense-in-depth security for local development:
+### File Structure:
+- `src/features/*`: The codebase is organized by feature rather than type. All code related to Orders (components, API hooks, pages) lives inside `src/features/orders/`. This makes the code highly modular and easy to navigate.
+- `src/components/ui/*`: Reusable, generic UI components like Buttons, Badges, and Dropdowns.
 
-| Layer | Implementation |
-|-------|---------------|
-| **Password Policy** | Minimum 8 chars, uppercase, lowercase, number (Zod enforced) |
-| **JWT Auth** | 96-char hex secret, 7-day expiry, HTTP-only secure cookies with `sameSite: 'lax'` |
-| **Token Revocation** | Logout revokes JWT server-side via Redis blacklist |
-| **Multi-Tenancy** | `requireStoreMembership` middleware validates user has role in `store_members` for each request |
-| **SQL Injection** | Repository column allowlists prevent malicious column names |
-| **Rate Limiting** | Global 2000 req/15min; auth endpoints 10 req/15min (login/signup) |
-| **Request Validation** | Zod schemas validate all inputs; UUID validation on route params |
-| **Security Headers** | Helmet with HSTS, CSP, and standard protections |
-
----
-
-## 📜 License
-*Proprietary / All Rights Reserved* - Designed for University SDP Evaluation.
+By strictly following these patterns, SellWise remains highly scalable, secure, and ready to handle large amounts of data for thousands of businesses!

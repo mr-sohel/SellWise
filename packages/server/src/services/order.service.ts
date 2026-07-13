@@ -11,13 +11,21 @@ export class OrderService {
     return orderRepository.findByStore(storeId, filters);
   }
 
-  async getOrder(storeId: string, id: string): Promise<Order & { items: OrderItem[] }> {
+  async getOrder(storeId: string, id: string): Promise<any> {
     const order = await orderRepository.findById(id);
     if (!order || order.store_id !== storeId) {
       throw new NotFoundError('Order');
     }
     const items = await orderRepository.findItemsByOrderId(id);
-    return { ...order, items };
+    const customer = await customerRepository.findById(order.customer_id);
+    
+    return { 
+      ...order, 
+      customer_name: customer?.name || null,
+      customer_phone: customer?.phone || null,
+      customer_address: customer?.address || null,
+      items 
+    };
   }
 
   async createOrder(storeId: string, data: CreateOrderDTO): Promise<Order> {
