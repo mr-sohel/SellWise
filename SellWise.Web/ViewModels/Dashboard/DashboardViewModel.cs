@@ -11,10 +11,17 @@ public class DashboardViewModel
     public int HealthScore { get; set; }
     
     public List<RevenuePoint> RevenueTrend { get; set; } = new List<RevenuePoint>();
+    public List<ForecastPoint> DemandForecast { get; set; } = new List<ForecastPoint>();
 }
 
 public class RevenuePoint
 {
     public string Date { get; set; } = string.Empty;
     public decimal Revenue { get; set; }
+}
+
+public class ForecastPoint
+{
+    public string Date { get; set; } = string.Empty;
+    public double PredictedDemand { get; set; }
 }

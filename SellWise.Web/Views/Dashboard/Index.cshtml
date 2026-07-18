@@ -4,83 +4,200 @@
 }
 
 <!-- KPI Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center p-3 shadow-sm border-0">
-            <div class="fs-3 fw-bold">৳@Model.TotalRevenue.ToString("N0")</div>
-            <div class="text-muted small text-uppercase fw-bold mt-1">Total Revenue</div>
-            <div class="text-@(Model.RevenueGrowth >= 0 ? "success" : "danger") small mt-1 fw-bold">
-                @(Model.RevenueGrowth >= 0 ? "↑" : "↓") @Math.Abs(Model.RevenueGrowth)%
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card p-4 h-100 border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Total Revenue</div>
+                    <div class="fs-2 fw-bold text-dark">৳@Model.TotalRevenue.ToString("N0")</div>
+                </div>
+                <div class="kpi-icon bg-primary bg-opacity-10 text-primary mb-0 shadow-sm">
+                    💰
+                </div>
+            </div>
+            <div class="text-@(Model.RevenueGrowth >= 0 ? "success" : "danger") small mt-3 fw-bold d-flex align-items-center gap-1">
+                <span class="fs-5">@(Model.RevenueGrowth >= 0 ? "↑" : "↓")</span> @Math.Abs(Model.RevenueGrowth)% from last month
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center p-3 shadow-sm border-0 h-100">
-            <div class="fs-3 fw-bold">@Model.TotalOrders</div>
-            <div class="text-muted small text-uppercase fw-bold mt-1">Total Orders</div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card p-4 h-100 border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Total Orders</div>
+                    <div class="fs-2 fw-bold text-dark">@Model.TotalOrders</div>
+                </div>
+                <div class="kpi-icon bg-info bg-opacity-10 text-info mb-0 shadow-sm">
+                    📦
+                </div>
+            </div>
+            <div class="text-muted small mt-3">Completed in the last 30 days</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center p-3 shadow-sm border-0 h-100">
-            <div class="fs-3 fw-bold">৳@Model.AvgOrderValue.ToString("N0")</div>
-            <div class="text-muted small text-uppercase fw-bold mt-1">Avg Order Value</div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card p-4 h-100 border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Avg Order Value</div>
+                    <div class="fs-2 fw-bold text-dark">৳@Model.AvgOrderValue.ToString("N0")</div>
+                </div>
+                <div class="kpi-icon bg-success bg-opacity-10 text-success mb-0 shadow-sm">
+                    📈
+                </div>
+            </div>
+            <div class="text-muted small mt-3">Across all completed orders</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center p-3 shadow-sm border-0 h-100">
-            <div class="fs-3 fw-bold">@Model.HealthScore/100</div>
-            <div class="text-muted small text-uppercase fw-bold mt-1">Health Score</div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card p-4 h-100 border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Health Score</div>
+                    <div class="fs-2 fw-bold text-dark">@Model.HealthScore<span class="fs-5 text-muted">/100</span></div>
+                </div>
+                <div class="kpi-icon bg-warning bg-opacity-10 text-warning mb-0 shadow-sm">
+                    ❤️
+                </div>
+            </div>
+            <div class="text-muted small mt-3">Based on store activity</div>
         </div>
     </div>
 </div>
 
-<!-- Revenue Chart -->
-<div class="card mb-4 shadow-sm border-0">
-    <div class="card-header bg-white border-0 pt-4 pb-0">
-        <h5 class="card-title fw-bold">Revenue Trend (Last 30 Days)</h5>
+<div class="row g-4 mb-4">
+    <!-- Revenue Chart -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                <h5 class="card-title fw-bold mb-0">Revenue Trend (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="200"></canvas>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <canvas id="revenueChart" height="100"></canvas>
+    
+    <!-- Demand Forecasting Chart -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title fw-bold mb-0">
+                    <span class="text-primary">✨ AI Powered</span> Demand Forecast (Next 30 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="forecastChart" height="200"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
 <script>
-    const labels = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Date)));
-    const data = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Revenue)));
+    // Revenue Chart Setup
+    const revLabels = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Date)));
+    const revData = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Revenue)));
 
-    new Chart(document.getElementById('revenueChart'), {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Revenue (৳)',
-                data: data,
-                borderColor: 'rgb(99, 102, 241)',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: 'rgb(99, 102, 241)'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
+    if (document.getElementById('revenueChart')) {
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: revLabels,
+                datasets: [{
+                    label: 'Revenue (৳)',
+                    data: revData,
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#4f46e5',
+                    pointRadius: 3,
+                    pointHoverRadius: 6
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value, index, values) {
-                            return '৳' + value.toLocaleString();
-                        }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                        padding: 12,
+                        titleFont: { size: 14, family: "'Inter', sans-serif" },
+                        bodyFont: { size: 14, family: "'Inter', sans-serif" }
                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [4, 4], color: 'rgba(229, 231, 235, 0.5)' },
+                        ticks: {
+                            callback: function(value) { return '৳' + value.toLocaleString(); },
+                            font: { family: "'Inter', sans-serif" }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "'Inter', sans-serif" } }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
                 }
             }
-        }
-    });
+        });
+    }
+
+    // Forecast Chart Setup
+    const forecastLabels = @Html.Raw(Json.Serialize(Model.DemandForecast.Select(r => r.Date)));
+    const forecastData = @Html.Raw(Json.Serialize(Model.DemandForecast.Select(r => r.PredictedDemand)));
+
+    if (document.getElementById('forecastChart')) {
+        new Chart(document.getElementById('forecastChart'), {
+            type: 'bar',
+            data: {
+                labels: forecastLabels,
+                datasets: [{
+                    label: 'Predicted Unit Demand',
+                    data: forecastData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                    borderRadius: 4,
+                    hoverBackgroundColor: 'rgba(16, 185, 129, 1)',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                        padding: 12,
+                        titleFont: { size: 14, family: "'Inter', sans-serif" },
+                        bodyFont: { size: 14, family: "'Inter', sans-serif" }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [4, 4], color: 'rgba(229, 231, 235, 0.5)' },
+                        ticks: { font: { family: "'Inter', sans-serif" } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "'Inter', sans-serif" } }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            }
+        });
+    }
 </script>
 }

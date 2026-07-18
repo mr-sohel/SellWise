@@ -26,4 +26,5 @@ public class DashboardController : BaseController
         var vm = await _analytics.GetOverview(storeId, range);
         return View(vm);
     }
+
 }
