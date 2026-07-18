@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Data;
@@ -6,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace SellWise.Web.Controllers;
 
+[Authorize]
 public class ReportController : BaseController
 {
     public ReportController(AppDbContext db) : base(db) { }
 
     public async Task<IActionResult> Index()
     {
-        var store = await Db.Stores.FirstOrDefaultAsync();
-        var storeId = store?.Id ?? System.Guid.Empty;
+        var storeId = GetCurrentStoreId();
+        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        // Calculate count and total revenue matching store context
         var totalOrders = await Db.Orders.Where(o => o.StoreId == storeId).CountAsync();
         var totalRevenue = await Db.Orders.Where(o => o.StoreId == storeId).SumAsync(o => o.Total);
 

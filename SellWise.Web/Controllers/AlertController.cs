@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Data;
@@ -7,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace SellWise.Web.Controllers;
 
+[Authorize]
 public class AlertController : BaseController
 {
     public AlertController(AppDbContext db) : base(db) { }
 
     public async Task<IActionResult> Index(bool showUnreadOnly = false)
     {
-        var store = await Db.Stores.FirstOrDefaultAsync();
-        var storeId = store?.Id ?? System.Guid.Empty;
+        var storeId = GetCurrentStoreId();
+        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        // Query existing alerts
         var alerts = await Db.Alerts
             .Include(a => a.Product)
             .Where(a => a.StoreId == storeId)
@@ -25,7 +26,6 @@ public class AlertController : BaseController
 
         if (!alerts.Any())
         {
-            // Auto generate alerts from products that have low stock to demonstrate feature
             var lowStockProducts = await Db.Products
                 .Where(p => p.StoreId == storeId)
                 .Take(6)
@@ -66,8 +66,8 @@ public class AlertController : BaseController
     [HttpPost]
     public async Task<IActionResult> MarkAllRead()
     {
-        var store = await Db.Stores.FirstOrDefaultAsync();
-        var storeId = store?.Id ?? System.Guid.Empty;
+        var storeId = GetCurrentStoreId();
+        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
 
         var unread = await Db.Alerts.Where(a => a.StoreId == storeId && !a.IsRead).ToListAsync();
         foreach (var a in unread)
@@ -82,7 +82,8 @@ public class AlertController : BaseController
     [HttpPost]
     public async Task<IActionResult> Dismiss(System.Guid id)
     {
-        var alert = await Db.Alerts.FindAsync(id);
+        var storeId = GetCurrentStoreId();
+        var alert = await Db.Alerts.FirstOrDefaultAsync(a => a.Id == id && a.StoreId == storeId);
         if (alert != null)
         {
             Db.Alerts.Remove(alert);

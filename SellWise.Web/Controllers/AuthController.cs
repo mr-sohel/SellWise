@@ -43,10 +43,13 @@ public class AuthController : Controller
         if (result.Succeeded)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user!.Id);
-            if (member != null)
+            if (user != null)
             {
-                HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+                var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
+                if (member != null)
+                {
+                    HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+                }
             }
             return RedirectToAction("Index", "Dashboard");
         }

@@ -1,61 +1,127 @@
+@model SellWise.Web.ViewModels.Settings.ProfileViewModel
 @{
-    ViewData["Title"] = Html.Raw("Settings <span class='text-muted mx-2'>›</span> Profile");
+    ViewData["Title"] = "Settings";
 }
 
-<div class="mb-4">
-    <h2 class="fw-bold text-dark mb-1">Settings</h2>
-    <p class="text-muted mb-0">Manage your account and store preferences.</p>
+<div class="d-flex align-items-center gap-2 mb-4">
+    <h2 class="fw-bold text-dark mb-0">Settings</h2>
+    <span class="text-muted mx-1">&rsaquo;</span>
+    <span class="text-muted">Profile</span>
 </div>
+<p class="text-muted mb-0">Manage your account and store preferences.</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert" style="max-width: 800px;">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert" style="max-width: 800px;">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <!-- Navigation Tabs -->
-<ul class="nav nav-tabs mb-4" style="border-bottom: 1px solid #e2e8f0;">
+<ul class="nav nav-tabs mb-4 mt-4" style="border-bottom: 1px solid #e2e8f0;">
     <li class="nav-item">
-        <a class="nav-link active fw-bold px-4 py-2" href="#" style="color: #0f172a; background-color: #ffffff; border: 1px solid #e2e8f0; border-bottom: 1px solid #ffffff; border-radius: var(--radius-md) var(--radius-md) 0 0;">
+        <a class="nav-link active fw-bold px-4 py-2" href="#profile" style="color: #0f172a; background-color: #ffffff; border: 1px solid #e2e8f0; border-bottom: 1px solid #ffffff; border-radius: var(--radius-md) var(--radius-md) 0 0;">
             <span class="d-flex align-items-center gap-2">
-                <span>👤</span> Profile
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profile
             </span>
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link text-muted px-4 py-2 border-0" href="#">
+        <a class="nav-link text-muted px-4 py-2 border-0" href="#security">
             <span class="d-flex align-items-center gap-2">
-                <span>👥</span> Staff Management
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Account Security
+            </span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-muted px-4 py-2 border-0" asp-controller="Settings" asp-action="Staff">
+            <span class="d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Staff Management
             </span>
         </a>
     </li>
 </ul>
 
-<!-- Account Security Card -->
-<div class="card p-4 border-1 shadow-sm mb-4" style="max-width: 800px;">
-    <h5 class="fw-bold text-dark mb-1">Account Security</h5>
-    <p class="text-muted small mb-4">Update your email address and password.</p>
+<!-- Profile Card -->
+<div class="card p-4 border-1 shadow-sm mb-4" style="max-width: 800px;" id="profile">
+    <h5 class="fw-bold text-dark mb-1">Profile Information</h5>
+    <p class="text-muted small mb-4">Your account details and store information.</p>
     
     <hr class="mb-4" style="border-color: #e2e8f0;">
 
-    <form method="post" action="#" onsubmit="alert('Settings saved!'); return false;">
-        
-        <div class="mb-4">
-            <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Email Address</label>
-            <input type="email" class="form-control px-3 py-2" value="sohel@gmail.com" style="border-radius: var(--radius-md); border-color: #e2e8f0;" readonly>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Change Password</label>
-        </div>
-        
-        <div class="mb-3">
-            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">Current Password (Required)</label>
-            <input type="password" class="form-control px-3 py-2" placeholder="••••••••" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
-        </div>
-
-        <div class="mb-4">
-            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">New Password</label>
-            <input type="password" class="form-control px-3 py-2" placeholder="Leave blank to keep current password" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+    <form asp-controller="Settings" asp-action="UpdateProfile" method="post">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Email Address</label>
+                <input type="email" class="form-control px-3 py-2" value="@Model.Email" style="border-radius: var(--radius-md); border-color: #e2e8f0;" readonly>
+                <small class="text-muted">Email cannot be changed here.</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Role</label>
+                <input type="text" class="form-control px-3 py-2" value="@Model.Role" style="border-radius: var(--radius-md); border-color: #e2e8f0;" readonly>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="StoreName" class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Store Name</label>
+                <input asp-for="StoreName" type="text" class="form-control px-3 py-2" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+            </div>
+            <div class="col-md-6">
+                <label asp-for="PreferredLang" class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Preferred Language</label>
+                <select asp-for="PreferredLang" class="form-select px-3 py-2" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                    <option value="en">English</option>
+                    <option value="bn">Bengali</option>
+                </select>
+            </div>
         </div>
 
         <div class="d-flex justify-content-end mt-4">
             <button type="submit" class="btn btn-secondary px-4 py-2 d-flex align-items-center gap-2" style="background-color: #64748b; border: none; border-radius: 20px;">
-                <span>💾</span> Save Changes
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Profile
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Account Security Card -->
+<div class="card p-4 border-1 shadow-sm mb-4" style="max-width: 800px;" id="security">
+    <h5 class="fw-bold text-dark mb-1">Account Security</h5>
+    <p class="text-muted small mb-4">Update your password.</p>
+    
+    <hr class="mb-4" style="border-color: #e2e8f0;">
+
+    <form asp-controller="Settings" asp-action="ChangePassword" method="post">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">Current Password</label>
+            <input type="password" name="CurrentPassword" class="form-control px-3 py-2" placeholder="Enter current password" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">New Password</label>
+            <input type="password" name="NewPassword" class="form-control px-3 py-2" placeholder="Enter new password (min 8 characters)" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">Confirm New Password</label>
+            <input type="password" name="ConfirmNewPassword" class="form-control px-3 py-2" placeholder="Confirm new password" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-secondary px-4 py-2 d-flex align-items-center gap-2" style="background-color: #64748b; border: none; border-radius: 20px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Change Password
             </button>
         </div>
     </form>

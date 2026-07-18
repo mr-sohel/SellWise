@@ -1,0 +1,137 @@
+@model List<SellWise.Web.ViewModels.Settings.EmployeeViewModel>
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="d-flex align-items-center gap-2 mb-4">
+    <h2 class="fw-bold text-dark mb-0">Settings</h2>
+    <span class="text-muted mx-1">&rsaquo;</span>
+    <span class="text-muted">Staff Management</span>
+</div>
+<p class="text-muted mb-0">Manage your store employees and their roles.</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert" style="max-width: 900px;">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert" style="max-width: 900px;">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs mb-4 mt-4" style="border-bottom: 1px solid #e2e8f0;">
+    <li class="nav-item">
+        <a class="nav-link text-muted px-4 py-2 border-0" asp-controller="Settings" asp-action="Index">
+            <span class="d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profile
+            </span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active fw-bold px-4 py-2" href="#staff" style="color: #0f172a; background-color: #ffffff; border: 1px solid #e2e8f0; border-bottom: 1px solid #ffffff; border-radius: var(--radius-md) var(--radius-md) 0 0;">
+            <span class="d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Staff Management
+            </span>
+        </a>
+    </li>
+</ul>
+
+<div class="row g-4" style="max-width: 900px;">
+    <!-- Employee List -->
+    <div class="col-lg-7">
+        <div class="card p-4 border-1 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0">Team Members</h5>
+                <span class="badge" style="background-color: #e2e8f0; color: #475569;">@Model.Count members</span>
+            </div>
+            <p class="text-muted small mb-3">People who have access to this store.</p>
+            <hr style="border-color: #e2e8f0;">
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-4 text-muted">
+                    <p>No team members found.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var emp in Model)
+                {
+                    <div class="d-flex align-items-center justify-content-between py-3 @(emp != Model.Last() ? "border-bottom" : "")" style="border-color: #f1f5f9 !important;">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(emp.FullName)&background=e2e8f0&color=0f172a&bold=true" alt="@emp.FullName" style="width: 40px; height: 40px; border-radius: 50%;">
+                            <div>
+                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">@emp.FullName</div>
+                                <div class="text-muted small">@emp.Email</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge @(emp.Role == "owner" ? "bg-primary" : "bg-secondary")" style="border-radius: 12px; font-size: 0.75rem;">
+                                @emp.Role
+                            </span>
+                            @if (emp.Role != "owner")
+                            {
+                                <form asp-controller="Settings" asp-action="RemoveEmployee" method="post" onsubmit="return confirm('Remove @emp.FullName from the store?');">
+                                    <input type="hidden" name="userId" value="@emp.UserId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 12px; font-size: 0.8rem; padding: 4px 12px;">
+                                        Remove
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Invite Form -->
+    <div class="col-lg-5">
+        <div class="card p-4 border-1 shadow-sm">
+            <h5 class="fw-bold text-dark mb-1">Invite Employee</h5>
+            <p class="text-muted small mb-3">Add a new team member to your store.</p>
+            <hr style="border-color: #e2e8f0;">
+
+            <form asp-controller="Settings" asp-action="InviteEmployee" method="post">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Full Name</label>
+                    <input type="text" name="FullName" class="form-control px-3 py-2" placeholder="e.g. Rahim Uddin" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Email Address</label>
+                    <input type="email" name="Email" class="form-control px-3 py-2" placeholder="e.g. rahim@example.com" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Password</label>
+                    <input type="password" name="Password" class="form-control px-3 py-2" placeholder="Min 8 characters" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Role</label>
+                    <select name="Role" class="form-select px-3 py-2" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                        <option value="employee">Employee</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" style="background-color: #6366f1; color: white; border: none; border-radius: 20px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    Send Invite
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

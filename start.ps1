@@ -2,66 +2,85 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "=================================================" -ForegroundColor Cyan
-Write-Host "[INFO] Starting SellWise (ASP.NET Core Windows Mode) " -ForegroundColor Cyan
+Write-Host "[INFO] Starting SellWise" -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 
-# 1. Start SQL Server Container
-Write-Host "[1/4] Starting SQL Server Database Container..." -ForegroundColor Yellow
-docker stop sellwise-sql 2>$null
-docker rm sellwise-sql 2>$null
+# 1. Start SQL Server Container (persistent volume)
+Write-Host "[1/4] Starting SQL Server..." -ForegroundColor Yellow
 
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourPass123!" `
-    -p 1433:1433 --name sellwise-sql -d `
-    mcr.microsoft.com/mssql/server:2022-latest | Out-Null
+$containerExists = docker ps -a --format '{{.Names}}' | Select-String -Pattern "^sellwise-sql$"
+if ($containerExists) {
+    # Container exists — just start it (data preserved via volume)
+    docker start sellwise-sql 2>$null | Out-Null
+} else {
+    # First time — create container with named volume
+    docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourPass123!" `
+        -p 1433:1433 --name sellwise-sql `
+        -v sellwise-data:/var/opt/mssql `
+        -d mcr.microsoft.com/mssql/server:2022-latest | Out-Null
+}
 
-Write-Host "Waiting for SQL Server to accept connections (15s)..." -ForegroundColor Yellow
-Start-Sleep -Seconds 15
+# Wait for SQL Server with timeout
+$maxWait = 30
+$waited = 0
+Write-Host "Waiting for SQL Server..." -ForegroundColor Yellow -NoNewline
+while ($waited -lt $maxWait) {
+    $result = docker exec sellwise-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourPass123!" -Q "SELECT 1" -C -b 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host " Ready (${waited}s)" -ForegroundColor Green
+        break
+    }
+    Start-Sleep -Seconds 1
+    $waited++
+    Write-Host "." -NoNewline
+}
+if ($waited -ge $maxWait) {
+    Write-Host " Timeout!" -ForegroundColor Red
+    exit 1
+}
 
 $mlProcess = $null
 try {
     # 2. Start ML Service
-    Write-Host "[2/4] Starting Python ML Service (Background)..." -ForegroundColor Yellow
+    Write-Host "[2/4] Starting ML Service..." -ForegroundColor Yellow
     if (Test-Path "SellWise.ML") {
-        # Start ML service as a background process and capture it
         $mlProcess = Start-Process -FilePath "uv" -ArgumentList "run uvicorn app.main:app --port 8000" -WorkingDirectory "SellWise.ML" -WindowStyle Hidden -PassThru
-        Write-Host "[SUCCESS] ML Service running on port 8000." -ForegroundColor Green
+        Write-Host "[OK] ML Service on port 8000." -ForegroundColor Green
     } else {
-        Write-Host "[WARNING] SellWise.ML not found. Forecasting features may fail." -ForegroundColor Red
+        Write-Host "[SKIP] SellWise.ML not found." -ForegroundColor DarkYellow
     }
 
-    # 3. Apply Migrations
-    Write-Host "[3/4] Applying EF Core Database Migrations..." -ForegroundColor Yellow
+    # 3. Apply Migrations (only if needed)
+    Write-Host "[3/4] Checking database..." -ForegroundColor Yellow
     if (Test-Path "SellWise.Web") {
         Push-Location SellWise.Web
-        dotnet ef database update
+        dotnet ef database update --no-build 2>&1 | Out-Null
         Pop-Location
-        Write-Host "[SUCCESS] Database schema is up to date." -ForegroundColor Green
+        Write-Host "[OK] Database ready." -ForegroundColor Green
     } else {
-        Write-Host "[ERROR] SellWise.Web directory not found!" -ForegroundColor Red
+        Write-Host "[ERROR] SellWise.Web not found!" -ForegroundColor Red
         exit 1
     }
 
     # 4. Start ASP.NET Core MVC Application
-    Write-Host "[4/4] Starting ASP.NET Core Application..." -ForegroundColor Yellow
+    Write-Host "[4/4] Starting web app..." -ForegroundColor Yellow
     Write-Host "=================================================" -ForegroundColor Cyan
-    Write-Host "[SUCCESS] Everything is ready! Open your browser to:" -ForegroundColor Green
-    Write-Host "-> http://localhost:5000" -ForegroundColor Green
-    Write-Host "Press Ctrl+C to safely shut down all services." -ForegroundColor Gray
+    Write-Host "[OK] http://localhost:5000" -ForegroundColor Green
+    Write-Host "Press Ctrl+C to stop all services." -ForegroundColor Gray
     Write-Host "=================================================" -ForegroundColor Cyan
 
     Set-Location SellWise.Web
-    # Run the app with Hot Reload enabled (this will block until the user presses Ctrl+C)
     dotnet watch run --urls "http://localhost:5000"
 }
 finally {
-    Write-Host "`n[STOP] Shutting down services safely..." -ForegroundColor Yellow
+    Write-Host "`n[STOP] Shutting down..." -ForegroundColor Yellow
     if ($mlProcess -ne $null) {
         Stop-Process -Id $mlProcess.Id -Force -ErrorAction SilentlyContinue
-        Write-Host "[SUCCESS] Python ML Service stopped." -ForegroundColor Green
+        Write-Host "[OK] ML Service stopped." -ForegroundColor Green
     }
     
-    Write-Host "[WAIT] Stopping SQL Server container..." -ForegroundColor Yellow
+    # Stop container but do NOT remove — data persists in volume
     docker stop sellwise-sql 2>$null
-    Write-Host "[SUCCESS] SQL Server stopped." -ForegroundColor Green
+    Write-Host "[OK] SQL Server stopped (data preserved)." -ForegroundColor Green
     Write-Host "Goodbye!" -ForegroundColor Cyan
 }

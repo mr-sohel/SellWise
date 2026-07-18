@@ -51,6 +51,7 @@ public class OrderController : BaseController
     public async Task<IActionResult> Create(OrderFormViewModel model)
     {
         var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
         if (!model.Items.Any() || model.Items.All(i => i.ProductId == Guid.Empty))
         {
@@ -78,23 +79,42 @@ public class OrderController : BaseController
 
                 foreach (var item in model.Items.Where(i => i.ProductId != Guid.Empty && i.Quantity > 0))
                 {
-                    var product = await Db.Products.FindAsync(item.ProductId);
-                    if (product != null)
+                    var product = await Db.Products
+                        .FirstOrDefaultAsync(p => p.Id == item.ProductId && p.StoreId == storeId);
+                    
+                    if (product == null)
                     {
-                        var orderItem = new OrderItem
-                        {
-                            ProductId = product.Id,
-                            ProductName = product.Name,
-                            UnitPrice = product.SellingPrice,
-                            CostPrice = product.CostPrice,
-                            Quantity = item.Quantity
-                        };
-                        order.Items.Add(orderItem);
-                        subtotal += (product.SellingPrice * item.Quantity);
-                        
-                        // Decrease stock
-                        product.StockQuantity -= item.Quantity;
+                        ModelState.AddModelError("", $"Product not found in your store.");
+                        await transaction.RollbackAsync();
+                        return await RepopulateAndReturn(model, storeId);
                     }
+
+                    if (product.StockQuantity < item.Quantity)
+                    {
+                        ModelState.AddModelError("", $"Insufficient stock for {product.Name}. Available: {product.StockQuantity}, requested: {item.Quantity}.");
+                        await transaction.RollbackAsync();
+                        return await RepopulateAndReturn(model, storeId);
+                    }
+
+                    var orderItem = new OrderItem
+                    {
+                        ProductId = product.Id,
+                        ProductName = product.Name,
+                        UnitPrice = product.SellingPrice,
+                        CostPrice = product.CostPrice,
+                        Quantity = item.Quantity
+                    };
+                    order.Items.Add(orderItem);
+                    subtotal += (product.SellingPrice * item.Quantity);
+                    
+                    product.StockQuantity -= item.Quantity;
+                }
+
+                if (model.Discount > subtotal + model.DeliveryCharge)
+                {
+                    ModelState.AddModelError("", "Discount cannot exceed the order total.");
+                    await transaction.RollbackAsync();
+                    return await RepopulateAndReturn(model, storeId);
                 }
 
                 order.Total = subtotal + model.DeliveryCharge - model.Discount;
@@ -112,12 +132,15 @@ public class OrderController : BaseController
             }
         }
 
-        // Repopulate dropdowns on failure
+        return await RepopulateAndReturn(model, storeId);
+    }
+
+    private async Task<IActionResult> RepopulateAndReturn(OrderFormViewModel model, Guid storeId)
+    {
         var products = await Db.Products.Where(p => p.StoreId == storeId && p.IsActive).ToListAsync();
         var customers = await Db.Customers.Where(c => c.StoreId == storeId).ToListAsync();
         model.AvailableProducts = products.Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Name} (৳{p.SellingPrice})" });
         model.AvailableCustomers = customers.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name });
-
         return View(model);
     }
 }

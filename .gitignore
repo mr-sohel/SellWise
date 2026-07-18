@@ -60,3 +60,9 @@ dist/
 .npm/
 
 Screen/
+
+# =========================
+# Docker Volumes (local data)
+# =========================
+*.mdf
+*.ldf

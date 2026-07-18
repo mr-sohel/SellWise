@@ -11,10 +11,12 @@ namespace SellWise.Web.Controllers;
 public class DashboardController : BaseController
 {
     private readonly AnalyticsService _analytics;
+    private readonly DemoSeederService _seeder;
 
-    public DashboardController(AppDbContext db, AnalyticsService analytics) : base(db)
+    public DashboardController(AppDbContext db, AnalyticsService analytics, DemoSeederService seeder) : base(db)
     {
         _analytics = analytics;
+        _seeder = seeder;
     }
 
     public async Task<IActionResult> Index(string range = "30d")
@@ -22,6 +24,9 @@ public class DashboardController : BaseController
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty)
             return RedirectToAction("Login", "Auth");
+
+        // Auto-seed demo data on first visit
+        await _seeder.SeedStoreAsync(storeId);
 
         var vm = await _analytics.GetOverview(storeId, range);
         return View(vm);
