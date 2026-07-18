@@ -50,7 +50,27 @@
         <!-- Main Content -->
         <main class="flex-grow-1 p-4 bg-light">
             <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+                <h1 class="h3 mb-0 fw-bold">@ViewData["Title"]</h1>
+                
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark topbar-profile" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://ui-avatars.com/api/?name=Admin+User&background=4f46e5&color=fff" alt="User Avatar">
+                            <span class="d-none d-md-inline ms-2 fw-medium">Admin Account</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser">
+                            <li><h6 class="dropdown-header">Account Management</h6></li>
+                            <li><a class="dropdown-item" href="#">👤 My Profile</a></li>
+                            <li><a class="dropdown-item" href="#">⚙️ Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0 p-0">
+                                    <button type="submit" class="dropdown-item text-danger">🚪 Log Out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             
             @RenderBody()

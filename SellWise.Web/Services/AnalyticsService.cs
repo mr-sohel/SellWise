@@ -43,6 +43,20 @@ public class AnalyticsService
             .OrderBy(r => r.Date)
             .ToList();
 
+        var demandForecast = new List<ForecastPoint>();
+        for (int i = 1; i <= 30; i++)
+        {
+            var forecastDate = now.AddDays(i);
+            // Mock a seasonal/trending forecast wave
+            double baseDemand = 100 + (i * 2); 
+            double noise = (Math.Sin(i) * 15);
+            demandForecast.Add(new ForecastPoint
+            {
+                Date = forecastDate.ToString("MMM dd"),
+                PredictedDemand = Math.Max(0, baseDemand + noise)
+            });
+        }
+
         return new DashboardViewModel
         {
             TotalRevenue = totalRevenue,
@@ -50,7 +64,8 @@ public class AnalyticsService
             AvgOrderValue = avgOrderValue,
             RevenueGrowth = 5.2m, // Mock growth for now
             HealthScore = 85,
-            RevenueTrend = revenueTrend
+            RevenueTrend = revenueTrend,
+            DemandForecast = demandForecast
         };
     }
 }

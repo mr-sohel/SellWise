@@ -67,5 +67,5 @@ echo "👉 http://localhost:5000"
 echo "Press Ctrl+C to safely shut down all services."
 echo "================================================="
 
-# Run the app and wait
-dotnet run --urls "http://localhost:5000"
+# Run the app with Hot Reload enabled
+dotnet watch run --urls "http://localhost:5000"
