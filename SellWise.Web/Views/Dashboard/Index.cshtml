@@ -1,0 +1,86 @@
+@model SellWise.Web.ViewModels.Dashboard.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow-sm border-0">
+            <div class="fs-3 fw-bold">৳@Model.TotalRevenue.ToString("N0")</div>
+            <div class="text-muted small text-uppercase fw-bold mt-1">Total Revenue</div>
+            <div class="text-@(Model.RevenueGrowth >= 0 ? "success" : "danger") small mt-1 fw-bold">
+                @(Model.RevenueGrowth >= 0 ? "↑" : "↓") @Math.Abs(Model.RevenueGrowth)%
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow-sm border-0 h-100">
+            <div class="fs-3 fw-bold">@Model.TotalOrders</div>
+            <div class="text-muted small text-uppercase fw-bold mt-1">Total Orders</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow-sm border-0 h-100">
+            <div class="fs-3 fw-bold">৳@Model.AvgOrderValue.ToString("N0")</div>
+            <div class="text-muted small text-uppercase fw-bold mt-1">Avg Order Value</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3 shadow-sm border-0 h-100">
+            <div class="fs-3 fw-bold">@Model.HealthScore/100</div>
+            <div class="text-muted small text-uppercase fw-bold mt-1">Health Score</div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Chart -->
+<div class="card mb-4 shadow-sm border-0">
+    <div class="card-header bg-white border-0 pt-4 pb-0">
+        <h5 class="card-title fw-bold">Revenue Trend (Last 30 Days)</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="revenueChart" height="100"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const labels = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Date)));
+    const data = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Revenue)));
+
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue (৳)',
+                data: data,
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: 'rgb(99, 102, 241)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return '৳' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+}

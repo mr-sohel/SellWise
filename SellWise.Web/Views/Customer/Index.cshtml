@@ -1,0 +1,35 @@
+@model IEnumerable<SellWise.Web.Models.Customer>
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Total Orders</th>
+                    <th>Total Spent</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td class="align-middle fw-bold">@c.Name</td>
+                        <td class="align-middle">@c.Phone</td>
+                        <td class="align-middle">@c.Email</td>
+                        <td class="align-middle">@c.TotalOrders</td>
+                        <td class="align-middle fw-bold">৳@c.TotalSpent.ToString("N0")</td>
+                    </tr>
+                }
+                @if(!Model.Any()) {
+                    <tr><td colspan="5" class="text-center text-muted py-4">No customers found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

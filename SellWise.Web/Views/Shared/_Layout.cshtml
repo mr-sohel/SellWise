@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SellWise</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="sidebar bg-dark text-white p-3" style="width:250px; min-height:100vh">
+            <div class="fs-4 fw-bold mb-4">⚡ SellWise</div>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Dashboard" asp-action="Index">
+                        📊 Dashboard
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Product" asp-action="Index">
+                        📦 Products
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Order" asp-action="Index">
+                        🛒 Orders
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Customer" asp-action="Index">
+                        👥 Customers
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Expense" asp-action="Index">
+                        💸 Expenses
+                    </a>
+                </li>
+            </ul>
+            <div class="mt-auto pt-5">
+                <hr class="text-white-50" />
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light w-100">Log Out</button>
+                </form>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow-1 p-4 bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+            </div>
+            
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
