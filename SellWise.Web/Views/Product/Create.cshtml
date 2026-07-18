@@ -1,0 +1,19 @@
+@model SellWise.Web.ViewModels.Product.ProductFormViewModel
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<div class="card shadow-sm border-0 p-4" style="max-width: 800px;">
+    <form asp-action="Create" method="post">
+        <partial name="_ProductForm" model="Model" />
+        
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Save Product</button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

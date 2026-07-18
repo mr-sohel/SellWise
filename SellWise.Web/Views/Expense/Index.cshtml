@@ -1,0 +1,33 @@
+@model IEnumerable<SellWise.Web.Models.Expense>
+@{
+    ViewData["Title"] = "Expenses";
+}
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td class="align-middle">@e.ExpenseDate.ToString("MMM dd, yyyy")</td>
+                        <td class="align-middle fw-bold">@e.Category</td>
+                        <td class="align-middle text-danger">৳@e.Amount.ToString("N0")</td>
+                        <td class="align-middle text-muted">@e.Notes</td>
+                    </tr>
+                }
+                @if(!Model.Any()) {
+                    <tr><td colspan="4" class="text-center text-muted py-4">No expenses found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
