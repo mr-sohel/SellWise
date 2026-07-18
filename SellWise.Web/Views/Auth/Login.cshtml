@@ -5,33 +5,35 @@
     Layout = "_AuthLayout";
 }
 
-<div class="card shadow-sm p-4" style="width: 100%; max-width: 400px;">
+<div class="d-flex flex-column align-items-center" style="width: 100%; max-width: 440px;">
     <div class="text-center mb-4">
-        <h1 class="h3 fw-bold mb-1">SellWise</h1>
+        <h1 class="fw-bold mb-1 text-dark" style="font-size: 2.2rem; letter-spacing: -1px;">SellWise</h1>
         <p class="text-muted">Welcome back! Please login to your account.</p>
     </div>
 
-    <form asp-action="Login" method="post">
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-        
-        <div class="mb-3">
-            <label asp-for="Email" class="form-label">Email address</label>
-            <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
-        
-        <div class="mb-3">
-            <label asp-for="Password" class="form-label">Password</label>
-            <input asp-for="Password" class="form-control" autocomplete="current-password" aria-required="true" />
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
-        
-        <button type="submit" class="btn btn-primary w-100 mb-3">Log in</button>
-        
-        <div class="text-center">
-            <p class="mb-0">Don't have an account? <a asp-action="Signup">Sign up</a></p>
-        </div>
-    </form>
+    <div class="auth-card" style="width: 100%;">
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label text-bold mb-2">Email</label>
+                <input asp-for="Email" class="form-control py-2" placeholder="you@example.com" autocomplete="username" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <span asp-validation-for="Email" class="text-danger" style="font-size: 0.8rem;"></span>
+            </div>
+            
+            <div class="mb-4">
+                <label asp-for="Password" class="form-label text-bold mb-2">Password</label>
+                <input asp-for="Password" class="form-control py-2" placeholder="••••••••" autocomplete="current-password" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <span asp-validation-for="Password" class="text-danger" style="font-size: 0.8rem;"></span>
+            </div>
+            
+            <button type="submit" class="btn btn-black-pill w-100">Log In</button>
+        </form>
+    </div>
+    
+    <div class="text-center mt-4" style="font-size: 0.9rem;">
+        <span class="text-muted">Don't have an account?</span> <a asp-action="Signup" class="text-decoration-none fw-bold" style="color: #2563eb;">Sign up</a>
+    </div>
 </div>
 
 @section Scripts {

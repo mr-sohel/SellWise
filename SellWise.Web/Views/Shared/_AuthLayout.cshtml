@@ -7,12 +7,10 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="bg-light">
-    <div class="container">
-        <main role="main" class="pb-3 d-flex align-items-center justify-content-center min-vh-100">
-            @RenderBody()
-        </main>
-    </div>
+<body style="background-color: #f9fafb; font-family: 'Plus Jakarta Sans', sans-serif;">
+    <main class="d-flex align-items-center justify-content-center min-vh-100 p-3">
+        @RenderBody()
+    </main>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)

@@ -8,60 +8,86 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="d-flex">
+    <div class="app-container d-flex">
         <!-- Sidebar -->
-        <nav class="sidebar bg-dark text-white p-3" style="width:250px; min-height:100vh">
-            <div class="fs-4 fw-bold mb-4">⚡ SellWise</div>
+        <nav class="sidebar p-4">
+            <div class="sidebar-brand mb-4">
+                <div class="brand-logo me-2">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="6" fill="#6366F1"/>
+                        <path d="M12 5L5 9L12 13L19 9L12 5Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 9V15L12 19L19 15V9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 13V19" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <span class="brand-text">SellWise</span>
+            </div>
             <ul class="nav flex-column">
-                <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Dashboard" asp-action="Index">
-                        📊 Dashboard
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                        <span class="nav-icon">📊</span> Dashboard
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Product" asp-action="Index">
-                        📦 Products
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")" asp-controller="Product" asp-action="Index">
+                        <span class="nav-icon">📦</span> Products
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Order" asp-action="Index">
-                        🛒 Orders
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Order" ? "active" : "")" asp-controller="Order" asp-action="Index">
+                        <span class="nav-icon">🛒</span> Orders
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Customer" asp-action="Index">
-                        👥 Customers
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">
+                        <span class="nav-icon">👥</span> Customers
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Expense" asp-action="Index">
-                        💸 Expenses
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Expense" ? "active" : "")" asp-controller="Expense" asp-action="Index">
+                        <span class="nav-icon">💸</span> Expenses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Report" ? "active" : "")" asp-controller="Report" asp-action="Index">
+                        <span class="nav-icon">📈</span> Reports
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Alert" ? "active" : "")" asp-controller="Alert" asp-action="Index">
+                        <span class="nav-icon">🔔</span> Alerts
                     </a>
                 </li>
             </ul>
-            <div class="mt-auto pt-5">
-                <hr class="text-white-50" />
+            <div class="sidebar-footer">
+                <hr class="divider" />
                 <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light w-100">Log Out</button>
+                    <button type="submit" class="btn btn-logout w-100">
+                        <span>🚪</span> Log Out
+                    </button>
                 </form>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="flex-grow-1 p-4 bg-light">
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                <h1 class="h3 mb-0 fw-bold">@ViewData["Title"]</h1>
+        <main class="main-content">
+            <div class="top-nav d-flex justify-content-between align-items-center">
+                <h1 class="page-title h3 mb-0">@ViewData["Title"]</h1>
                 
                 <div class="d-flex align-items-center gap-3">
+                    <div class="search-widget">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Search...">
+                        <span class="search-shortcut">⌘ K</span>
+                    </div>
                     <div class="dropdown">
-                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark topbar-profile" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://ui-avatars.com/api/?name=Admin+User&background=4f46e5&color=fff" alt="User Avatar">
-                            <span class="d-none d-md-inline ms-2 fw-medium">Admin Account</span>
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle topbar-profile" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://ui-avatars.com/api/?name=S&background=e2e8f0&color=0f172a&bold=true" alt="User Avatar">
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="dropdownUser">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="dropdownUser">
                             <li><h6 class="dropdown-header">Account Management</h6></li>
                             <li><a class="dropdown-item" href="#">👤 My Profile</a></li>
-                            <li><a class="dropdown-item" href="#">⚙️ Settings</a></li>
+                            <li><a class="dropdown-item" asp-controller="Settings" asp-action="Index">⚙️ Settings</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0 p-0">
@@ -73,7 +99,9 @@
                 </div>
             </div>
             
-            @RenderBody()
+            <div class="page-container animate-fade-in">
+                @RenderBody()
+            </div>
         </main>
     </div>
 

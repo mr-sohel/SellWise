@@ -4,29 +4,29 @@
 set -e
 
 echo "================================================="
-echo "🚀 Starting SellWise (ASP.NET Core Defense Mode) "
+echo "[INFO] Starting SellWise (ASP.NET Core Defense Mode) "
 echo "================================================="
 
 # Function to clean up background processes on exit
 cleanup() {
     echo ""
-    echo "🛑 Shutting down services safely..."
+    echo "[STOP] Shutting down services safely..."
     if [ -n "$ML_PID" ]; then
         kill $ML_PID 2>/dev/null || true
-        echo "✅ Python ML Service stopped."
+        echo "[SUCCESS] Python ML Service stopped."
     fi
     
-    echo "⏳ Stopping SQL Server container (this may take a few seconds)..."
+    echo "[WAIT] Stopping SQL Server container (this may take a few seconds)..."
     docker stop sellwise-sql 2>/dev/null || true
-    echo "✅ SQL Server stopped."
-    echo "Goodbye! 👋"
+    echo "[SUCCESS] SQL Server stopped."
+    echo "Goodbye!"
     exit 0
 }
 
 # Trap SIGINT (Ctrl+C)
 trap cleanup SIGINT
 
-echo "▶ [1/4] Starting SQL Server Database..."
+echo "[1/4] Starting SQL Server Database..."
 # Stop and remove any existing container with the same name
 docker stop sellwise-sql 2>/dev/null || true
 docker rm sellwise-sql 2>/dev/null || true
@@ -39,31 +39,31 @@ docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourPass123!" \
 echo "Waiting for SQL Server to accept connections (15s)..."
 sleep 15
 
-echo "▶ [2/4] Starting Python ML Service (Background)..."
+echo "[2/4] Starting Python ML Service (Background)..."
 if [ -d "SellWise.ML" ]; then
     cd SellWise.ML
     # Start ML service and suppress its noisy output so it doesn't clutter the terminal
     uv run uvicorn app.main:app --port 8000 > /dev/null 2>&1 &
     ML_PID=$!
     cd ..
-    echo "✅ ML Service running on port 8000."
+    echo "[SUCCESS] ML Service running on port 8000."
 else
-    echo "⚠️ Warning: SellWise.ML not found. Forecasting features may fail."
+    echo "[WARNING] SellWise.ML not found. Forecasting features may fail."
 fi
 
-echo "▶ [3/4] Applying EF Core Database Migrations..."
+echo "[3/4] Applying EF Core Database Migrations..."
 if [ -d "SellWise.Web" ]; then
     cd SellWise.Web
     dotnet ef database update
 else
-    echo "❌ Error: SellWise.Web directory not found!"
+    echo "[ERROR] SellWise.Web directory not found!"
     exit 1
 fi
 
-echo "▶ [4/4] Starting ASP.NET Core Application..."
+echo "[4/4] Starting ASP.NET Core Application..."
 echo "================================================="
-echo "✅ Everything is ready! Open your browser to:"
-echo "👉 http://localhost:5000"
+echo "[SUCCESS] Everything is ready! Open your browser to:"
+echo "-> http://localhost:5000"
 echo "Press Ctrl+C to safely shut down all services."
 echo "================================================="
 

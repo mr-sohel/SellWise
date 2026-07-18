@@ -3,92 +3,265 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<!-- KPI Cards -->
+<!-- Top Header section matching 02_dashboard.png -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Overview</h2>
+        <p class="text-muted small mb-0">📅 Store performance for the last 30D</p>
+    </div>
+    <div class="btn-group-timeframe">
+        <a href="?range=7d" class="btn-timeframe @(Context.Request.Query["range"] == "7d" ? "active" : "")" style="text-decoration: none;">7D</a>
+        <a href="?range=30d" class="btn-timeframe @(Context.Request.Query["range"] == "30d" || string.IsNullOrEmpty(Context.Request.Query["range"]) ? "active" : "")" style="text-decoration: none;">30D</a>
+        <a href="?range=90d" class="btn-timeframe @(Context.Request.Query["range"] == "90d" ? "active" : "")" style="text-decoration: none;">90D</a>
+        <a href="?range=1y" class="btn-timeframe @(Context.Request.Query["range"] == "1y" ? "active" : "")" style="text-decoration: none;">1Y</a>
+    </div>
+</div>
 
+<!-- KPI Cards & Main Revenue Trend Row -->
 <div class="row g-4 mb-4">
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card p-4 h-100 border-0">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Total Revenue</div>
-                    <div class="fs-2 fw-bold text-dark">৳@Model.TotalRevenue.ToString("N0")</div>
-                </div>
-                <div class="kpi-icon bg-primary bg-opacity-10 text-primary mb-0 shadow-sm">
-                    💰
+    <!-- Left column: 2x2 Grid of KPIs -->
+    <div class="col-12 col-xl-5">
+        <div class="row g-3 h-100">
+            <!-- Total Revenue Card -->
+            <div class="col-12 col-sm-6">
+                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="kpi-title">Total Revenue</span>
+                            <span class="kpi-badge badge-success">↗ @Model.RevenueGrowth%</span>
+                        </div>
+                        <div class="kpi-value text-truncate">৳@Model.TotalRevenue.ToString("N0")</div>
+                    </div>
+                    <div class="text-muted small mt-2">Store performance this month</div>
                 </div>
             </div>
-            <div class="text-@(Model.RevenueGrowth >= 0 ? "success" : "danger") small mt-3 fw-bold d-flex align-items-center gap-1">
-                <span class="fs-5">@(Model.RevenueGrowth >= 0 ? "↑" : "↓")</span> @Math.Abs(Model.RevenueGrowth)% from last month
+            
+            <!-- Total Orders Card -->
+            <div class="col-12 col-sm-6">
+                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="kpi-title">Total Orders</span>
+                            <div class="kpi-icon" style="background-color: #ecfdf5; color: #10b981;">📦</div>
+                        </div>
+                        <div class="kpi-value">@Model.TotalOrders.ToString("N0")</div>
+                    </div>
+                    <div class="text-muted small mt-2">Completed in the last 30 days</div>
+                </div>
+            </div>
+
+            <!-- Avg Order Value Card -->
+            <div class="col-12 col-sm-6">
+                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="kpi-title">Avg Order Value</span>
+                            <div class="kpi-icon" style="background-color: #f5f3ff; color: #8b5cf6;">💵</div>
+                        </div>
+                        <div class="kpi-value">৳@Model.AvgOrderValue.ToString("N0")</div>
+                    </div>
+                    <div class="text-muted small mt-2">Across all completed orders</div>
+                </div>
+            </div>
+
+            <!-- Health Score Card -->
+            <div class="col-12 col-sm-6">
+                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="kpi-title">Health Score</span>
+                            <div class="kpi-icon" style="background-color: #f0f9ff; color: #0ea5e9;">📈</div>
+                        </div>
+                        <div class="kpi-value">@Model.HealthScore<span class="fs-6 text-muted">/100</span></div>
+                    </div>
+                    <div class="text-muted small mt-2">Based on store activity</div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card p-4 h-100 border-0">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Total Orders</div>
-                    <div class="fs-2 fw-bold text-dark">@Model.TotalOrders</div>
-                </div>
-                <div class="kpi-icon bg-info bg-opacity-10 text-info mb-0 shadow-sm">
-                    📦
-                </div>
+
+    <!-- Right column: Main Revenue Trend Card -->
+    <div class="col-12 col-xl-7">
+        <div class="card shadow-sm border-1 h-100 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0 text-dark">Revenue Trend</h5>
+                <span class="text-muted small">৳ in millions</span>
             </div>
-            <div class="text-muted small mt-3">Completed in the last 30 days</div>
-        </div>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card p-4 h-100 border-0">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Avg Order Value</div>
-                    <div class="fs-2 fw-bold text-dark">৳@Model.AvgOrderValue.ToString("N0")</div>
-                </div>
-                <div class="kpi-icon bg-success bg-opacity-10 text-success mb-0 shadow-sm">
-                    📈
-                </div>
+            <div style="height: 240px; position: relative;">
+                <canvas id="revenueChart"></canvas>
             </div>
-            <div class="text-muted small mt-3">Across all completed orders</div>
-        </div>
-    </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card p-4 h-100 border-0">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-muted small text-uppercase fw-bold mb-1">Health Score</div>
-                    <div class="fs-2 fw-bold text-dark">@Model.HealthScore<span class="fs-5 text-muted">/100</span></div>
-                </div>
-                <div class="kpi-icon bg-warning bg-opacity-10 text-warning mb-0 shadow-sm">
-                    ❤️
-                </div>
-            </div>
-            <div class="text-muted small mt-3">Based on store activity</div>
         </div>
     </div>
 </div>
 
+<!-- Demand Forecast & Category Sales Row -->
 <div class="row g-4 mb-4">
-    <!-- Revenue Chart -->
-    <div class="col-lg-6">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                <h5 class="card-title fw-bold mb-0">Revenue Trend (Last 30 Days)</h5>
+    <!-- Demand Forecast Product List -->
+    <div class="col-12 col-xl-8">
+        <div class="card shadow-sm border-1 p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">Demand Forecast</h5>
+                    <p class="text-muted small mb-0">Predicted demand for top selling products</p>
+                </div>
+                <div class="btn-group-timeframe">
+                    <a href="?range=7d" class="btn-timeframe @(Context.Request.Query["range"] == "7d" ? "active" : "")" style="text-decoration: none;">7D</a>
+                    <a href="?range=15d" class="btn-timeframe @(Context.Request.Query["range"] == "15d" ? "active" : "")" style="text-decoration: none;">15D</a>
+                    <a href="?range=30d" class="btn-timeframe @(Context.Request.Query["range"] == "30d" || string.IsNullOrEmpty(Context.Request.Query["range"]) ? "active" : "")" style="text-decoration: none;">30D</a>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="revenueChart" height="200"></canvas>
+            
+            <div class="forecast-grid mt-3">
+                @for (int i = 0; i < Model.ProductForecasts.Count; i++)
+                {
+                    var f = Model.ProductForecasts[i];
+                    var sparkColor = (i % 3) switch {
+                        0 => "#2563eb",
+                        1 => "#8b5cf6",
+                        _ => "#0ea5e9"
+                    };
+
+                    <div class="forecast-item-card">
+                        <div class="forecast-badge-number">@(i + 1)</div>
+                        <div class="fw-bold text-dark text-truncate mb-1" style="font-size: 0.85rem;" title="@f.ProductName">
+                            @f.ProductName
+                        </div>
+                        <div class="text-muted mb-2" style="font-size: 0.75rem;">@f.Category</div>
+                        
+                        <!-- Sparkline SVG -->
+                        <div class="forecast-sparkline">
+                            <svg viewBox="0 0 100 30" class="w-100 h-100" preserveAspectRatio="none">
+                                @{
+                                    var points = "";
+                                    for(int k=0; k<f.SparklineData.Count; k++) {
+                                        var x = (k * 11).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                        // Normalize height within 30px container
+                                        var y = (30 - (f.SparklineData[k] * 0.8)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                        points += (k == 0 ? "M" : "L") + $" {x} {y} ";
+                                    }
+                                }
+                                <path d="@points" fill="none" stroke="@sparkColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="font-size: 0.75rem;">
+                            <div>
+                                <span class="fw-bold text-dark">@f.PredictedUnits.ToString("N0")</span>
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">units / 30d</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold text-dark">@f.Stock</span>
+                                <span class="text-muted d-block" style="font-size: 0.65rem;">in stock</span>
+                            </div>
+                        </div>
+                        <div class="text-muted mt-1" style="font-size: 0.65rem;">
+                            ~@f.DailyAverage units/day
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
-    
-    <!-- Demand Forecasting Chart -->
-    <div class="col-lg-6">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                <h5 class="card-title fw-bold mb-0">
-                    <span class="text-primary">✨ AI Powered</span> Demand Forecast (Next 30 Days)
-                </h5>
+
+    <!-- Sales By Category Doughnut -->
+    <div class="col-12 col-xl-4">
+        <div class="card shadow-sm border-1 p-4 h-100">
+            <h5 class="fw-bold mb-3 text-dark">Sales by Category</h5>
+            
+            <div class="position-relative d-flex justify-content-center align-items-center" style="height: 180px;">
+                <canvas id="categoryChart" style="max-height: 160px; max-width: 160px;"></canvas>
+                <div class="position-absolute text-center" style="pointer-events: none; z-index: 10;">
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.5px;">Total</small>
+                    <div class="fw-bold text-dark" style="font-size: 1rem;">৳@Model.TotalRevenue.ToString("N0")</div>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="forecastChart" height="200"></canvas>
+
+            <div class="row g-2 mt-3" style="font-size: 0.8rem;">
+                @for (int i = 0; i < Model.CategorySales.Count; i++)
+                {
+                    var cat = Model.CategorySales[i];
+                    var catColor = (i % 4) switch {
+                        0 => "#2563eb",
+                        1 => "#8b5cf6",
+                        2 => "#0ea5e9",
+                        _ => "#ec4899"
+                    };
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <span class="rounded-circle" style="width: 8px; height: 8px; background-color: @catColor; display: inline-block;"></span>
+                        <div class="text-truncate">
+                            <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.75rem;">@cat.Category</span>
+                            <span class="text-muted" style="font-size: 0.7rem;">@cat.Percentage.ToString(System.Globalization.CultureInfo.InvariantCulture)%</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performers Lists section (Top Performers & Needs Attention) -->
+<div class="row g-4">
+    <!-- Top Performers List -->
+    <div class="col-12 col-md-6">
+        <div class="card p-4 border-1 shadow-sm">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <h5 class="fw-bold mb-0 text-dark">Top Performers</h5>
+                <span class="badge" style="background-color: #fff7ed; color: #ea580c; font-size: 0.65rem;">HIGH MOMENTUM</span>
+            </div>
+            <p class="text-muted small mb-3">Highest revenue generating items</p>
+            
+            <div class="performers-list">
+                @foreach (var item in Model.TopPerformers)
+                {
+                    <div class="performers-item">
+                        <div class="d-flex align-items-center">
+                            <span class="performers-num top-rank">#@item.Rank</span>
+                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">@item.ProductName</span>
+                        </div>
+                        <span class="fw-bold text-dark" style="font-size: 0.85rem;">৳@item.Revenue.ToString("N0")</span>
+                    </div>
+                }
+                @if (!Model.TopPerformers.Any())
+                {
+                    <div class="text-center text-muted small py-4">No data available</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Needs Attention List -->
+    <div class="col-12 col-md-6">
+        <div class="card p-4 border-1 shadow-sm">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <h5 class="fw-bold mb-0 text-dark">Needs Attention</h5>
+                <span class="badge" style="background-color: #fef2f2; color: #ef4444; font-size: 0.65rem;">AT RISK</span>
+            </div>
+            <p class="text-muted small mb-3">Lowest inventory items needing restock</p>
+            
+            <div class="performers-list">
+                @foreach (var item in Model.NeedsAttention)
+                {
+                    // Calculate filled percentage for stock indicator bar
+                    var pct = (double)item.Stock / Math.Max(1, item.Threshold) * 100;
+                    var barColor = pct < 50 ? "#ef4444" : "#f97316";
+
+                    <div class="performers-item">
+                        <div class="d-flex align-items-center" style="width: 70%;">
+                            <span class="performers-num normal-rank">@item.Rank</span>
+                            <div class="text-truncate" style="width: 100%;">
+                                <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.85rem;">@item.ProductName</span>
+                                <div class="performers-bar" style="max-width: 120px;">
+                                    <div class="performers-bar-fill" style="width: @Math.Min(100, pct).ToString(System.Globalization.CultureInfo.InvariantCulture)%; background-color: @barColor;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="fw-bold text-dark" style="font-size: 0.85rem;">@item.Stock left</span>
+                    </div>
+                }
+                @if (!Model.NeedsAttention.Any())
+                {
+                    <div class="text-center text-muted small py-4">No data available</div>
+                }
             </div>
         </div>
     </div>
@@ -96,7 +269,9 @@
 
 @section Scripts {
 <script>
-    // Revenue Chart Setup
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+
+    // Revenue Trend Chart (Line Chart)
     const revLabels = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Date)));
     const revData = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Revenue)));
 
@@ -108,14 +283,16 @@
                 datasets: [{
                     label: 'Revenue (৳)',
                     data: revData,
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                    borderWidth: 3,
+                    borderColor: '#0f172a',
+                    backgroundColor: 'rgba(15, 23, 42, 0.03)',
+                    borderWidth: 2,
                     tension: 0.4,
                     fill: true,
-                    pointBackgroundColor: '#4f46e5',
+                    pointBackgroundColor: '#0f172a',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5,
                     pointRadius: 3,
-                    pointHoverRadius: 6
+                    pointHoverRadius: 5
                 }]
             },
             options: {
@@ -124,77 +301,63 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                        padding: 12,
-                        titleFont: { size: 14, family: "'Inter', sans-serif" },
-                        bodyFont: { size: 14, family: "'Inter', sans-serif" }
+                        backgroundColor: '#0f172a',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        padding: 10,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { borderDash: [4, 4], color: 'rgba(229, 231, 235, 0.5)' },
+                        grid: { color: '#f1f5f9' },
                         ticks: {
-                            callback: function(value) { return '৳' + value.toLocaleString(); },
-                            font: { family: "'Inter', sans-serif" }
+                            color: '#64748b',
+                            font: { size: 10 },
+                            callback: function(value) {
+                                if (value >= 1000000) return '৳' + (value / 1000000).toFixed(0) + 'M';
+                                return '৳' + value.toLocaleString();
+                            }
                         }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { font: { family: "'Inter', sans-serif" } }
+                        ticks: { color: '#64748b', font: { size: 10 } }
                     }
-                },
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
                 }
             }
         });
     }
 
-    // Forecast Chart Setup
-    const forecastLabels = @Html.Raw(Json.Serialize(Model.DemandForecast.Select(r => r.Date)));
-    const forecastData = @Html.Raw(Json.Serialize(Model.DemandForecast.Select(r => r.PredictedDemand)));
+    // Sales by Category Chart (Doughnut Chart)
+    const catLabels = @Html.Raw(Json.Serialize(Model.CategorySales.Select(c => c.Category)));
+    const catPercentages = @Html.Raw(Json.Serialize(Model.CategorySales.Select(c => c.Percentage)));
 
-    if (document.getElementById('forecastChart')) {
-        new Chart(document.getElementById('forecastChart'), {
-            type: 'bar',
+    if (document.getElementById('categoryChart')) {
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
             data: {
-                labels: forecastLabels,
+                labels: catLabels,
                 datasets: [{
-                    label: 'Predicted Unit Demand',
-                    data: forecastData,
-                    backgroundColor: 'rgba(16, 185, 129, 0.85)',
-                    borderRadius: 4,
-                    hoverBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    data: catPercentages,
+                    backgroundColor: ['#2563eb', '#8b5cf6', '#0ea5e9', '#ec4899', '#f59e0b'],
+                    borderWidth: 3,
+                    borderColor: '#ffffff'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '80%',
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                        padding: 12,
-                        titleFont: { size: 14, family: "'Inter', sans-serif" },
-                        bodyFont: { size: 14, family: "'Inter', sans-serif" }
+                        callbacks: {
+                            label: function(context) { return ' ' + context.label + ': ' + context.parsed + '%'; }
+                        }
                     }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { borderDash: [4, 4], color: 'rgba(229, 231, 235, 0.5)' },
-                        ticks: { font: { family: "'Inter', sans-serif" } }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { family: "'Inter', sans-serif" } }
-                    }
-                },
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
                 }
             }
         });

@@ -1,33 +1,144 @@
 @model IEnumerable<SellWise.Web.Models.Expense>
 @{
     ViewData["Title"] = "Expenses";
+    var expenseCount = Model.Count();
 }
 
-<div class="card shadow-sm border-0">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark mb-0">Expenses</h2>
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #18181b; border: none;" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+        + Add Expense
+    </button>
+</div>
+
+<div class="card border-1 shadow-sm p-3 mb-4">
+    <div class="btn-group-timeframe" style="background-color: #f1f5f9; border: 1px solid var(--border-color); padding: 0.25rem; border-radius: var(--radius-md);">
+        <button class="btn-timeframe" onclick="filterDays(7);">7 Days</button>
+        <button class="btn-timeframe" onclick="filterDays(15);">15 Days</button>
+        <button class="btn-timeframe" onclick="filterDays(30);">30 Days</button>
+        <button class="btn-timeframe active" onclick="filterDays(0);">All Time</button>
+    </div>
+</div>
+
+<div class="card shadow-sm border-1 mb-3">
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0" id="expenseTable">
             <thead class="table-light">
                 <tr>
-                    <th>Date</th>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Notes</th>
+                    <th style="width: 25%;">Date</th>
+                    <th style="width: 25%;">Category</th>
+                    <th style="width: 35%;">Notes</th>
+                    <th style="width: 15%;">Amount</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var e in Model)
                 {
-                    <tr>
-                        <td class="align-middle">@e.ExpenseDate.ToString("MMM dd, yyyy")</td>
-                        <td class="align-middle fw-bold">@e.Category</td>
-                        <td class="align-middle text-danger">৳@e.Amount.ToString("N0")</td>
+                    <tr data-date="@e.ExpenseDate.ToString("yyyy-MM-dd")">
+                        <td class="align-middle text-muted">@e.ExpenseDate.ToString("M/d/yyyy")</td>
+                        <td class="align-middle fw-bold text-dark">@e.Category</td>
                         <td class="align-middle text-muted">@e.Notes</td>
+                        <td class="align-middle fw-bold text-dark">৳@e.Amount.ToString("N0")</td>
                     </tr>
                 }
-                @if(!Model.Any()) {
-                    <tr><td colspan="4" class="text-center text-muted py-4">No expenses found.</td></tr>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="4" class="text-center text-muted py-5">No expenses found.</td></tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+<div class="pagination-wrap">
+    <div>Showing <strong>1</strong> to <strong>@expenseCount</strong> of <strong>@expenseCount</strong> results</div>
+    <div class="d-flex gap-2">
+        <a href="#" class="pagination-btn">Previous</a>
+        <a href="#" class="pagination-btn">Next</a>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden; box-shadow: var(--shadow-lg);">
+            <div class="modal-header bg-light border-bottom p-4">
+                <h5 class="modal-title fw-bold text-dark" id="addExpenseModalLabel">Add New Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="Create" method="post">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="Category" class="form-select" required>
+                            <option value="Rent">Rent</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Packaging">Packaging</option>
+                            <option value="Supplies">Supplies</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount (৳)</label>
+                        <input type="number" name="Amount" class="form-control" placeholder="e.g. 5000" min="1" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Expense Date</label>
+                        <input type="date" name="ExpenseDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="Notes" class="form-control" rows="3" placeholder="Describe the expense details..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top p-4 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #18181b; border: none;">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterDays(days) {
+            // Update active state of filter button
+            var buttons = document.querySelectorAll(".btn-group-timeframe button");
+            buttons.forEach(btn => btn.classList.remove("active"));
+            
+            var event = window.event;
+            if (event && event.target) {
+                event.target.classList.add("active");
+            }
+
+            var table = document.getElementById("expenseTable");
+            var tr = table.getElementsByTagName("tr");
+            
+            if (days === 0) {
+                for (var i = 1; i < tr.length; i++) {
+                    tr[i].style.display = "";
+                }
+                return;
+            }
+
+            var now = new Date();
+            var cutoff = new Date();
+            cutoff.setDate(now.getDate() - days);
+
+            for (var i = 1; i < tr.length; i++) {
+                var dateStr = tr[i].getAttribute("data-date");
+                if (dateStr) {
+                    var rowDate = new Date(dateStr);
+                    if (rowDate >= cutoff) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+}

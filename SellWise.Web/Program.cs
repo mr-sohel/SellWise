@@ -42,9 +42,9 @@ if (args.Contains("--seed"))
         db.SaveChanges();
     }
     
-    Console.WriteLine($"🌱 Seeding data for Store: {store.Name} ({store.Id})...");
+    Console.WriteLine($"[INFO] Seeding data for Store: {store.Name} ({store.Id})...");
     seeder.SeedStoreAsync(store.Id).Wait();
-    Console.WriteLine("✅ Data seeded successfully!");
+    Console.WriteLine("[SUCCESS] Data seeded successfully!");
     
     // Exit application after seeding
     return;

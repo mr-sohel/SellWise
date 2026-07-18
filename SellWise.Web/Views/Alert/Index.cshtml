@@ -1,0 +1,79 @@
+@model IEnumerable<SellWise.Web.Models.InventoryAlert>
+@{
+    ViewData["Title"] = "Inventory Alerts";
+    bool showUnreadOnly = (bool)(ViewData["ShowUnreadOnly"] ?? false);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Inventory Alerts</h2>
+        <p class="text-muted mb-0">Smart recommendations based on predicted demand and sales velocity.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary" onclick="location.reload();">
+            🔄 Scan Inventory
+        </button>
+        <form asp-action="MarkAllRead" method="post" class="d-inline">
+            <button type="submit" class="btn btn-dark" style="background-color: #18181b; border: none;">
+                ✓ Mark All Read
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="mb-4">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="showUnreadOnly" @(showUnreadOnly ? "checked" : "") onchange="filterUnread(this);">
+        <label class="form-check-label text-bold" for="showUnreadOnly" style="cursor:pointer;">
+            Show unread only
+        </label>
+    </div>
+</div>
+
+<div class="d-flex flex-column gap-3">
+    @foreach (var alert in Model)
+    {
+        <div class="card p-4 border-1 @(alert.IsRead ? "opacity-75" : "")" style="border-left: 4px solid #f59e0b !important;">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-warning">⚠️</span>
+                    <strong class="text-dark">@alert.Type</strong>
+                    <span class="text-muted">•</span>
+                    <a asp-controller="Product" asp-action="Edit" asp-route-id="@alert.ProductId" class="fw-bold text-decoration-none" style="color: #2563eb;">
+                        @alert.Product?.Name
+                    </a>
+                </div>
+                <small class="text-muted">@alert.CreatedAt.ToLocalTime().ToString("g")</small>
+            </div>
+            
+            <p class="text-muted mb-3" style="font-size: 0.95rem;">
+                @alert.Message
+            </p>
+            
+            <div class="d-flex gap-3">
+                <form asp-action="Dismiss" asp-route-id="@alert.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-link p-0 text-decoration-none text-uppercase fw-bold text-muted" style="font-size: 0.75rem;">
+                        Dismiss
+                    </button>
+                </form>
+                <a asp-controller="Product" asp-action="Edit" asp-route-id="@alert.ProductId" class="text-decoration-none text-uppercase fw-bold" style="color: #2563eb; font-size: 0.75rem;">
+                    Restock Now
+                </a>
+            </div>
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="card p-5 text-center text-muted">
+            📦 No active inventory alerts! All items are well stocked.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function filterUnread(checkbox) {
+            window.location.href = '?showUnreadOnly=' + checkbox.checked;
+        }
+    </script>
+}

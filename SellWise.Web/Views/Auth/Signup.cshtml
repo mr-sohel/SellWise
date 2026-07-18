@@ -5,55 +5,56 @@
     Layout = "_AuthLayout";
 }
 
-<div class="card shadow-sm p-4" style="width: 100%; max-width: 500px;">
+<div class="d-flex flex-column align-items-center" style="width: 100%; max-width: 440px;">
     <div class="text-center mb-4">
-        <h1 class="h3 fw-bold mb-1">SellWise</h1>
-        <p class="text-muted">Create your account to start managing your store.</p>
+        <h1 class="fw-bold mb-1 text-dark" style="font-size: 2.2rem; letter-spacing: -1px;">SellWise</h1>
+        <p class="text-muted">Create your account to get started.</p>
     </div>
 
-    <form asp-action="Signup" method="post">
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-        
-        <div class="mb-3">
-            <label asp-for="StoreName" class="form-label">Store Name</label>
-            <input asp-for="StoreName" class="form-control" aria-required="true" />
-            <span asp-validation-for="StoreName" class="text-danger"></span>
-        </div>
+    <div class="auth-card" style="width: 100%;">
+        <form asp-action="Signup" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <div class="mb-3">
+                <label asp-for="StoreName" class="form-label text-bold mb-2">Store Name</label>
+                <input asp-for="StoreName" class="form-control py-2" placeholder="e.g. My Demo Store" required style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <span asp-validation-for="StoreName" class="text-danger" style="font-size: 0.8rem;"></span>
+            </div>
 
-        <div class="mb-3">
-            <label asp-for="Email" class="form-label">Email address</label>
-            <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label asp-for="Password" class="form-label">Password</label>
-                <input asp-for="Password" class="form-control" autocomplete="new-password" aria-required="true" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label text-bold mb-2">Email</label>
+                <input asp-for="Email" class="form-control py-2" placeholder="you@example.com" autocomplete="username" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <span asp-validation-for="Email" class="text-danger" style="font-size: 0.8rem;"></span>
             </div>
             
-            <div class="col-md-6 mb-3">
-                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
-                <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label text-bold mb-2">Password</label>
+                <input asp-for="Password" class="form-control py-2" placeholder="••••••••" autocomplete="new-password" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <span asp-validation-for="Password" class="text-danger" style="font-size: 0.8rem;"></span>
             </div>
-        </div>
+            
+            <div class="mb-3">
+                <label asp-for="ConfirmPassword" class="form-label text-bold mb-2">Confirm Password</label>
+                <input asp-for="ConfirmPassword" class="form-control py-2" placeholder="••••••••" autocomplete="new-password" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger" style="font-size: 0.8rem;"></span>
+            </div>
 
-        <div class="mb-3">
-            <label asp-for="PreferredLang" class="form-label">Preferred Language</label>
-            <select asp-for="PreferredLang" class="form-select">
-                <option value="en">English</option>
-                <option value="bn">Bangla</option>
-            </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary w-100 mb-3">Sign up</button>
-        
-        <div class="text-center">
-            <p class="mb-0">Already have an account? <a asp-action="Login">Log in</a></p>
-        </div>
-    </form>
+            <div class="mb-4">
+                <label asp-for="PreferredLang" class="form-label text-bold mb-2">Preferred Language</label>
+                <select asp-for="PreferredLang" class="form-select py-2" style="background-color: #ffffff; border-color: #e5e7eb;">
+                    <option value="en">English</option>
+                    <option value="bn">Bangla</option>
+                </select>
+                <span asp-validation-for="PreferredLang" class="text-danger" style="font-size: 0.8rem;"></span>
+            </div>
+            
+            <button type="submit" class="btn btn-black-pill w-100">Sign Up</button>
+        </form>
+    </div>
+    
+    <div class="text-center mt-4" style="font-size: 0.9rem;">
+        <span class="text-muted">Already have an account?</span> <a asp-action="Login" class="text-decoration-none fw-bold" style="color: #2563eb;">Log in</a>
+    </div>
 </div>
 
 @section Scripts {

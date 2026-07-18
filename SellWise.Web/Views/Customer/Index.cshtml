@@ -1,35 +1,152 @@
 @model IEnumerable<SellWise.Web.Models.Customer>
 @{
     ViewData["Title"] = "Customers";
+    var customerCount = Model.Count();
 }
 
-<div class="card shadow-sm border-0">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark mb-0">Customers</h2>
+    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2" onclick="alert('RFM segments recalculated! (Simulation)');">
+        🔄 Recalculate RFM
+    </button>
+</div>
+
+<div class="card border-1 shadow-sm p-3 mb-4">
+    <div class="d-flex gap-3">
+        <div class="search-widget" style="width: 100%; max-width: 400px;">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="customerSearch" placeholder="Search by name, phone or email..." onkeyup="searchCustomers();">
+        </div>
+        <select class="form-select" id="segmentFilter" style="width: 100%; max-width: 200px; background-color: #ffffff; border-color: #cbd5e1;" onchange="filterCustomers();">
+            <option value="">All Segments</option>
+            <option value="CHAMPION">Champion</option>
+            <option value="POTENTIAL">Potential</option>
+            <option value="PROMISING">Promising</option>
+        </select>
+    </div>
+</div>
+
+<div class="card shadow-sm border-1 mb-3">
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0" id="customerTable">
             <thead class="table-light">
                 <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                    <th>Total Orders</th>
-                    <th>Total Spent</th>
+                    <th style="width: 25%;">Name</th>
+                    <th style="width: 30%;">Contact</th>
+                    <th style="width: 15%;">Orders</th>
+                    <th style="width: 15%;">Segment (RFM)</th>
+                    <th style="width: 10%;">Total Spent</th>
+                    <th style="width: 5%;"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var c in Model)
                 {
+                    string segment;
+                    string segmentClass;
+                    string rfmText;
+
+                    if (c.TotalSpent >= 10000000)
+                    {
+                        segment = "Champion";
+                        segmentClass = "badge-champion";
+                        rfmText = "R:5 F:5 M:5";
+                    }
+                    else if (c.TotalSpent >= 5000000)
+                    {
+                        segment = "Potential";
+                        segmentClass = "badge-potential";
+                        rfmText = "R:2 F:5 M:5";
+                    }
+                    else
+                    {
+                        segment = "Promising";
+                        segmentClass = "badge-potential";
+                        rfmText = "R:3 F:3 M:3";
+                    }
+
                     <tr>
-                        <td class="align-middle fw-bold">@c.Name</td>
-                        <td class="align-middle">@c.Phone</td>
-                        <td class="align-middle">@c.Email</td>
+                        <td class="align-middle fw-bold text-dark">@c.Name</td>
+                        <td class="align-middle">
+                            <div class="text-dark fw-medium">@c.Phone</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">@c.Email</div>
+                        </td>
                         <td class="align-middle">@c.TotalOrders</td>
-                        <td class="align-middle fw-bold">৳@c.TotalSpent.ToString("N0")</td>
+                        <td class="align-middle">
+                            <span class="badge @segmentClass d-inline-block mb-1">@segment</span>
+                            <div class="text-muted" style="font-size: 0.7rem;">@rfmText</div>
+                        </td>
+                        <td class="align-middle fw-bold text-dark">৳@c.TotalSpent.ToString("N0")</td>
+                        <td class="align-middle text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-link p-0 text-muted dropdown-toggle no-arrow" type="button" data-bs-toggle="dropdown">
+                                    •••
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-1 mt-1">
+                                    <li><a href="#" class="dropdown-item">View History</a></li>
+                                    <li><a href="#" class="dropdown-item">Edit Info</a></li>
+                                </ul>
+                            </div>
+                        </td>
                     </tr>
                 }
-                @if(!Model.Any()) {
-                    <tr><td colspan="5" class="text-center text-muted py-4">No customers found.</td></tr>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-5">No customers found.</td></tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+<div class="pagination-wrap">
+    <div>Showing <strong>1</strong> to <strong>@customerCount</strong> of <strong>@customerCount</strong> results</div>
+    <div class="d-flex gap-2">
+        <a href="#" class="pagination-btn">Previous</a>
+        <a href="#" class="pagination-btn">Next</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function searchCustomers() {
+            var input, filter, table, tr, tdName, tdContact, i, nameVal, contactVal;
+            input = document.getElementById("customerSearch");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("customerTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 1; i < tr.length; i++) {
+                tdName = tr[i].getElementsByTagName("td")[0];
+                tdContact = tr[i].getElementsByTagName("td")[1];
+                if (tdName || tdContact) {
+                    nameVal = tdName ? (tdName.textContent || tdName.innerText) : "";
+                    contactVal = tdContact ? (tdContact.textContent || tdContact.innerText) : "";
+                    if (nameVal.toUpperCase().indexOf(filter) > -1 || contactVal.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        function filterCustomers() {
+            var select, filter, table, tr, td, i, txtValue;
+            select = document.getElementById("segmentFilter");
+            filter = select.value.toUpperCase();
+            table = document.getElementById("customerTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 1; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[3];
+                if (td) {
+                    txtValue = td.getElementsByTagName("span")[0].textContent || td.getElementsByTagName("span")[0].innerText;
+                    if (filter === "" || txtValue.trim().toUpperCase() === filter) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+}

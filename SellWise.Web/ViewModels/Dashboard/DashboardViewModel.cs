@@ -12,6 +12,12 @@ public class DashboardViewModel
     
     public List<RevenuePoint> RevenueTrend { get; set; } = new List<RevenuePoint>();
     public List<ForecastPoint> DemandForecast { get; set; } = new List<ForecastPoint>();
+
+    // New properties matching screenshots
+    public List<CategorySalesPoint> CategorySales { get; set; } = new List<CategorySalesPoint>();
+    public List<ProductPerformancePoint> TopPerformers { get; set; } = new List<ProductPerformancePoint>();
+    public List<ProductAttentionPoint> NeedsAttention { get; set; } = new List<ProductAttentionPoint>();
+    public List<ProductForecastCard> ProductForecasts { get; set; } = new List<ProductForecastCard>();
 }
 
 public class RevenuePoint
@@ -24,4 +30,37 @@ public class ForecastPoint
 {
     public string Date { get; set; } = string.Empty;
     public double PredictedDemand { get; set; }
+}
+
+public class CategorySalesPoint
+{
+    public string Category { get; set; } = string.Empty;
+    public decimal Revenue { get; set; }
+    public double Percentage { get; set; }
+}
+
+public class ProductPerformancePoint
+{
+    public string ProductName { get; set; } = string.Empty;
+    public decimal Revenue { get; set; }
+    public int Rank { get; set; }
+}
+
+public class ProductAttentionPoint
+{
+    public string ProductName { get; set; } = string.Empty;
+    public int Stock { get; set; }
+    public int Threshold { get; set; }
+    public decimal Revenue { get; set; }
+    public int Rank { get; set; }
+}
+
+public class ProductForecastCard
+{
+    public string ProductName { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public List<double> SparklineData { get; set; } = new List<double>();
+    public double PredictedUnits { get; set; }
+    public int Stock { get; set; }
+    public double DailyAverage { get; set; }
 }

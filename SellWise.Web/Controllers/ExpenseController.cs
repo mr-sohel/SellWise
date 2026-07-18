@@ -26,4 +26,19 @@ public class ExpenseController : BaseController
             
         return View(expenses);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(Expense expense)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        expense.StoreId = storeId;
+        expense.CreatedAt = DateTime.UtcNow;
+
+        Db.Expenses.Add(expense);
+        await Db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
 }
