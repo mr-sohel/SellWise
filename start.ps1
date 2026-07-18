@@ -44,7 +44,7 @@ try {
     # 2. Start ML Service
     Write-Host "[2/4] Starting ML Service..." -ForegroundColor Yellow
     if (Test-Path "SellWise.ML") {
-        $mlProcess = Start-Process -FilePath "uv" -ArgumentList "run uvicorn app.main:app --port 8000" -WorkingDirectory "SellWise.ML" -WindowStyle Hidden -PassThru
+        $mlProcess = Start-Process -FilePath "uv" -ArgumentList "run", "uvicorn", "app.main:app", "--port", "8000", "--reload" -WorkingDirectory "SellWise.ML" -WindowStyle Hidden -PassThru
         Write-Host "[OK] ML Service on port 8000." -ForegroundColor Green
     } else {
         Write-Host "[SKIP] SellWise.ML not found." -ForegroundColor DarkYellow
@@ -54,7 +54,7 @@ try {
     Write-Host "[3/4] Checking database..." -ForegroundColor Yellow
     if (Test-Path "SellWise.Web") {
         Push-Location SellWise.Web
-        dotnet ef database update --no-build 2>&1 | Out-Null
+        dotnet ef database update --no-build
         Pop-Location
         Write-Host "[OK] Database ready." -ForegroundColor Green
     } else {

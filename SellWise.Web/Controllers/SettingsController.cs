@@ -196,16 +196,28 @@ public class SettingsController : BaseController
         var result = await _userManager.CreateAsync(newUser, model.Password);
         if (result.Succeeded)
         {
-            var storeMember = new StoreMember
+            using var transaction = await Db.Database.BeginTransactionAsync();
+            try
             {
-                StoreId = storeId,
-                UserId = newUser.Id,
-                Role = model.Role
-            };
-            Db.StoreMembers.Add(storeMember);
-            await Db.SaveChangesAsync();
+                var storeMember = new StoreMember
+                {
+                    StoreId = storeId,
+                    UserId = newUser.Id,
+                    Role = model.Role
+                };
+                Db.StoreMembers.Add(storeMember);
+                await Db.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-            TempData["Success"] = $"{model.FullName} has been invited as {model.Role}.";
+                TempData["Success"] = $"{model.FullName} has been invited as {model.Role}.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                await _userManager.DeleteAsync(newUser); // Clean up identity user if member creation fails
+                ModelState.AddModelError(string.Empty, "Failed to assign user to the store.");
+                TempData["Error"] = "Failed to assign user to the store. Please try again.";
+            }
         }
         else
         {

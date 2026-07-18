@@ -8,26 +8,65 @@ using System.Threading.Tasks;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Order;
+using SellWise.Web.Services;
 
 namespace SellWise.Web.Controllers;
 
 [Authorize]
 public class OrderController : BaseController
 {
-    public OrderController(AppDbContext db) : base(db) { }
+    private readonly IOrderService _orderService;
 
-    public async Task<IActionResult> Index()
+    public OrderController(AppDbContext db, IOrderService orderService) : base(db)
+    {
+        _orderService = orderService;
+    }
+
+    public async Task<IActionResult> Index(string search, string status, int page = 1)
     {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        var orders = await Db.Orders
+        var query = Db.Orders
             .Include(o => o.Customer)
-            .Include(o => o.Items)
-            .Where(o => o.StoreId == storeId)
+            .Where(o => o.StoreId == storeId);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(o => o.OrderNumber.Contains(search) || (o.Customer != null && o.Customer.Name.Contains(search)));
+        }
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            query = query.Where(o => o.Status == status.ToLower());
+        }
+
+        int pageSize = 20;
+        int totalItems = await query.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        var orders = await query
             .OrderByDescending(o => o.OrderDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(o => new OrderViewModel
+            {
+                Id = o.Id,
+                OrderNumber = o.OrderNumber,
+                CustomerName = o.Customer != null ? o.Customer.Name : null,
+                CustomerPhone = o.Customer != null ? o.Customer.Phone : null,
+                OrderDate = o.OrderDate,
+                Total = o.Total,
+                Status = o.Status
+            })
             .ToListAsync();
-            
+
+        ViewData["CurrentPage"] = page;
+        ViewData["TotalPages"] = totalPages;
+        ViewData["Search"] = search;
+        ViewData["Status"] = status;
+        ViewData["TotalItems"] = totalItems;
+
         return View(orders);
     }
 
@@ -43,7 +82,7 @@ public class OrderController : BaseController
             AvailableProducts = products.Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Name} (৳{p.SellingPrice} - Stock: {p.StockQuantity})" }),
             AvailableCustomers = customers.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
         };
-        
+
         return View(model);
     }
 
@@ -60,76 +99,12 @@ public class OrderController : BaseController
 
         if (ModelState.IsValid)
         {
-            using var transaction = await Db.Database.BeginTransactionAsync();
-            try
+            var error = await _orderService.CreateOrderAsync(storeId, model);
+            if (error == null)
             {
-                var order = new Order
-                {
-                    StoreId = storeId,
-                    CustomerId = model.CustomerId,
-                    Source = model.Source,
-                    DeliveryCharge = model.DeliveryCharge,
-                    Discount = model.Discount,
-                    Notes = model.Notes,
-                    Status = "completed",
-                    OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}"
-                };
-
-                decimal subtotal = 0;
-
-                foreach (var item in model.Items.Where(i => i.ProductId != Guid.Empty && i.Quantity > 0))
-                {
-                    var product = await Db.Products
-                        .FirstOrDefaultAsync(p => p.Id == item.ProductId && p.StoreId == storeId);
-                    
-                    if (product == null)
-                    {
-                        ModelState.AddModelError("", $"Product not found in your store.");
-                        await transaction.RollbackAsync();
-                        return await RepopulateAndReturn(model, storeId);
-                    }
-
-                    if (product.StockQuantity < item.Quantity)
-                    {
-                        ModelState.AddModelError("", $"Insufficient stock for {product.Name}. Available: {product.StockQuantity}, requested: {item.Quantity}.");
-                        await transaction.RollbackAsync();
-                        return await RepopulateAndReturn(model, storeId);
-                    }
-
-                    var orderItem = new OrderItem
-                    {
-                        ProductId = product.Id,
-                        ProductName = product.Name,
-                        UnitPrice = product.SellingPrice,
-                        CostPrice = product.CostPrice,
-                        Quantity = item.Quantity
-                    };
-                    order.Items.Add(orderItem);
-                    subtotal += (product.SellingPrice * item.Quantity);
-                    
-                    product.StockQuantity -= item.Quantity;
-                }
-
-                if (model.Discount > subtotal + model.DeliveryCharge)
-                {
-                    ModelState.AddModelError("", "Discount cannot exceed the order total.");
-                    await transaction.RollbackAsync();
-                    return await RepopulateAndReturn(model, storeId);
-                }
-
-                order.Total = subtotal + model.DeliveryCharge - model.Discount;
-
-                Db.Orders.Add(order);
-                await Db.SaveChangesAsync();
-                await transaction.CommitAsync();
-
                 return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                await transaction.RollbackAsync();
-                ModelState.AddModelError("", "An error occurred while creating the order.");
-            }
+            ModelState.AddModelError("", error);
         }
 
         return await RepopulateAndReturn(model, storeId);

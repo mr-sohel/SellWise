@@ -7,7 +7,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/churn", response_model=ChurnResponse)
-async def calculate_churn(request: ChurnRequest):
+def calculate_churn(request: ChurnRequest):
     try:
         predictions = predict_churn(request.store_id, request.customers)
         return ChurnResponse(
@@ -19,7 +19,7 @@ async def calculate_churn(request: ChurnRequest):
         raise HTTPException(status_code=500, detail="Churn prediction failed. Please try again later.")
 
 @router.post("/churn/train")
-async def train_churn(request: TrainChurnRequest):
+def train_churn(request: TrainChurnRequest):
     try:
         success = train_churn_model(request.store_id, request.customers)
         if not success:

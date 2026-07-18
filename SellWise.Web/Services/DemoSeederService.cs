@@ -137,6 +137,8 @@ public class DemoSeederService
         var productArr = products.ToArray();
         var statuses = new[] { "completed", "completed", "completed", "completed", "pending" };
 
+        _db.ChangeTracker.AutoDetectChangesEnabled = false;
+
         for (int i = 0; i < 11000; i++)
         {
             var daysAgo = rnd.Next(0, 90);
@@ -177,9 +179,16 @@ public class DemoSeederService
 
             customer.TotalOrders++;
             customer.TotalSpent += order.Total;
+
+            if (i % 1000 == 0)
+            {
+                await _db.SaveChangesAsync();
+                _db.ChangeTracker.Clear(); // Clear tracked entities to avoid memory bloat
+            }
         }
 
         await _db.SaveChangesAsync();
+        _db.ChangeTracker.AutoDetectChangesEnabled = true;
 
         // --- Expenses (3 months of expenses) ---
         var expenseCategories = new[] { "Rent", "Salary", "Utilities", "Marketing", "Packaging", "Supplies", "Other" };

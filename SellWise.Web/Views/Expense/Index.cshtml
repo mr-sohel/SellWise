@@ -1,4 +1,4 @@
-@model IEnumerable<SellWise.Web.Models.Expense>
+@model IEnumerable<SellWise.Web.ViewModels.Expense.ExpenseViewModel>
 @{
     ViewData["Title"] = "Expenses";
     var expenseCount = Model.Count();
@@ -7,17 +7,17 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold text-dark mb-0">Expenses</h2>
     <button type="button" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #18181b; border: none;" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add Expense
     </button>
 </div>
 
 <div class="card border-1 shadow-sm p-3 mb-4">
     <div class="btn-group-timeframe" style="background-color: #f1f5f9; border: 1px solid var(--border-color); padding: 0.25rem; border-radius: var(--radius-md);">
-        <button class="btn-timeframe" onclick="filterDays(7);">7 Days</button>
-        <button class="btn-timeframe" onclick="filterDays(15);">15 Days</button>
-        <button class="btn-timeframe" onclick="filterDays(30);">30 Days</button>
-        <button class="btn-timeframe active" onclick="filterDays(0);">All Time</button>
+        <a href="?days=7" class="btn-timeframe @((ViewData["Days"]?.ToString() == "7") ? "active" : "")">7 Days</a>
+        <a href="?days=15" class="btn-timeframe @((ViewData["Days"]?.ToString() == "15") ? "active" : "")">15 Days</a>
+        <a href="?days=30" class="btn-timeframe @((ViewData["Days"]?.ToString() == "30") ? "active" : "")">30 Days</a>
+        <a href="?days=0" class="btn-timeframe @((ViewData["Days"]?.ToString() == "0" || string.IsNullOrEmpty(ViewData["Days"]?.ToString())) ? "active" : "")">All Time</a>
     </div>
 </div>
 
@@ -52,10 +52,30 @@
 </div>
 
 <div class="pagination-wrap">
-    <div>Showing <strong>1</strong> to <strong>@expenseCount</strong> of <strong>@expenseCount</strong> results</div>
+    <div>Showing <strong>@Model.Count()</strong> of <strong>@ViewData["TotalItems"]</strong> results</div>
     <div class="d-flex gap-2">
-        <a href="#" class="pagination-btn">Previous</a>
-        <a href="#" class="pagination-btn">Next</a>
+        @{
+            int currentPage = (int)ViewData["CurrentPage"]!;
+            int totalPages = (int)ViewData["TotalPages"]!;
+            var days = ViewData["Days"]?.ToString();
+        }
+        @if (currentPage > 1)
+        {
+            <a href="?page=@(currentPage - 1)&days=@days" class="pagination-btn">Previous</a>
+        }
+        else
+        {
+            <span class="pagination-btn text-muted" style="cursor: not-allowed; opacity: 0.5;">Previous</span>
+        }
+
+        @if (currentPage < totalPages)
+        {
+            <a href="?page=@(currentPage + 1)&days=@days" class="pagination-btn">Next</a>
+        }
+        else
+        {
+            <span class="pagination-btn text-muted" style="cursor: not-allowed; opacity: 0.5;">Next</span>
+        }
     </div>
 </div>
 
@@ -80,18 +100,22 @@
                             <option value="Supplies">Supplies</option>
                             <option value="Other">Other</option>
                         </select>
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Category" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Amount (৳)</label>
                         <input type="number" name="Amount" class="form-control" placeholder="e.g. 5000" min="1" required />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Amount" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Expense Date</label>
                         <input type="date" name="ExpenseDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="ExpenseDate" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
                         <textarea name="Notes" class="form-control" rows="3" placeholder="Describe the expense details..."></textarea>
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Notes" data-valmsg-replace="true"></span>
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-top p-4 d-flex justify-content-end gap-2">
@@ -104,42 +128,4 @@
 </div>
 
 @section Scripts {
-    <script>
-        function filterDays(days) {
-            // Update active state of filter button
-            var buttons = document.querySelectorAll(".btn-group-timeframe button");
-            buttons.forEach(btn => btn.classList.remove("active"));
-            
-            var event = window.event;
-            if (event && event.target) {
-                event.target.classList.add("active");
-            }
-
-            var table = document.getElementById("expenseTable");
-            var tr = table.getElementsByTagName("tr");
-            
-            if (days === 0) {
-                for (var i = 1; i < tr.length; i++) {
-                    tr[i].style.display = "";
-                }
-                return;
-            }
-
-            var now = new Date();
-            var cutoff = new Date();
-            cutoff.setDate(now.getDate() - days);
-
-            for (var i = 1; i < tr.length; i++) {
-                var dateStr = tr[i].getAttribute("data-date");
-                if (dateStr) {
-                    var rowDate = new Date(dateStr);
-                    if (rowDate >= cutoff) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
-            }
-        }
-    </script>
 }

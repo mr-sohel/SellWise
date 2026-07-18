@@ -9,16 +9,19 @@
     <div class="col-md-6 mb-3">
         <label asp-for="NameBn" class="form-label">Name (Bangla)</label>
         <input asp-for="NameBn" class="form-control" />
+        <span asp-validation-for="NameBn" class="text-danger"></span>
     </div>
 </div>
 <div class="row">
     <div class="col-md-6 mb-3">
         <label asp-for="Sku" class="form-label">SKU / Barcode</label>
         <input asp-for="Sku" class="form-control" />
+        <span asp-validation-for="Sku" class="text-danger"></span>
     </div>
     <div class="col-md-6 mb-3">
         <label asp-for="Category" class="form-label">Category</label>
         <input asp-for="Category" class="form-control" />
+        <span asp-validation-for="Category" class="text-danger"></span>
     </div>
 </div>
 <div class="row">
@@ -42,9 +45,11 @@
     <div class="col-md-4 mb-3">
         <label asp-for="LowStockThreshold" class="form-label">Low Stock Alert At</label>
         <input asp-for="LowStockThreshold" type="number" class="form-control" />
+        <span asp-validation-for="LowStockThreshold" class="text-danger"></span>
     </div>
     <div class="col-md-4 mb-3">
         <label asp-for="Unit" class="form-label">Unit (e.g. pcs, kg)</label>
         <input asp-for="Unit" class="form-control" />
+        <span asp-validation-for="Unit" class="text-danger"></span>
     </div>
 </div>

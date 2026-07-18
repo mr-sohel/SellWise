@@ -30,15 +30,23 @@
     <li class="nav-item">
         <a class="nav-link text-muted px-4 py-2 border-0" asp-controller="Settings" asp-action="Index">
             <span class="d-flex align-items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Profile
+            </span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-muted px-4 py-2 border-0" href="/Settings#security">
+            <span class="d-flex align-items-center gap-2">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Account Security
             </span>
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link active fw-bold px-4 py-2" href="#staff" style="color: #0f172a; background-color: #ffffff; border: 1px solid #e2e8f0; border-bottom: 1px solid #ffffff; border-radius: var(--radius-md) var(--radius-md) 0 0;">
             <span class="d-flex align-items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 Staff Management
             </span>
         </a>
@@ -107,16 +115,19 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Full Name</label>
                     <input type="text" name="FullName" class="form-control px-3 py-2" placeholder="e.g. Rahim Uddin" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                    <span class="text-danger field-validation-valid" data-valmsg-for="FullName" data-valmsg-replace="true"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Email Address</label>
                     <input type="email" name="Email" class="form-control px-3 py-2" placeholder="e.g. rahim@example.com" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                    <span class="text-danger field-validation-valid" data-valmsg-for="Email" data-valmsg-replace="true"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Password</label>
                     <input type="password" name="Password" class="form-control px-3 py-2" placeholder="Min 8 characters" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                    <span class="text-danger field-validation-valid" data-valmsg-for="Password" data-valmsg-replace="true"></span>
                 </div>
 
                 <div class="mb-4">
@@ -125,10 +136,11 @@
                         <option value="employee">Employee</option>
                         <option value="manager">Manager</option>
                     </select>
+                    <span class="text-danger field-validation-valid" data-valmsg-for="Role" data-valmsg-replace="true"></span>
                 </div>
 
                 <button type="submit" class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" style="background-color: #6366f1; color: white; border: none; border-radius: 20px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
                     Send Invite
                 </button>
             </form>

@@ -8,7 +8,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/forecast", response_model=ForecastResponse)
-async def create_forecast(request: ForecastRequest):
+def create_forecast(request: ForecastRequest):
     try:
         # Tier 1 (EWMA) vs Tier 2 (Prophet) logic
         if len(request.history) < 30:
@@ -36,7 +36,7 @@ async def create_forecast(request: ForecastRequest):
         raise HTTPException(status_code=500, detail="Forecast generation failed. Please try again later.")
 
 @router.post("/backtest", response_model=BacktestResponse)
-async def run_backtest(request: ForecastRequest):
+def run_backtest(request: ForecastRequest):
     try:
         metrics = backtest_forecast(
             request.history,
@@ -49,4 +49,4 @@ async def run_backtest(request: ForecastRequest):
         )
     except Exception as e:
         logger.exception("Backtest failed")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Backtest evaluation failed. Please try again later.")

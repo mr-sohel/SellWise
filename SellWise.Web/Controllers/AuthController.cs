@@ -12,15 +12,18 @@ public class AuthController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly AppDbContext _db;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        AppDbContext db)
+        AppDbContext db,
+        ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _db = db;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -112,9 +115,10 @@ public class AuthController : Controller
                 ModelState.AddModelError(string.Empty, error.Description);
             }
         }
-        catch
+        catch (Exception ex)
         {
             await transaction.RollbackAsync();
+            _logger.LogError(ex, "An error occurred during signup.");
             ModelState.AddModelError(string.Empty, "An error occurred during signup.");
         }
 

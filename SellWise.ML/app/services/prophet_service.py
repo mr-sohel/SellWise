@@ -78,7 +78,7 @@ def generate_forecast(
     if sparsity > 0.7:
         # Very sparse: strong regularization
         changepoint_prior = 0.01
-        seasonality_prior = 10.0
+        seasonality_prior = 1.0
     elif sparsity > 0.4:
         # Moderately sparse
         changepoint_prior = 0.03
@@ -86,7 +86,7 @@ def generate_forecast(
     else:
         # Dense data: standard parameters
         changepoint_prior = 0.05
-        seasonality_prior = 3.0
+        seasonality_prior = 10.0
 
     # Initialize Prophet model
     model = Prophet(

@@ -17,6 +17,8 @@ builder.Services.AddSession();
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<SellWise.Web.Services.AnalyticsService>();
 builder.Services.AddScoped<SellWise.Web.Services.DemoSeederService>();
+builder.Services.AddScoped<SellWise.Web.Services.IOrderService, SellWise.Web.Services.OrderService>();
+builder.Services.AddScoped<SellWise.Web.Services.IAlertService, SellWise.Web.Services.AlertService>();
 builder.Services.AddHttpClient<SellWise.Web.Services.ForecastService>();
 
 builder.Services.ConfigureApplicationCookie(options => {

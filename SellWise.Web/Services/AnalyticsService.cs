@@ -35,23 +35,20 @@ public class AnalyticsService
             _ => now.AddDays(-30)
         };
 
-        // Fetch completed orders
         var currentPeriodOrders = await _db.Orders
-            .Where(o => o.StoreId == storeId && o.Status != "cancelled" && o.OrderDate >= startDate)
+            .Where(o => o.StoreId == storeId && o.Status != "completed" && o.OrderDate >= startDate)
             .ToListAsync();
 
         var totalRevenue = currentPeriodOrders.Sum(o => o.Total);
         var orderCount = currentPeriodOrders.Count;
         var avgOrderValue = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-        // Group by day for the main chart
         var revenueTrend = currentPeriodOrders
             .GroupBy(o => o.OrderDate.Date)
             .Select(g => new RevenuePoint { Date = g.Key.ToString("MMM dd"), Revenue = g.Sum(o => o.Total) })
             .OrderBy(r => DateTime.ParseExact(r.Date, "MMM dd", null))
             .ToList();
 
-        // 1. Group by category for Category Sales chart
         var orderItems = await _db.OrderItems
             .Include(oi => oi.Product)
             .Where(oi => oi.Order.StoreId == storeId && oi.Order.Status != "cancelled" && oi.Order.OrderDate >= startDate)
@@ -71,7 +68,6 @@ public class AnalyticsService
             .OrderByDescending(c => c.Revenue)
             .ToList();
 
-        // 2. Fetch Top Performers
         var topPerformers = orderItems
             .GroupBy(oi => oi.ProductName)
             .Select((g, index) => new ProductPerformancePoint {
@@ -86,7 +82,6 @@ public class AnalyticsService
             })
             .ToList();
 
-        // 3. Fetch Needs Attention
         var needsAttentionData = await _db.Products
             .Where(p => p.StoreId == storeId)
             .OrderBy(p => p.StockQuantity)
@@ -109,7 +104,6 @@ public class AnalyticsService
             })
             .ToList();
 
-        // 4. Product Forecasts — call real ML service
         var topProducts = orderItems
             .GroupBy(oi => oi.Product)
             .Where(g => g.Key != null)
@@ -118,14 +112,50 @@ public class AnalyticsService
             .Select(g => g.Key!)
             .ToList();
 
-        var productForecasts = new List<ProductForecastCard>();
-        foreach (var p in topProducts)
+        var topProductIds = topProducts.Select(p => p.Id).ToList();
+
+        var allCached = await _db.Forecasts
+            .Where(f => f.StoreId == storeId && topProductIds.Contains(f.ProductId) && f.CreatedAt > now.AddHours(-24))
+            .ToListAsync();
+
+        var allHistoryData = await _db.OrderItems
+            .Where(oi => oi.ProductId.HasValue && topProductIds.Contains(oi.ProductId.Value)
+                && oi.Order.StoreId == storeId
+                && oi.Order.Status != "cancelled"
+                && oi.Order.OrderDate >= now.AddDays(-90))
+            .Select(oi => new { ProductId = oi.ProductId.Value, oi.Order.OrderDate, oi.Quantity })
+            .ToListAsync();
+
+        var forecastTasks = new List<Task<(ProductForecastCard Card, List<Forecast> NewForecasts)>>();
+
+        foreach (var product in topProducts)
         {
-            var card = await GetProductForecast(storeId, p, now);
-            productForecasts.Add(card);
+            var productCached = allCached.Where(f => f.ProductId == product.Id).OrderBy(f => f.TargetDate).ToList();
+
+            var productHistory = allHistoryData
+                .Where(oi => oi.ProductId == product.Id)
+                .GroupBy(oi => oi.OrderDate.Date)
+                .Select(g => new SalesHistoryPoint
+                {
+                    ds = g.Key,
+                    y = g.Sum(oi => (double)oi.Quantity)
+                })
+                .OrderBy(h => h.ds)
+                .ToList();
+
+            forecastTasks.Add(GetProductForecastAsync(storeId, product, now, productCached, productHistory));
         }
 
-        // 5. Overall demand forecast — aggregate from product forecasts
+        var results = await Task.WhenAll(forecastTasks);
+        var productForecasts = results.Select(r => r.Card).ToList();
+
+        var newForecasts = results.SelectMany(r => r.NewForecasts).ToList();
+        if (newForecasts.Any())
+        {
+            _db.Forecasts.AddRange(newForecasts);
+            await _db.SaveChangesAsync();
+        }
+
         var demandForecast = await GetDemandForecast(storeId, topProducts, now);
 
         return new DashboardViewModel
@@ -144,17 +174,11 @@ public class AnalyticsService
         };
     }
 
-    private async Task<ProductForecastCard> GetProductForecast(Guid storeId, Product product, DateTime now)
+    private async Task<(ProductForecastCard, List<Forecast>)> GetProductForecastAsync(Guid storeId, Product product, DateTime now, List<Forecast> cached, List<SalesHistoryPoint> history)
     {
-        // Check for cached forecast in DB (less than 24 hours old)
-        var cached = await _db.Forecasts
-            .Where(f => f.StoreId == storeId && f.ProductId == product.Id && f.CreatedAt > now.AddHours(-24))
-            .OrderBy(f => f.TargetDate)
-            .ToListAsync();
-
         if (cached.Any())
         {
-            return new ProductForecastCard
+            return (new ProductForecastCard
             {
                 ProductName = product.Name,
                 Category = product.Category ?? "Other",
@@ -162,28 +186,11 @@ public class AnalyticsService
                 PredictedUnits = cached.Sum(f => f.PredictedDemand),
                 Stock = product.StockQuantity,
                 DailyAverage = Math.Round(cached.Average(f => f.PredictedDemand), 1)
-            };
+            }, new List<Forecast>());
         }
 
-        // Gather sales history for this product (last 90 days)
-        var history = await _db.OrderItems
-            .Where(oi => oi.ProductId == product.Id
-                && oi.Order.StoreId == storeId
-                && oi.Order.Status != "cancelled"
-                && oi.Order.OrderDate >= now.AddDays(-90))
-            .GroupBy(oi => oi.Order.OrderDate.Date)
-            .Select(g => new SalesHistoryPoint
-            {
-                ds = g.Key,
-                y = g.Sum(oi => (double)oi.Quantity)
-            })
-            .OrderBy(h => h.ds)
-            .ToListAsync();
-
-        // Pad with zeros for missing days to create continuous history
         var paddedHistory = PadHistoryWithZeros(history, now.AddDays(-90), now);
 
-        // Need at least 7 data points for ML service
         if (paddedHistory.Count >= 7)
         {
             try
@@ -192,7 +199,6 @@ public class AnalyticsService
 
                 if (result?.forecast != null && result.forecast.Any())
                 {
-                    // Store in DB for caching
                     var forecasts = result.forecast.Select(f => new Forecast
                     {
                         StoreId = storeId,
@@ -205,10 +211,7 @@ public class AnalyticsService
                         CreatedAt = now
                     }).ToList();
 
-                    _db.Forecasts.AddRange(forecasts);
-                    await _db.SaveChangesAsync();
-
-                    return new ProductForecastCard
+                    var card = new ProductForecastCard
                     {
                         ProductName = product.Name,
                         Category = product.Category ?? "Other",
@@ -217,6 +220,8 @@ public class AnalyticsService
                         Stock = product.StockQuantity,
                         DailyAverage = Math.Round(result.forecast.Average(f => Math.Max(0, f.yhat)), 1)
                     };
+
+                    return (card, forecasts);
                 }
             }
             catch (Exception ex)
@@ -225,39 +230,35 @@ public class AnalyticsService
             }
         }
 
-        // Fallback: simple moving average
-        return GetFallbackForecast(product, paddedHistory);
+        return (GetFallbackForecast(product, paddedHistory), new List<Forecast>());
     }
 
     private async Task<List<ForecastPoint>> GetDemandForecast(Guid storeId, List<Product> products, DateTime now)
     {
-        // Aggregate forecasts from all top products
         var allForecasts = new List<ForecastPoint>();
 
-        foreach (var product in products)
-        {
-            var cached = await _db.Forecasts
-                .Where(f => f.StoreId == storeId && f.ProductId == product.Id && f.CreatedAt > now.AddHours(-24))
-                .OrderBy(f => f.TargetDate)
-                .ToListAsync();
+        var productIds = products.Select(p => p.Id).ToList();
+        var cached = await _db.Forecasts
+            .Where(f => f.StoreId == storeId && productIds.Contains(f.ProductId) && f.CreatedAt > now.AddHours(-24))
+            .OrderBy(f => f.TargetDate)
+            .ToListAsync();
 
-            if (cached.Any())
+        if (cached.Any())
+        {
+            foreach (var f in cached)
             {
-                foreach (var f in cached)
+                var existing = allForecasts.FirstOrDefault(df => df.Date == f.TargetDate.ToString("MMM dd"));
+                if (existing != null)
                 {
-                    var existing = allForecasts.FirstOrDefault(df => df.Date == f.TargetDate.ToString("MMM dd"));
-                    if (existing != null)
+                    existing.PredictedDemand += f.PredictedDemand;
+                }
+                else
+                {
+                    allForecasts.Add(new ForecastPoint
                     {
-                        existing.PredictedDemand += f.PredictedDemand;
-                    }
-                    else
-                    {
-                        allForecasts.Add(new ForecastPoint
-                        {
-                            Date = f.TargetDate.ToString("MMM dd"),
-                            PredictedDemand = f.PredictedDemand
-                        });
-                    }
+                        Date = f.TargetDate.ToString("MMM dd"),
+                        PredictedDemand = f.PredictedDemand
+                    });
                 }
             }
         }
@@ -267,7 +268,6 @@ public class AnalyticsService
             return allForecasts.OrderBy(f => DateTime.ParseExact(f.Date, "MMM dd", null)).ToList();
         }
 
-        // Fallback: generate placeholder if no forecasts available
         var fallback = new List<ForecastPoint>();
         for (int i = 1; i <= 30; i++)
         {

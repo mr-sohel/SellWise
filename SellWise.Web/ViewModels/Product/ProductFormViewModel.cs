@@ -8,7 +8,7 @@ public class ProductFormViewModel
     public Guid? Id { get; set; }
     
     [Required]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; } = string.Empty;
     
     public string? NameBn { get; set; }
     public string? Sku { get; set; }
@@ -27,5 +27,5 @@ public class ProductFormViewModel
     public int StockQuantity { get; set; }
     
     public int LowStockThreshold { get; set; } = 10;
-    public string Unit { get; set; } = "pcs";
+    public string? Unit { get; set; } = "pcs";
 }

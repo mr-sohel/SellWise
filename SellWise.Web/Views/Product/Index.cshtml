@@ -1,4 +1,4 @@
-@model IEnumerable<SellWise.Web.Models.Product>
+@model IEnumerable<SellWise.Web.ViewModels.Product.ProductViewModel>
 @{
     ViewData["Title"] = "Products";
     var productCount = Model.Count();
@@ -8,21 +8,22 @@
     <h2 class="fw-bold text-dark mb-0">Products</h2>
     <div class="d-flex gap-2">
         <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Bulk Import
         </button>
         <a asp-action="Create" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #18181b; border: none;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Product
         </a>
     </div>
 </div>
 
 <div class="card border-1 shadow-sm p-3 mb-4">
-    <div class="search-widget" style="width: 100%; max-width: 400px;">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="productSearch" placeholder="Search products..." onkeyup="searchProducts();">
-    </div>
+    <form method="get" class="search-widget" style="width: 100%; max-width: 400px;">
+        <svg aria-hidden="true" class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="search" value="@ViewData["Search"]" aria-label="Search" placeholder="Search products...">
+        <button type="submit" class="btn btn-primary d-none">Search</button>
+    </form>
 </div>
 
 <div class="card shadow-sm border-1 mb-3">
@@ -41,8 +42,14 @@
                 @foreach (var p in Model)
                 {
                     var isLowStock = p.StockQuantity <= p.LowStockThreshold;
-                    <tr>
-                        <td class="align-middle fw-bold text-dark">@p.Name</td>
+                    <tr class="@(isLowStock ? "table-danger opacity-75" : "")">
+                        <td class="align-middle fw-bold text-dark">
+                            @p.Name
+                            @if(isLowStock)
+                            {
+                                <span class="badge bg-danger ms-2">Low Stock</span>
+                            }
+                        </td>
                         <td class="align-middle text-muted">@p.Sku</td>
                         <td class="align-middle fw-bold text-dark">৳@p.SellingPrice.ToString("N0")</td>
                         <td class="align-middle">
@@ -52,7 +59,7 @@
                         </td>
                         <td class="align-middle text-end">
                             <div class="dropdown">
-                                <button class="btn btn-link p-0 text-muted dropdown-toggle no-arrow" type="button" data-bs-toggle="dropdown">
+                                <button class="btn btn-link p-0 text-muted dropdown-toggle no-arrow" type="button" aria-label="Options" data-bs-toggle="dropdown">
                                     •••
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end border-1 mt-1">
@@ -77,32 +84,32 @@
 </div>
 
 <div class="pagination-wrap">
-    <div>Showing <strong>1</strong> to <strong>@productCount</strong> of <strong>@productCount</strong> results</div>
+    <div>Showing <strong>@Model.Count()</strong> of <strong>@ViewData["TotalItems"]</strong> results</div>
     <div class="d-flex gap-2">
-        <a href="#" class="pagination-btn">Previous</a>
-        <a href="#" class="pagination-btn">Next</a>
+        @{
+            int currentPage = (int)ViewData["CurrentPage"]!;
+            int totalPages = (int)ViewData["TotalPages"]!;
+            var search = ViewData["Search"]?.ToString();
+        }
+        @if (currentPage > 1)
+        {
+            <a href="?page=@(currentPage - 1)&search=@search" class="pagination-btn">Previous</a>
+        }
+        else
+        {
+            <span class="pagination-btn text-muted" style="cursor: not-allowed; opacity: 0.5;">Previous</span>
+        }
+
+        @if (currentPage < totalPages)
+        {
+            <a href="?page=@(currentPage + 1)&search=@search" class="pagination-btn">Next</a>
+        }
+        else
+        {
+            <span class="pagination-btn text-muted" style="cursor: not-allowed; opacity: 0.5;">Next</span>
+        }
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        function searchProducts() {
-            var input, filter, table, tr, td, i, txtValue;
-            input = document.getElementById("productSearch");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("productTable");
-            tr = table.getElementsByTagName("tr");
-            for (i = 1; i < tr.length; i++) {
-                td = tr[i].getElementsByTagName("td")[0];
-                if (td) {
-                    txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
-            }
-        }
-    </script>
 }

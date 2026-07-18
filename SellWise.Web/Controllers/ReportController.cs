@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Data;
+using SellWise.Web.ViewModels.Report;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,9 +21,12 @@ public class ReportController : BaseController
         var totalOrders = await Db.Orders.Where(o => o.StoreId == storeId).CountAsync();
         var totalRevenue = await Db.Orders.Where(o => o.StoreId == storeId).SumAsync(o => o.Total);
 
-        ViewData["TotalOrders"] = totalOrders;
-        ViewData["TotalRevenue"] = totalRevenue;
+        var vm = new ReportViewModel
+        {
+            TotalOrders = totalOrders,
+            TotalRevenue = totalRevenue
+        };
 
-        return View();
+        return View(vm);
     }
 }

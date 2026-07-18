@@ -16,10 +16,9 @@ cleanup() {
     docker stop sellwise-sql 2>/dev/null || true
     echo "[OK] SQL Server stopped (data preserved)."
     echo "Goodbye!"
-    exit 0
 }
 
-trap cleanup SIGINT
+trap cleanup EXIT
 
 echo "[1/4] Starting SQL Server..."
 
@@ -55,7 +54,7 @@ fi
 echo "[2/4] Starting ML Service..."
 if [ -d "SellWise.ML" ]; then
     cd SellWise.ML
-    uv run uvicorn app.main:app --port 8000 > /dev/null 2>&1 &
+    uv run uvicorn app.main:app --port 8000 --reload > /dev/null 2>&1 &
     ML_PID=$!
     cd ..
     echo "[OK] ML Service on port 8000."
@@ -66,7 +65,7 @@ fi
 echo "[3/4] Checking database..."
 if [ -d "SellWise.Web" ]; then
     cd SellWise.Web
-    dotnet ef database update --no-build > /dev/null 2>&1
+    dotnet ef database update --no-build
     echo "[OK] Database ready."
 else
     echo "[ERROR] SellWise.Web not found!"

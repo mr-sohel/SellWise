@@ -16,6 +16,7 @@
                         <select asp-for="CustomerId" asp-items="Model.AvailableCustomers" class="form-select">
                             <option value="">Walk-in Customer</option>
                         </select>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-md-6">
                         <label asp-for="Source" class="form-label">Order Source</label>
@@ -23,6 +24,7 @@
                             <option value="walk_in">In-Store / Walk-in</option>
                             <option value="online">Online / Delivery</option>
                         </select>
+                        <span asp-validation-for="Source" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -48,10 +50,12 @@
                     <div class="col-md-6">
                         <label asp-for="DeliveryCharge" class="form-label">Delivery Charge (৳)</label>
                         <input asp-for="DeliveryCharge" type="number" class="form-control" value="0" />
+                        <span asp-validation-for="DeliveryCharge" class="text-danger"></span>
                     </div>
                     <div class="col-md-6">
                         <label asp-for="Discount" class="form-label">Discount (৳)</label>
                         <input asp-for="Discount" type="number" class="form-control" value="0" />
+                        <span asp-validation-for="Discount" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -69,14 +73,75 @@
     </div>
     
     <div class="col-md-4">
-        <div class="card shadow-sm border-0 p-4 bg-light">
-            <h5 class="fw-bold text-muted mb-3">Order Summary</h5>
-            <p>Select products and click "Complete Order" to checkout.</p>
-            <p class="small text-muted">Stock will be automatically deducted from inventory.</p>
+        <div class="card shadow-sm border-0 p-4 bg-light position-sticky" style="top: 80px;">
+            <h5 class="fw-bold text-dark mb-4">Order Summary</h5>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Subtotal</span>
+                <span class="fw-bold text-dark" id="summarySubtotal">৳0</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Delivery</span>
+                <span class="fw-bold text-dark" id="summaryDelivery">৳0</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3 text-danger">
+                <span>Discount</span>
+                <span class="fw-bold" id="summaryDiscount">-৳0</span>
+            </div>
+
+            <hr />
+
+            <div class="d-flex justify-content-between mb-2">
+                <span class="fw-bold" style="font-size: 1.1rem;">Total</span>
+                <span class="fw-bold text-primary" style="font-size: 1.25rem;" id="summaryTotal">৳0</span>
+            </div>
+
+            <p class="small text-muted mt-4 mb-0">Stock will be automatically deducted upon completion.</p>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const productSelect = document.querySelector("select[name='Items[0].ProductId']");
+            const quantityInput = document.querySelector("input[name='Items[0].Quantity']");
+            const deliveryInput = document.getElementById("DeliveryCharge");
+            const discountInput = document.getElementById("Discount");
+
+            const summarySubtotal = document.getElementById("summarySubtotal");
+            const summaryDelivery = document.getElementById("summaryDelivery");
+            const summaryDiscount = document.getElementById("summaryDiscount");
+            const summaryTotal = document.getElementById("summaryTotal");
+
+            function calculateSummary() {
+                let subtotal = 0;
+                const qty = parseInt(quantityInput.value) || 0;
+
+                if (productSelect.selectedIndex > 0) {
+                    const optionText = productSelect.options[productSelect.selectedIndex].text;
+                    const priceMatch = optionText.match(/\(৳([\d.]+)\s-/);
+                    if (priceMatch && priceMatch[1]) {
+                        subtotal = parseFloat(priceMatch[1]) * qty;
+                    }
+                }
+
+                const delivery = parseFloat(deliveryInput.value) || 0;
+                const discount = parseFloat(discountInput.value) || 0;
+
+                const total = Math.max(0, subtotal + delivery - discount);
+
+                summarySubtotal.innerText = `৳${subtotal.toLocaleString()}`;
+                summaryDelivery.innerText = `৳${delivery.toLocaleString()}`;
+                summaryDiscount.innerText = `-৳${discount.toLocaleString()}`;
+                summaryTotal.innerText = `৳${total.toLocaleString()}`;
+            }
+
+            productSelect.addEventListener("change", calculateSummary);
+            quantityInput.addEventListener("input", calculateSummary);
+            deliveryInput.addEventListener("input", calculateSummary);
+            discountInput.addEventListener("input", calculateSummary);
+        });
+    </script>
 }

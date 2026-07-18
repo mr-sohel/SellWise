@@ -1,4 +1,4 @@
-@model IEnumerable<SellWise.Web.Models.Customer>
+@model IEnumerable<SellWise.Web.ViewModels.Customer.CustomerViewModel>
 @{
     ViewData["Title"] = "Customers";
     var customerCount = Model.Count();
@@ -6,25 +6,26 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold text-dark mb-0">Customers</h2>
-    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2" onclick="alert('RFM segments recalculated! (Simulation)');">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2" onclick="window.location.reload();">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
         Recalculate RFM
     </button>
 </div>
 
 <div class="card border-1 shadow-sm p-3 mb-4">
-    <div class="d-flex gap-3">
+    <form method="get" class="d-flex gap-3">
         <div class="search-widget" style="width: 100%; max-width: 400px;">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="customerSearch" placeholder="Search by name, phone or email..." onkeyup="searchCustomers();">
+            <svg aria-hidden="true" class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" name="search" value="@ViewData["Search"]" aria-label="Search" placeholder="Search by name, phone or email...">
         </div>
-        <select class="form-select" id="segmentFilter" style="width: 100%; max-width: 200px; background-color: #ffffff; border-color: #cbd5e1;" onchange="filterCustomers();">
+        <select class="form-select" name="segment" style="width: 100%; max-width: 200px; background-color: #ffffff; border-color: #cbd5e1;" onchange="this.form.submit();">
             <option value="">All Segments</option>
-            <option value="CHAMPION">Champion</option>
-            <option value="POTENTIAL">Potential</option>
-            <option value="PROMISING">Promising</option>
+            <option value="CHAMPION" selected="@((ViewData["Segment"]?.ToString() == "CHAMPION") ? "selected" : null)">Champion</option>
+            <option value="POTENTIAL" selected="@((ViewData["Segment"]?.ToString() == "POTENTIAL") ? "selected" : null)">Potential</option>
+            <option value="PROMISING" selected="@((ViewData["Segment"]?.ToString() == "PROMISING") ? "selected" : null)">Promising</option>
         </select>
-    </div>
+        <button type="submit" class="btn btn-primary d-none">Search</button>
+    </form>
 </div>
 
 <div class="card shadow-sm border-1 mb-3">
@@ -43,29 +44,6 @@
             <tbody>
                 @foreach (var c in Model)
                 {
-                    string segment;
-                    string segmentClass;
-                    string rfmText;
-
-                    if (c.TotalSpent >= 10000000)
-                    {
-                        segment = "Champion";
-                        segmentClass = "badge-champion";
-                        rfmText = "R:5 F:5 M:5";
-                    }
-                    else if (c.TotalSpent >= 5000000)
-                    {
-                        segment = "Potential";
-                        segmentClass = "badge-potential";
-                        rfmText = "R:2 F:5 M:5";
-                    }
-                    else
-                    {
-                        segment = "Promising";
-                        segmentClass = "badge-potential";
-                        rfmText = "R:3 F:3 M:3";
-                    }
-
                     <tr>
                         <td class="align-middle fw-bold text-dark">@c.Name</td>
                         <td class="align-middle">
@@ -74,13 +52,13 @@
                         </td>
                         <td class="align-middle">@c.TotalOrders</td>
                         <td class="align-middle">
-                            <span class="badge @segmentClass d-inline-block mb-1">@segment</span>
-                            <div class="text-muted" style="font-size: 0.7rem;">@rfmText</div>
+                            <span class="badge @c.SegmentClass d-inline-block mb-1">@c.Segment</span>
+                            <div class="text-muted" style="font-size: 0.7rem;">@c.RfmText</div>
                         </td>
                         <td class="align-middle fw-bold text-dark">৳@c.TotalSpent.ToString("N0")</td>
                         <td class="align-middle text-end">
                             <div class="dropdown">
-                                <button class="btn btn-link p-0 text-muted dropdown-toggle no-arrow" type="button" data-bs-toggle="dropdown">
+                                <button class="btn btn-link p-0 text-muted dropdown-toggle no-arrow" type="button" aria-label="Options" data-bs-toggle="dropdown">
                                     •••
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end border-1 mt-1">
@@ -101,53 +79,33 @@
 </div>
 
 <div class="pagination-wrap">
-    <div>Showing <strong>1</strong> to <strong>@customerCount</strong> of <strong>@customerCount</strong> results</div>
+    <div>Showing <strong>@Model.Count()</strong> of <strong>@ViewData["TotalItems"]</strong> results</div>
     <div class="d-flex gap-2">
-        <a href="#" class="pagination-btn">Previous</a>
-        <a href="#" class="pagination-btn">Next</a>
+        @{
+            int currentPage = (int)ViewData["CurrentPage"]!;
+            int totalPages = (int)ViewData["TotalPages"]!;
+            var search = ViewData["Search"]?.ToString();
+            var segment = ViewData["Segment"]?.ToString();
+        }
+        @if (currentPage > 1)
+        {
+            <a href="?page=@(currentPage - 1)&search=@search&segment=@segment" class="pagination-btn">Previous</a>
+        }
+        else
+        {
+            <span class="pagination-btn text-muted" style="cursor: not-allowed; opacity: 0.5;">Previous</span>
+        }
+
+        @if (currentPage < totalPages)
+        {
+            <a href="?page=@(currentPage + 1)&search=@search&segment=@segment" class="pagination-btn">Next</a>
+        }
+        else
+        {
+            <span class="pagination-btn text-muted" style="cursor: not-allowed; opacity: 0.5;">Next</span>
+        }
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        function searchCustomers() {
-            var input, filter, table, tr, tdName, tdContact, i, nameVal, contactVal;
-            input = document.getElementById("customerSearch");
-            filter = input.value.toUpperCase();
-            table = document.getElementById("customerTable");
-            tr = table.getElementsByTagName("tr");
-            for (i = 1; i < tr.length; i++) {
-                tdName = tr[i].getElementsByTagName("td")[0];
-                tdContact = tr[i].getElementsByTagName("td")[1];
-                if (tdName || tdContact) {
-                    nameVal = tdName ? (tdName.textContent || tdName.innerText) : "";
-                    contactVal = tdContact ? (tdContact.textContent || tdContact.innerText) : "";
-                    if (nameVal.toUpperCase().indexOf(filter) > -1 || contactVal.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
-            }
-        }
-
-        function filterCustomers() {
-            var select, filter, table, tr, td, i, txtValue;
-            select = document.getElementById("segmentFilter");
-            filter = select.value.toUpperCase();
-            table = document.getElementById("customerTable");
-            tr = table.getElementsByTagName("tr");
-            for (i = 1; i < tr.length; i++) {
-                td = tr[i].getElementsByTagName("td")[3];
-                if (td) {
-                    txtValue = td.getElementsByTagName("span")[0].textContent || td.getElementsByTagName("span")[0].innerText;
-                    if (filter === "" || txtValue.trim().toUpperCase() === filter) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
-            }
-        }
-    </script>
 }

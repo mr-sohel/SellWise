@@ -55,10 +55,8 @@ def predict_churn(store_id: str, customers: List[CustomerDataPoint]) -> List[Chu
                 X_scaled = scaler.transform(X)
                 lr_probs = model.predict_proba(X_scaled)[:, 1]
             except Exception:
-                # Fallback to refitting if loading/predicting fails
-                lr_probs = _fit_lr_model(df, model_path)
-        else:
-            lr_probs = _fit_lr_model(df, model_path)
+                # Ignore if prediction fails
+                pass
 
     # Ensemble: combine heuristic + LR if available
     if lr_probs is not None:
@@ -69,66 +67,16 @@ def predict_churn(store_id: str, customers: List[CustomerDataPoint]) -> List[Chu
     else:
         final_probs = heuristic_probs.values
 
-    results = []
-    for i, row in df.iterrows():
-        results.append(ChurnResultPoint(
-            customer_id=row['customer_id'],
-            churn_probability=float(np.clip(final_probs[i], 0, 1))
-        ))
+    results = [
+        ChurnResultPoint(
+            customer_id=customer_id,
+            churn_probability=float(np.clip(prob, 0.0, 1.0))
+        )
+        for customer_id, prob in zip(df['customer_id'], final_probs)
+    ]
 
     return results
 
-
-def _fit_lr_model(df: pd.DataFrame, model_path: str) -> np.ndarray | None:
-    """
-    Fit a logistic regression model with synthetic labels derived from
-    multiple signals (not just gap_ratio) to reduce tautological bias.
-
-    Returns predicted probabilities or None if fitting fails.
-    """
-    try:
-        # Create pseudo-labels using MULTIPLE features (reduces tautology)
-        # A customer is "churned" if they meet 2+ of these conditions:
-        #   1. gap_ratio > 3.0 (far past their usual cadence)
-        #   2. recency > median recency AND frequency < median frequency
-        #   3. monetary < 25th percentile (low lifetime value)
-        median_recency = df['recency_days'].median()
-        median_frequency = df['frequency_count'].median()
-        q25_monetary = df['monetary_value'].quantile(0.25)
-
-        conditions = (
-            (df['gap_ratio'] > 3.0).astype(int) +
-            ((df['recency_days'] > median_recency) & (df['frequency_count'] < median_frequency)).astype(int) +
-            (df['monetary_value'] < q25_monetary).astype(int)
-        )
-        df['pseudo_target'] = (conditions >= 2).astype(int)
-
-        # Need at least 2 classes to fit LR
-        if df['pseudo_target'].nunique() <= 1:
-            return None
-
-        features = ['recency_days', 'frequency_count', 'monetary_value', 'avg_gap_between_orders']
-        X = df[features].fillna(0)
-        y = df['pseudo_target']
-
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-
-        model = LogisticRegression(class_weight='balanced', max_iter=200)
-        model.fit(X_scaled, y)
-
-        probs = model.predict_proba(X_scaled)[:, 1]
-        
-        # Save model and scaler
-        try:
-            joblib.dump((model, scaler), model_path)
-        except Exception:
-            pass
-
-        return probs
-
-    except Exception:
-        return None
 
 def train_churn_model(store_id: str, customers: List[LabeledCustomerDataPoint]) -> bool:
     """

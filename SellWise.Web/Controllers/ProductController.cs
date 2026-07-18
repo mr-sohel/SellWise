@@ -15,16 +15,43 @@ public class ProductController : BaseController
 {
     public ProductController(AppDbContext db) : base(db) { }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string search, int page = 1)
     {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        var products = await Db.Products
-            .Where(p => p.StoreId == storeId && p.IsActive)
+        var query = Db.Products.Where(p => p.StoreId == storeId && p.IsActive);
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p => p.Name.Contains(search) || p.Sku.Contains(search));
+        }
+
+        int pageSize = 20;
+        int totalItems = await query.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        var products = await query
             .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new ProductViewModel
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Sku = p.Sku,
+                SellingPrice = p.SellingPrice,
+                StockQuantity = p.StockQuantity,
+                LowStockThreshold = p.LowStockThreshold,
+                Unit = p.Unit
+            })
             .ToListAsync();
-            
+
+        ViewData["CurrentPage"] = page;
+        ViewData["TotalPages"] = totalPages;
+        ViewData["Search"] = search;
+        ViewData["TotalItems"] = totalItems;
+
         return View(products);
     }
 
@@ -41,6 +68,7 @@ public class ProductController : BaseController
             return View(model);
 
         var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
         
         var product = new Product
         {
@@ -69,6 +97,7 @@ public class ProductController : BaseController
     public async Task<IActionResult> Edit(Guid id)
     {
         var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
         var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
         
         if (product == null)
@@ -101,6 +130,8 @@ public class ProductController : BaseController
             return View(model);
 
         var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
         var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
         
         if (product == null)
@@ -125,6 +156,7 @@ public class ProductController : BaseController
     public async Task<IActionResult> Delete(Guid id)
     {
         var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
         var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
         
         if (product != null)

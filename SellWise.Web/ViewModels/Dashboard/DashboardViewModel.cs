@@ -22,33 +22,33 @@ public class DashboardViewModel
 
 public class RevenuePoint
 {
-    public string Date { get; set; } = string.Empty;
+    public string? Date { get; set; } = string.Empty;
     public decimal Revenue { get; set; }
 }
 
 public class ForecastPoint
 {
-    public string Date { get; set; } = string.Empty;
+    public string? Date { get; set; } = string.Empty;
     public double PredictedDemand { get; set; }
 }
 
 public class CategorySalesPoint
 {
-    public string Category { get; set; } = string.Empty;
+    public string? Category { get; set; } = string.Empty;
     public decimal Revenue { get; set; }
     public double Percentage { get; set; }
 }
 
 public class ProductPerformancePoint
 {
-    public string ProductName { get; set; } = string.Empty;
+    public string? ProductName { get; set; } = string.Empty;
     public decimal Revenue { get; set; }
     public int Rank { get; set; }
 }
 
 public class ProductAttentionPoint
 {
-    public string ProductName { get; set; } = string.Empty;
+    public string? ProductName { get; set; } = string.Empty;
     public int Stock { get; set; }
     public int Threshold { get; set; }
     public decimal Revenue { get; set; }
@@ -57,8 +57,8 @@ public class ProductAttentionPoint
 
 public class ProductForecastCard
 {
-    public string ProductName { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty;
+    public string? ProductName { get; set; } = string.Empty;
+    public string? Category { get; set; } = string.Empty;
     public List<double> SparklineData { get; set; } = new List<double>();
     public double PredictedUnits { get; set; }
     public int Stock { get; set; }
