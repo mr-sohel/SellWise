@@ -553,6 +553,8 @@ body {
   padding: 0.2rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .btn-timeframe {
@@ -696,6 +698,19 @@ body {
   margin-top: 1.25rem;
   font-size: 0.85rem;
   color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+@media (max-width: 575.98px) {
+  .pagination-wrap {
+    flex-direction: column;
+    text-align: center;
+  }
+  .pagination-wrap .d-flex {
+    justify-content: center;
+    width: 100%;
+  }
 }
 
 .pagination-btn {
@@ -784,6 +799,13 @@ body {
 
 .animate-fade-in {
   animation: fadeIn 0.25s ease-out;
+}
+
+/* ==================== SCROLLABLE TABS ==================== */
+.nav-tabs.scroll-shadow {
+  position: relative;
+  mask-image: linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 12px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 12px), transparent 100%);
 }
 
 /* ==================== RESPONSIVE ==================== */

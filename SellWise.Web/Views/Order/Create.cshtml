@@ -33,12 +33,12 @@
                     <div id="product-list">
                         <!-- Single product dropdown for simplicity in MVC without React -->
                         <div class="row mb-2">
-                            <div class="col-md-8">
+                            <div class="col-8">
                                 <select name="Items[0].ProductId" asp-items="Model.AvailableProducts" class="form-select">
                                     <option value="">-- Select a Product --</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-4">
                                 <input name="Items[0].Quantity" type="number" class="form-control" value="1" min="1" placeholder="Qty" />
                             </div>
                         </div>
