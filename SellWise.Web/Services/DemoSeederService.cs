@@ -131,7 +131,7 @@ public class DemoSeederService
         _db.Products.AddRange(products);
         await _db.SaveChangesAsync();
 
-        // --- Orders (~11000 orders over 90 days) ---
+        // --- Orders (~11000 orders over 90 days with Realistic Trend & Seasonality) ---
         var orderNum = 17000;
         var customerArr = customers.ToArray();
         var productArr = products.ToArray();
@@ -139,51 +139,85 @@ public class DemoSeederService
 
         _db.ChangeTracker.AutoDetectChangesEnabled = false;
 
-        for (int i = 0; i < 11000; i++)
+        int orderCount = 0;
+        for (int d = 90; d >= 0; d--)
         {
-            var daysAgo = rnd.Next(0, 90);
-            var date = DateTime.UtcNow.AddDays(-daysAgo).AddHours(rnd.Next(8, 22)).AddMinutes(rnd.Next(0, 60));
-            var product = productArr[rnd.Next(productArr.Length)];
-            var qty = rnd.Next(1, 4);
-            var customer = customerArr[rnd.Next(customerArr.Length)];
-            var status = statuses[rnd.Next(statuses.Length)];
-            var isDelivery = rnd.Next(5) == 0;
+            var currentDate = DateTime.UtcNow.AddDays(-d);
+            // Bangladesh weekend is typically Friday & Saturday
+            bool isWeekend = currentDate.DayOfWeek == DayOfWeek.Friday || currentDate.DayOfWeek == DayOfWeek.Saturday;
 
-            var order = new Order
+            // 1. General Upward Trend: Starts around 60 orders/day, grows to ~140/day
+            double trendMultiplier = (90 - d) / 90.0; // 0.0 to 1.0
+            double baseOrders = 60 + (80 * trendMultiplier);
+
+            // 2. Weekly Seasonality: Weekends have 50% more sales
+            if (isWeekend) baseOrders *= 1.5;
+
+            // 3. Random Daily Noise (+/- 20%)
+            int dailyOrders = (int)(baseOrders * (0.8 + (rnd.NextDouble() * 0.4)));
+
+            for (int i = 0; i < dailyOrders; i++)
             {
-                StoreId = storeId,
-                CustomerId = customer.Id,
-                OrderNumber = $"SW-V{orderNum + i}",
-                Status = status,
-                Source = isDelivery ? "online" : "walk_in",
-                Total = product.SellingPrice * qty,
-                DeliveryCharge = isDelivery ? 60 : 0,
-                Discount = 0,
-                Notes = null,
-                OrderDate = date,
-                CreatedAt = date,
-                UpdatedAt = date
-            };
+                var date = currentDate.Date.AddHours(rnd.Next(8, 22)).AddMinutes(rnd.Next(0, 60));
 
-            order.Items.Add(new OrderItem
-            {
-                ProductId = product.Id,
-                ProductName = product.Name,
-                UnitPrice = product.SellingPrice,
-                CostPrice = product.CostPrice,
-                Quantity = qty,
-                CreatedAt = date
-            });
+                // 4. Product Selection with Lifecycle Trends
+                Product product = productArr[rnd.Next(productArr.Length)];
 
-            _db.Orders.Add(order);
+                // Re-roll to create product lifecycles
+                if (product.Name.Contains("15") || product.Name.Contains("S24"))
+                {
+                    // Newer phones: sell more recently
+                    if (rnd.NextDouble() > trendMultiplier) product = productArr[rnd.Next(productArr.Length)];
+                }
+                else if (product.Name.Contains("14") || product.Name.Contains("12th") || product.Name.Contains("3"))
+                {
+                    // Older models: sold more in the past
+                    if (rnd.NextDouble() < trendMultiplier) product = productArr[rnd.Next(productArr.Length)];
+                }
 
-            customer.TotalOrders++;
-            customer.TotalSpent += order.Total;
+                var qty = rnd.Next(1, 4);
+                var customer = customerArr[rnd.Next(customerArr.Length)];
+                var status = statuses[rnd.Next(statuses.Length)];
+                var isDelivery = rnd.Next(5) == 0;
 
-            if (i % 1000 == 0)
-            {
-                await _db.SaveChangesAsync();
-                _db.ChangeTracker.Clear(); // Clear tracked entities to avoid memory bloat
+                var order = new Order
+                {
+                    StoreId = storeId,
+                    CustomerId = customer.Id,
+                    OrderNumber = $"SW-V{orderNum + orderCount}",
+                    Status = status,
+                    Source = isDelivery ? "online" : "walk_in",
+                    Total = product.SellingPrice * qty,
+                    DeliveryCharge = isDelivery ? 60 : 0,
+                    Discount = 0,
+                    Notes = null,
+                    OrderDate = date,
+                    CreatedAt = date,
+                    UpdatedAt = date
+                };
+
+                order.Items.Add(new OrderItem
+                {
+                    ProductId = product.Id,
+                    ProductName = product.Name,
+                    UnitPrice = product.SellingPrice,
+                    CostPrice = product.CostPrice,
+                    Quantity = qty,
+                    CreatedAt = date
+                });
+
+                _db.Orders.Add(order);
+
+                customer.TotalOrders++;
+                customer.TotalSpent += order.Total;
+
+                orderCount++;
+
+                if (orderCount % 1000 == 0)
+                {
+                    await _db.SaveChangesAsync();
+                    _db.ChangeTracker.Clear();
+                }
             }
         }
 

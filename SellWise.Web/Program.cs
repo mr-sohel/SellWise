@@ -33,21 +33,42 @@ if (args.Contains("--seed"))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
     var seeder = scope.ServiceProvider.GetRequiredService<SellWise.Web.Services.DemoSeederService>();
-    
+
     // Grab the first available store to seed (or create one if none exist)
     var store = db.Stores.FirstOrDefault();
     if (store == null)
     {
         store = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "Demo Store", CreatedAt = DateTime.UtcNow };
         db.Stores.Add(store);
-        db.SaveChanges();
+        await db.SaveChangesAsync();
+
+        // Create a default admin user for this store so you can actually log in and see it!
+        var adminEmail = "admin@sellwise.com";
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        if (adminUser == null)
+        {
+            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, PreferredLang = "en" };
+            var result = await userManager.CreateAsync(adminUser, "Admin123!");
+            if (result.Succeeded)
+            {
+                db.StoreMembers.Add(new StoreMember
+                {
+                    StoreId = store.Id,
+                    UserId = adminUser.Id,
+                    Role = "owner"
+                });
+                await db.SaveChangesAsync();
+                Console.WriteLine($"[INFO] Created default admin user: {adminEmail} (Password: Admin123!)");
+            }
+        }
     }
-    
+
     Console.WriteLine($"[INFO] Seeding data for Store: {store.Name} ({store.Id})...");
-    seeder.SeedStoreAsync(store.Id).Wait();
+    await seeder.SeedStoreAsync(store.Id);
     Console.WriteLine("[SUCCESS] Data seeded successfully!");
-    
+
     // Exit application after seeding
     return;
 }

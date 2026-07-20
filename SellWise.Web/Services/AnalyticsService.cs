@@ -45,8 +45,8 @@ public class AnalyticsService
 
         var revenueTrend = currentPeriodOrders
             .GroupBy(o => o.OrderDate.Date)
+            .OrderBy(g => g.Key)
             .Select(g => new RevenuePoint { Date = g.Key.ToString("MMM dd"), Revenue = g.Sum(o => o.Total) })
-            .OrderBy(r => DateTime.ParseExact(r.Date, "MMM dd", null))
             .ToList();
 
         var orderItems = await _db.OrderItems
@@ -107,8 +107,8 @@ public class AnalyticsService
         var topProducts = orderItems
             .GroupBy(oi => oi.Product)
             .Where(g => g.Key != null)
-            .OrderByDescending(g => g.Sum(oi => oi.Quantity * oi.UnitPrice))
-            .Take(5)
+            .OrderByDescending(g => g.Sum(oi => oi.Quantity))
+            .Take(6)
             .Select(g => g.Key!)
             .ToList();
 
@@ -147,7 +147,9 @@ public class AnalyticsService
         }
 
         var results = await Task.WhenAll(forecastTasks);
-        var productForecasts = results.Select(r => r.Card).ToList();
+        var productForecasts = results.Select(r => r.Card)
+                                      .OrderByDescending(c => c.PredictedUnits)
+                                      .ToList();
 
         var newForecasts = results.SelectMany(r => r.NewForecasts).ToList();
         if (newForecasts.Any())
@@ -245,27 +247,21 @@ public class AnalyticsService
 
         if (cached.Any())
         {
-            foreach (var f in cached)
-            {
-                var existing = allForecasts.FirstOrDefault(df => df.Date == f.TargetDate.ToString("MMM dd"));
-                if (existing != null)
+            var grouped = cached
+                .GroupBy(f => f.TargetDate.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new ForecastPoint
                 {
-                    existing.PredictedDemand += f.PredictedDemand;
-                }
-                else
-                {
-                    allForecasts.Add(new ForecastPoint
-                    {
-                        Date = f.TargetDate.ToString("MMM dd"),
-                        PredictedDemand = f.PredictedDemand
-                    });
-                }
-            }
+                    Date = g.Key.ToString("MMM dd"),
+                    PredictedDemand = g.Sum(f => f.PredictedDemand)
+                });
+
+            allForecasts.AddRange(grouped);
         }
 
         if (allForecasts.Any())
         {
-            return allForecasts.OrderBy(f => DateTime.ParseExact(f.Date, "MMM dd", null)).ToList();
+            return allForecasts;
         }
 
         var fallback = new List<ForecastPoint>();

@@ -42,7 +42,7 @@ Razor `.cshtml` files that render the HTML. We use ViewModels (e.g., `OrderFormV
 Business logic lives here:
 - `AnalyticsService.cs` — Dashboard KPIs, revenue trends, product analytics, calls ForecastService for real ML predictions
 - `ForecastService.cs` — Calls Python ML service via `HttpClient`, caches results in `Forecasts` table
-- `DemoSeederService.cs` — Seeds demo data (53 products, 200 customers, ~11K orders)
+- `DemoSeederService.cs` — Seeds realistic demo data with trends and weekly seasonality (53 products, 200 customers, ~11K orders)
 
 ---
 
@@ -65,7 +65,8 @@ Creating an order involves modifying multiple tables (Orders, OrderItems, Produc
 
 ### Demo Data Seeding
 - **Auto-seed:** On first Dashboard visit, `DemoSeederService.SeedStoreAsync()` runs automatically if no products exist for the store.
-- **Manual seed:** Run `dotnet run --seed` from `SellWise.Web/` (exits after seeding, doesn't start the web server).
+- **Manual seed (Reset DB):** Run `./reset-db.sh` or `.\reset-db.ps1` to drop the DB, run migrations, and inject realistic, trend-heavy mock data.
+- **Default Admin Account:** A fresh DB seed automatically generates an admin user (`admin@sellwise.com` / `Admin123!`) so you can explore the populated dashboard instantly.
 
 ---
 
@@ -74,7 +75,7 @@ Creating an order involves modifying multiple tables (Orders, OrderItems, Produc
 The Python service runs independently on port 8000. It provides an endpoint `/api/v1/ml/forecast` that our C# `ForecastService.cs` calls to predict future sales.
 
 ### How It Works
-1. When the Dashboard loads, `AnalyticsService` identifies the top 5 products by revenue.
+1. When the Dashboard loads, `AnalyticsService` identifies the top 6 products by historical volume (units sold).
 2. For each product, it gathers 90 days of sales history from `OrderItems`.
 3. Missing days are padded with zeros to create continuous daily data.
 4. `ForecastService` sends the history to the Python ML service.
@@ -82,7 +83,7 @@ The Python service runs independently on port 8000. It provides an endpoint `/ap
    - **Prophet** (≥30 days history): Meta's Prophet model with weekly/yearly seasonality and Bangladesh holidays
    - **EWMA** (<30 days history): Exponential Weighted Moving Average for sparse data
 6. The prediction (30-day demand forecast) is returned and stored in the `Forecasts` table for caching.
-7. The Dashboard renders real demand curves, revenue growth, and health scores.
+7. The Dashboard strictly ranks these resulting cards by **highest predicted demand** (so #1 mathematically forecasts the most units), and renders the curves.
 
 ### Caching
 Forecasts are cached in the `Forecasts` table for 24 hours. If the ML service is unavailable, the system falls back to a simple moving average.
