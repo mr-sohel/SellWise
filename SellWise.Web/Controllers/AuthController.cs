@@ -27,11 +27,36 @@ public class AuthController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login()
+    public async Task<IActionResult> Login()
     {
         if (User.Identity?.IsAuthenticated == true)
+        {
+            var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
+            if (string.IsNullOrEmpty(storeIdStr))
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
+                    if (member != null)
+                    {
+                        HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+                    }
+                    else
+                    {
+                        await _signInManager.SignOutAsync();
+                        return View();
+                    }
+                }
+                else
+                {
+                    await _signInManager.SignOutAsync();
+                    return View();
+                }
+            }
             return RedirectToAction("Index", "Dashboard");
-            
+        }
+
         return View();
     }
 
@@ -62,11 +87,36 @@ public class AuthController : Controller
     }
 
     [HttpGet]
-    public IActionResult Signup()
+    public async Task<IActionResult> Signup()
     {
         if (User.Identity?.IsAuthenticated == true)
+        {
+            var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
+            if (string.IsNullOrEmpty(storeIdStr))
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
+                    if (member != null)
+                    {
+                        HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+                    }
+                    else
+                    {
+                        await _signInManager.SignOutAsync();
+                        return View();
+                    }
+                }
+                else
+                {
+                    await _signInManager.SignOutAsync();
+                    return View();
+                }
+            }
             return RedirectToAction("Index", "Dashboard");
-            
+        }
+
         return View();
     }
 
