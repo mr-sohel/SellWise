@@ -62,8 +62,8 @@
                                     •••
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end border-1 mt-1">
-                                    <li><a href="#" class="dropdown-item">View History</a></li>
-                                    <li><a href="#" class="dropdown-item">Edit Info</a></li>
+                                    <li><a asp-action="Details" asp-route-id="@c.Id" class="dropdown-item">View History</a></li>
+                                    <li><a asp-action="Edit" asp-route-id="@c.Id" class="dropdown-item">Edit Info</a></li>
                                 </ul>
                             </div>
                         </td>

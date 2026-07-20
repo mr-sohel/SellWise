@@ -1,0 +1,75 @@
+@model SellWise.Web.Models.Customer
+@{
+    ViewData["Title"] = "Customer Details";
+}
+
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a asp-action="Index" class="btn btn-outline-secondary d-flex align-items-center justify-content-center p-2" style="width: 40px; height: 40px; border-radius: 50%;">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </a>
+    <h2 class="fw-bold text-dark mb-0">Customer History</h2>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-md-4">
+        <div class="card p-4 border-1 shadow-sm h-100">
+            <h5 class="fw-bold mb-3">Customer Info</h5>
+            <p class="mb-1 text-muted small">Name</p>
+            <p class="fw-bold mb-3">@Model.Name</p>
+
+            <p class="mb-1 text-muted small">Email</p>
+            <p class="fw-bold mb-3">@Model.Email</p>
+
+            <p class="mb-1 text-muted small">Phone</p>
+            <p class="fw-bold mb-3">@Model.Phone</p>
+
+            <p class="mb-1 text-muted small">Total Orders</p>
+            <p class="fw-bold mb-3">@Model.TotalOrders</p>
+
+            <p class="mb-1 text-muted small">Total Spent</p>
+            <p class="fw-bold mb-0">৳@Model.TotalSpent.ToString("N0")</p>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-8">
+        <div class="card p-4 border-1 shadow-sm h-100">
+            <h5 class="fw-bold mb-3">Order History</h5>
+            @if (Model.Orders != null && Model.Orders.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.Orders.OrderByDescending(o => o.OrderDate))
+                            {
+                                <tr>
+                                    <td><a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id">@order.OrderNumber</a></td>
+                                    <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <span class="badge" style="background-color: @(order.Status == "completed" ? "#10b981" : order.Status == "cancelled" ? "#ef4444" : "#f59e0b");">
+                                            @order.Status.ToUpper()
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold">৳@order.Total.ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    No orders found for this customer.
+                </div>
+            }
+        </div>
+    </div>
+</div>

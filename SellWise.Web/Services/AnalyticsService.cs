@@ -156,7 +156,24 @@ public class AnalyticsService
             await _db.SaveChangesAsync();
         }
 
-        var demandForecast = await GetDemandForecast(storeId, topProducts, now);
+        var demandForecast = new List<ForecastPoint>();
+        for (int i = 0; i < 30; i++)
+        {
+            var forecastDate = now.AddDays(i + 1);
+            double totalDemand = 0;
+            foreach (var card in productForecasts)
+            {
+                if (card.SparklineData.Count > i)
+                {
+                    totalDemand += card.SparklineData[i];
+                }
+            }
+            demandForecast.Add(new ForecastPoint
+            {
+                Date = forecastDate.ToString("MMM dd"),
+                PredictedDemand = totalDemand
+            });
+        }
 
         return new DashboardViewModel
         {
@@ -233,55 +250,7 @@ public class AnalyticsService
         return (GetFallbackForecast(product, paddedHistory), new List<Forecast>());
     }
 
-    private async Task<List<ForecastPoint>> GetDemandForecast(Guid storeId, List<Product> products, DateTime now)
-    {
-        var allForecasts = new List<ForecastPoint>();
-
-        var productIds = products.Select(p => p.Id).ToList();
-        var cached = await _db.Forecasts
-            .Where(f => f.StoreId == storeId && productIds.Contains(f.ProductId) && f.CreatedAt > now.AddHours(-24))
-            .OrderBy(f => f.TargetDate)
-            .ToListAsync();
-
-        if (cached.Any())
-        {
-            foreach (var f in cached)
-            {
-                var existing = allForecasts.FirstOrDefault(df => df.Date == f.TargetDate.ToString("MMM dd"));
-                if (existing != null)
-                {
-                    existing.PredictedDemand += f.PredictedDemand;
-                }
-                else
-                {
-                    allForecasts.Add(new ForecastPoint
-                    {
-                        Date = f.TargetDate.ToString("MMM dd"),
-                        PredictedDemand = f.PredictedDemand
-                    });
-                }
-            }
-        }
-
-        if (allForecasts.Any())
-        {
-            return allForecasts.OrderBy(f => DateTime.ParseExact(f.Date, "MMM dd", null)).ToList();
-        }
-
-        var fallback = new List<ForecastPoint>();
-        for (int i = 1; i <= 30; i++)
-        {
-            var forecastDate = now.AddDays(i);
-            double baseVal = 100 + (i * 2);
-            double noise = Math.Sin(i) * 15;
-            fallback.Add(new ForecastPoint
-            {
-                Date = forecastDate.ToString("MMM dd"),
-                PredictedDemand = Math.Max(0, baseVal + noise)
-            });
-        }
-        return fallback;
-    }
+    // GetDemandForecast removed as we now calculate it directly from productForecasts
 
     private async Task<decimal> CalculateRevenueGrowth(List<Order> currentOrders, DateTime startDate, DateTime now)
     {
@@ -339,11 +308,11 @@ public class AnalyticsService
 
     private List<SalesHistoryPoint> PadHistoryWithZeros(List<SalesHistoryPoint> history, DateTime start, DateTime end)
     {
-        var dict = history.ToDictionary(h => h.ds, h => h.y);
+        var dict = history.ToDictionary(h => h.ds.Date, h => h.y);
         var padded = new List<SalesHistoryPoint>();
-        var current = start;
+        var current = start.Date;
 
-        while (current <= end)
+        while (current <= end.Date)
         {
             padded.Add(new SalesHistoryPoint
             {

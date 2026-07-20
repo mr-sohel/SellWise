@@ -41,20 +41,20 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, true, false);
-
-        if (result.Succeeded)
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user != null)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null)
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, true, false);
+
+            if (result.Succeeded)
             {
                 var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
                 if (member != null)
                 {
                     HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
                 }
+                return RedirectToAction("Index", "Dashboard");
             }
-            return RedirectToAction("Index", "Dashboard");
         }
 
         ModelState.AddModelError(string.Empty, "Invalid login attempt.");

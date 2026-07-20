@@ -64,4 +64,53 @@ public class CustomerController : BaseController
 
         return View(customers);
     }
+
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var customer = await Db.Customers
+            .Include(c => c.Orders)
+            .FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
+
+        if (customer == null) return NotFound();
+
+        return View(customer);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
+        if (customer == null) return NotFound();
+
+        return View(customer);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(Guid id, Customer customer)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        if (id != customer.Id) return BadRequest();
+
+        if (ModelState.IsValid)
+        {
+            var existing = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
+            if (existing == null) return NotFound();
+
+            existing.Name = customer.Name;
+            existing.Email = customer.Email;
+            existing.Phone = customer.Phone;
+
+            await Db.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+        return View(customer);
+    }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SellWise.Web.Models;
 
@@ -18,4 +19,6 @@ public class Customer
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<Order> Orders { get; set; } = new List<Order>();
 }

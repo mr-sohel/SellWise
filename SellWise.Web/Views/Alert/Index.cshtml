@@ -58,9 +58,11 @@
                         Dismiss
                     </button>
                 </form>
-                <a asp-controller="Product" asp-action="Edit" asp-route-id="@alert.ProductId" class="text-decoration-none text-uppercase fw-bold" style="color: #2563eb; font-size: 0.75rem;">
-                    Restock Now
-                </a>
+                <form asp-action="RestockNow" asp-route-id="@alert.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-link p-0 text-decoration-none text-uppercase fw-bold" style="color: #2563eb; font-size: 0.75rem;">
+                        Restock Now
+                    </button>
+                </form>
             </div>
         </div>
     }

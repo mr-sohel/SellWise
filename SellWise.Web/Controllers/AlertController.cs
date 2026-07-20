@@ -83,4 +83,21 @@ public class AlertController : BaseController
         }
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    public async Task<IActionResult> RestockNow(System.Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var alert = await Db.Alerts.FirstOrDefaultAsync(a => a.Id == id && a.StoreId == storeId);
+        if (alert != null)
+        {
+            var productId = alert.ProductId;
+            Db.Alerts.Remove(alert);
+            await Db.SaveChangesAsync();
+            return RedirectToAction("Edit", "Product", new { id = productId });
+        }
+        return RedirectToAction(nameof(Index));
+    }
 }

@@ -20,9 +20,10 @@
         </div>
         <select class="form-select" name="status" style="width: 100%; max-width: 200px; background-color: #ffffff; border-color: #cbd5e1;" onchange="this.form.submit();">
             <option value="">All Statuses</option>
-            <option value="COMPLETED" selected="@((ViewData["Status"]?.ToString() == "COMPLETED") ? "selected" : null)">Completed</option>
             <option value="PENDING" selected="@((ViewData["Status"]?.ToString() == "PENDING") ? "selected" : null)">Pending</option>
+            <option value="CONFIRMED" selected="@((ViewData["Status"]?.ToString() == "CONFIRMED") ? "selected" : null)">Confirmed</option>
             <option value="DELIVERED" selected="@((ViewData["Status"]?.ToString() == "DELIVERED") ? "selected" : null)">Delivered</option>
+            <option value="CANCELLED" selected="@((ViewData["Status"]?.ToString() == "CANCELLED") ? "selected" : null)">Cancelled</option>
         </select>
         <button type="submit" class="btn btn-primary d-none">Search</button>
     </form>

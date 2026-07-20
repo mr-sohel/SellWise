@@ -149,6 +149,12 @@ public class OrderController : BaseController
 
         if (status.ToLower() == "cancelled" && order.Status.ToLower() != "cancelled")
         {
+            if (order.Status.ToLower() != "pending")
+            {
+                TempData["Error"] = "Only pending orders can be cancelled.";
+                return RedirectToAction(nameof(Index));
+            }
+
             foreach (var item in order.Items)
             {
                 var product = await Db.Products.FindAsync(item.ProductId);
