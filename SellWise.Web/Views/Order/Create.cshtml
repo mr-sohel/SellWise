@@ -14,8 +14,9 @@
                     <div class="col-md-6">
                         <label asp-for="CustomerId" class="form-label">Customer</label>
                         <select asp-for="CustomerId" asp-items="Model.AvailableCustomers" class="form-select">
-                            <option value="">Walk-in Customer</option>
+                            <option value="">Walk-in Customer (Or enter name below)</option>
                         </select>
+                        <input asp-for="CustomerName" class="form-control mt-2" placeholder="Manual Customer Name" />
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-md-6">

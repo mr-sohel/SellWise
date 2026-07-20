@@ -8,6 +8,7 @@ namespace SellWise.Web.ViewModels.Order;
 public class OrderFormViewModel
 {
     public Guid? CustomerId { get; set; }
+    public string? CustomerName { get; set; }
     
     [Required]
     public string? Source { get; set; } = "walk_in";

@@ -118,4 +118,61 @@ public class OrderController : BaseController
         model.AvailableCustomers = customers.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name });
         return View(model);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
+        var order = await Db.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
+            
+        if (order == null) return NotFound();
+        
+        return View(order);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateStatus(Guid id, string status)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var order = await Db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
+
+        if (order == null) return NotFound();
+
+        if (status.ToLower() == "cancelled" && order.Status.ToLower() != "cancelled")
+        {
+            foreach (var item in order.Items)
+            {
+                var product = await Db.Products.FindAsync(item.ProductId);
+                if (product != null)
+                {
+                    product.StockQuantity += item.Quantity;
+                }
+            }
+        }
+        else if (order.Status.ToLower() == "cancelled" && status.ToLower() != "cancelled")
+        {
+             foreach (var item in order.Items)
+             {
+                 var product = await Db.Products.FindAsync(item.ProductId);
+                 if (product != null)
+                 {
+                     product.StockQuantity -= item.Quantity;
+                 }
+             }
+        }
+
+        order.Status = status.ToLower();
+        await Db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
 }

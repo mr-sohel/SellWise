@@ -1,3 +1,5 @@
+using System.IO;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -165,6 +167,57 @@ public class ProductController : BaseController
             await Db.SaveChangesAsync();
         }
         
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Import(IFormFile file)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        if (file == null || file.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Please select a valid CSV file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        try
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            var headerLine = await reader.ReadLineAsync(); // skip header
+            
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                
+                var values = line.Split(',');
+                if (values.Length >= 6)
+                {
+                    var product = new Product
+                    {
+                        StoreId = storeId,
+                        Name = values[0].Trim(),
+                        Sku = values[1].Trim(),
+                        Category = values[2].Trim(),
+                        CostPrice = decimal.TryParse(values[3].Trim(), out var cost) ? cost : 0,
+                        SellingPrice = decimal.TryParse(values[4].Trim(), out var price) ? price : 0,
+                        StockQuantity = int.TryParse(values[5].Trim(), out var stock) ? stock : 0,
+                        Unit = "pcs",
+                        IsActive = true
+                    };
+                    Db.Products.Add(product);
+                }
+            }
+            await Db.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Products imported successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error importing products: " + ex.Message;
+        }
+
         return RedirectToAction(nameof(Index));
     }
 }

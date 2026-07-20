@@ -7,7 +7,7 @@
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
     <h2 class="fw-bold text-dark mb-0">Products</h2>
     <div class="d-flex gap-2">
-        <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#importModal">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Bulk Import
         </button>
@@ -17,6 +17,21 @@
         </a>
     </div>
 </div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="card border-1 shadow-sm p-3 mb-4">
     <form method="get" class="search-widget" style="width: 100%; max-width: 400px;">
@@ -109,6 +124,30 @@
             <span class="pagination-btn text-muted" style="cursor: not-allowed; opacity: 0.5;">Next</span>
         }
     </div>
+</div>
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+        <form asp-action="Import" method="post" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title" id="importModalLabel">Import Products (CSV)</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label for="file" class="form-label">Upload CSV File</label>
+                <input class="form-control" type="file" id="file" name="file" accept=".csv" required>
+            </div>
+            <p class="small text-muted">CSV Format should be: <strong>Name, Sku, Category, CostPrice, SellingPrice, StockQuantity</strong></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Import</button>
+          </div>
+        </form>
+    </div>
+  </div>
 </div>
 
 @section Scripts {

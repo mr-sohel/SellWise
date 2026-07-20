@@ -25,6 +25,14 @@ public class OrderService : IOrderService
         using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
+            if (model.CustomerId == null && !string.IsNullOrWhiteSpace(model.CustomerName))
+            {
+                var customer = new Customer { StoreId = storeId, Name = model.CustomerName };
+                _db.Customers.Add(customer);
+                await _db.SaveChangesAsync();
+                model.CustomerId = customer.Id;
+            }
+
             var order = new Order
             {
                 StoreId = storeId,
@@ -33,7 +41,7 @@ public class OrderService : IOrderService
                 DeliveryCharge = model.DeliveryCharge,
                 Discount = model.Discount,
                 Notes = model.Notes,
-                Status = "completed",
+                Status = "pending",
                 OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}"
             };
 

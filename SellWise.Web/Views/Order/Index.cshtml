@@ -66,9 +66,30 @@
                                     •••
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end border-1 mt-1">
-                                    <li><a href="#" class="dropdown-item">View Details</a></li>
+                                    <li><a asp-action="Details" asp-route-id="@o.Id" class="dropdown-item">View Details</a></li>
+                                    @if(o.Status.ToLower() == "pending") {
+                                        <li>
+                                            <form asp-action="UpdateStatus" asp-route-id="@o.Id" method="post" class="m-0 p-0">
+                                                <input type="hidden" name="status" value="confirmed" />
+                                                <button type="submit" class="dropdown-item">Mark as Confirmed</button>
+                                            </form>
+                                        </li>
+                                    }
+                                    @if(o.Status.ToLower() == "confirmed") {
+                                        <li>
+                                            <form asp-action="UpdateStatus" asp-route-id="@o.Id" method="post" class="m-0 p-0">
+                                                <input type="hidden" name="status" value="delivered" />
+                                                <button type="submit" class="dropdown-item">Mark as Delivered</button>
+                                            </form>
+                                        </li>
+                                    }
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a href="#" class="dropdown-item text-danger">Cancel Order</a></li>
+                                    <li>
+                                        <form asp-action="UpdateStatus" asp-route-id="@o.Id" method="post" class="m-0 p-0" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                                            <input type="hidden" name="status" value="cancelled" />
+                                            <button type="submit" class="dropdown-item text-danger">Cancel Order</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
                         </td>
