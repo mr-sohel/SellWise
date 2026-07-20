@@ -339,11 +339,12 @@ public class AnalyticsService
 
     private List<SalesHistoryPoint> PadHistoryWithZeros(List<SalesHistoryPoint> history, DateTime start, DateTime end)
     {
-        var dict = history.ToDictionary(h => h.ds, h => h.y);
+        var dict = history.ToDictionary(h => h.ds.Date, h => h.y);
         var padded = new List<SalesHistoryPoint>();
-        var current = start;
+        var current = start.Date;
+        var endDate = end.Date;
 
-        while (current <= end)
+        while (current <= endDate)
         {
             padded.Add(new SalesHistoryPoint
             {
