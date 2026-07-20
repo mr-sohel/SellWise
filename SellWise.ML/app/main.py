@@ -19,9 +19,9 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
 )
 
-app.include_router(health.router, tags=["Health"])
-app.include_router(forecast.router, tags=["Forecast"])
-app.include_router(churn.router, tags=["Churn"])
+app.include_router(health.router, prefix="/api/v1/ml", tags=["Health"])
+app.include_router(forecast.router, prefix="/api/v1/ml", tags=["Forecast"])
+app.include_router(churn.router, prefix="/api/v1/ml", tags=["Churn"])
 
 @app.get("/")
 async def root():

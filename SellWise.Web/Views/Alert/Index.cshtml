@@ -10,10 +10,12 @@
         <p class="text-muted mb-0">Smart recommendations based on predicted demand and sales velocity.</p>
     </div>
     <div class="d-flex gap-2">
-        <a asp-action="Index" class="btn btn-outline-primary d-flex align-items-center gap-2">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-            Scan Inventory
-        </a>
+        <form asp-action="ScanInventory" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                Scan Inventory
+            </button>
+        </form>
         <form asp-action="MarkAllRead" method="post" class="d-inline">
             <button type="submit" class="btn btn-dark d-flex align-items-center gap-2" style="background-color: #18181b; border: none;">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -31,6 +33,14 @@
         </label>
     </div>
 </div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="d-flex flex-column gap-3">
     @foreach (var alert in Model)

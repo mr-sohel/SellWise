@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using SellWise.Web.Data;
 using SellWise.Web.ViewModels.Product;
@@ -158,13 +161,106 @@ public class ProductController : BaseController
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
         var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
-        
+
         if (product != null)
         {
             product.IsActive = false; // Soft delete
             await Db.SaveChangesAsync();
         }
-        
+
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> BulkImport(IFormFile file)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        if (file == null || file.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Please select a valid CSV file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        try
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            var isFirstRow = true;
+            var productsToAdd = new List<Product>();
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                if (isFirstRow)
+                {
+                    isFirstRow = false; // Skip header row
+                    continue;
+                }
+
+                var values = ParseCsvLine(line);
+
+                // Basic validation: ensure we have enough columns
+                if (values.Length >= 8)
+                {
+                    productsToAdd.Add(new Product
+                    {
+                        StoreId = storeId,
+                        Name = values[0].Trim(),
+                        Sku = values[1].Trim(),
+                        Category = values[2].Trim(),
+                        CostPrice = decimal.TryParse(values[3], out var cp) ? cp : 0,
+                        SellingPrice = decimal.TryParse(values[4], out var sp) ? sp : 0,
+                        StockQuantity = int.TryParse(values[5], out var sq) ? sq : 0,
+                        LowStockThreshold = int.TryParse(values[6], out var lst) ? lst : 0,
+                        Unit = values[7].Trim(),
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            if (productsToAdd.Any())
+            {
+                Db.Products.AddRange(productsToAdd);
+                await Db.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Successfully imported {productsToAdd.Count} products.";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error processing the CSV file: " + ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private string[] ParseCsvLine(string line)
+    {
+        var result = new List<string>();
+        bool inQuotes = false;
+        var currentField = new System.Text.StringBuilder();
+
+        foreach (char c in line)
+        {
+            if (c == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (c == ',' && !inQuotes)
+            {
+                result.Add(currentField.ToString());
+                currentField.Clear();
+            }
+            else
+            {
+                currentField.Append(c);
+            }
+        }
+        result.Add(currentField.ToString());
+        return result.ToArray();
     }
 }

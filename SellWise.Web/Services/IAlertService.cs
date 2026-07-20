@@ -5,5 +5,5 @@ namespace SellWise.Web.Services;
 
 public interface IAlertService
 {
-    Task GenerateMockAlertsIfNeededAsync(Guid storeId);
+    Task ScanAndGenerateAlertsAsync(Guid storeId);
 }

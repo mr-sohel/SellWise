@@ -25,8 +25,6 @@ public class AlertController : BaseController
         var storeId = GetCurrentStoreId();
         if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        await _alertService.GenerateMockAlertsIfNeededAsync(storeId);
-
         var query = Db.Alerts.Where(a => a.StoreId == storeId);
 
         if (showUnreadOnly)
@@ -51,6 +49,17 @@ public class AlertController : BaseController
 
         ViewData["ShowUnreadOnly"] = showUnreadOnly;
         return View(alerts);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ScanInventory()
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        await _alertService.ScanAndGenerateAlertsAsync(storeId);
+        TempData["SuccessMessage"] = "Inventory scan completed. Alerts generated for low stock items.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]

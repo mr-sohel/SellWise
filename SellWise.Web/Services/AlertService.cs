@@ -16,30 +16,60 @@ public class AlertService : IAlertService
         _db = db;
     }
 
-    public async Task GenerateMockAlertsIfNeededAsync(Guid storeId)
+    public async Task ScanAndGenerateAlertsAsync(Guid storeId)
     {
-        var hasAlerts = await _db.Alerts.AnyAsync(a => a.StoreId == storeId);
-        if (hasAlerts) return;
-
+        // Find products below or equal to their low stock threshold
         var lowStockProducts = await _db.Products
-            .Where(p => p.StoreId == storeId && p.StockQuantity <= p.LowStockThreshold)
-            .Take(6)
+            .Where(p => p.StoreId == storeId && p.IsActive && p.StockQuantity <= p.LowStockThreshold)
+            .ToListAsync();
+
+        var healthyProductsIds = await _db.Products
+            .Where(p => p.StoreId == storeId && p.IsActive && p.StockQuantity > p.LowStockThreshold)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        var alertsToResolve = await _db.Alerts
+            .Where(a => a.StoreId == storeId && a.Type == "Low Stock" && healthyProductsIds.Contains(a.ProductId))
+            .ToListAsync();
+
+        bool hasChanges = alertsToResolve.Any();
+
+        foreach (var alert in alertsToResolve)
+        {
+            alert.Type = "Low Stock (Resolved)";
+            alert.IsRead = true;
+        }
+
+        // Get existing unresolved alerts for these products to avoid duplicates
+        // By checking Type == "Low Stock" (not checking IsRead), we ensure
+        // we don't generate duplicates even if the user marks it as read.
+        var existingAlertProductIds = await _db.Alerts
+            .Where(a => a.StoreId == storeId && a.Type == "Low Stock")
+            .Select(a => a.ProductId)
             .ToListAsync();
 
         foreach (var product in lowStockProducts)
         {
+            if (existingAlertProductIds.Contains(product.Id))
+                continue; // Already has an active alert
+
             var alert = new InventoryAlert
             {
                 StoreId = storeId,
                 ProductId = product.Id,
                 Type = "Low Stock",
-                Message = $"{product.Name} — current stock: {product.StockQuantity}, predicted demand: {product.StockQuantity * 2 + 15} in 30 days. Restock recommended: {Math.Max(50, (product.LowStockThreshold * 2) - product.StockQuantity)} units",
-                Severity = "Warning",
+                Message = $"{product.Name} is running low — current stock: {product.StockQuantity}, threshold: {product.LowStockThreshold}. Consider restocking soon.",
+                Severity = product.StockQuantity == 0 ? "Critical" : "Warning",
                 IsRead = false,
-                CreatedAt = DateTime.UtcNow.AddMinutes(-30)
+                CreatedAt = DateTime.UtcNow
             };
             _db.Alerts.Add(alert);
+            hasChanges = true;
         }
-        await _db.SaveChangesAsync();
+
+        if (hasChanges)
+        {
+            await _db.SaveChangesAsync();
+        }
     }
 }
