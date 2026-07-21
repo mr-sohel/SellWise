@@ -22,5 +22,4 @@ public class SignupViewModel
     [Display(Name = "Store Name")]
     public string? StoreName { get; set; } = string.Empty;
 
-    public string? PreferredLang { get; set; } = "en";
 }

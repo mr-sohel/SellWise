@@ -7,7 +7,6 @@ public class Store
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;
-    public string? NameBn { get; set; }
     public string Currency { get; set; } = "BDT";
     public string Timezone { get; set; } = "Asia/Dhaka";
     public string? BusinessType { get; set; }

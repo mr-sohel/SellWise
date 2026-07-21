@@ -1,38 +1,46 @@
 @model SellWise.Web.ViewModels.Auth.LoginViewModel
 
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Sign In";
     Layout = "_AuthLayout";
 }
 
 <div class="d-flex flex-column align-items-center" style="width: 100%; max-width: 440px;">
     <div class="text-center mb-4">
-        <h1 class="fw-bold mb-1 text-dark" style="font-size: 2.2rem; letter-spacing: -1px;">SellWise</h1>
-        <p class="text-muted">Welcome back! Please login to your account.</p>
+        <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+            <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="6" fill="#4338ca"/>
+                <path d="M12 5L5 9L12 13L19 9L12 5Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 9V15L12 19L19 15V9" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 13V19" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h1 class="fw-bold mb-0 text-primary" style="font-size: 2rem; letter-spacing: -1px;">SellWise</h1>
+        </div>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">AI-powered sales analytics for your store</p>
     </div>
 
-    <div class="auth-card" style="width: 100%;">
+    <div class="auth-card">
         <form asp-action="Login" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             
             <div class="mb-3">
-                <label asp-for="Email" class="form-label text-bold mb-2">Email</label>
-                <input asp-for="Email" class="form-control py-2" placeholder="you@example.com" autocomplete="username" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <label asp-for="Email" class="form-label mb-2">Email</label>
+                <input asp-for="Email" class="form-control py-2" placeholder="you@example.com" autocomplete="username" aria-required="true" />
                 <span asp-validation-for="Email" class="text-danger" style="font-size: 0.8rem;"></span>
             </div>
             
             <div class="mb-4">
-                <label asp-for="Password" class="form-label text-bold mb-2">Password</label>
-                <input asp-for="Password" class="form-control py-2" placeholder="••••••••" autocomplete="current-password" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <label asp-for="Password" class="form-label mb-2">Password</label>
+                <input asp-for="Password" class="form-control py-2" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password" aria-required="true" />
                 <span asp-validation-for="Password" class="text-danger" style="font-size: 0.8rem;"></span>
             </div>
             
-            <button type="submit" class="btn btn-black-pill w-100">Log In</button>
+            <button type="submit" class="btn-dark-pill">Sign In</button>
         </form>
     </div>
     
     <div class="text-center mt-4" style="font-size: 0.9rem;">
-        <span class="text-muted">Don't have an account?</span> <a asp-action="Signup" class="text-decoration-none fw-bold" style="color: #2563eb;">Sign up</a>
+        <span class="text-muted">Don't have an account?</span> <a asp-action="Signup" class="text-decoration-none fw-bold text-brand">Sign Up</a>
     </div>
 </div>
 

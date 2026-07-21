@@ -78,7 +78,6 @@ public class ProductController : BaseController
         {
             StoreId = storeId,
             Name = model.Name,
-            NameBn = model.NameBn,
             Sku = model.Sku,
             Category = model.Category,
             CostPrice = model.CostPrice,
@@ -111,7 +110,6 @@ public class ProductController : BaseController
         {
             Id = product.Id,
             Name = product.Name,
-            NameBn = product.NameBn,
             Sku = product.Sku,
             Category = product.Category,
             CostPrice = product.CostPrice,
@@ -142,7 +140,6 @@ public class ProductController : BaseController
             return NotFound();
 
         product.Name = model.Name;
-        product.NameBn = model.NameBn;
         product.Sku = model.Sku;
         product.Category = model.Category;
         product.CostPrice = model.CostPrice;

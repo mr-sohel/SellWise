@@ -133,8 +133,7 @@ public class AuthController : Controller
             var user = new ApplicationUser 
             { 
                 UserName = model.Email, 
-                Email = model.Email,
-                PreferredLang = model.PreferredLang
+                Email = model.Email
             };
             
             var result = await _userManager.CreateAsync(user, model.Password);

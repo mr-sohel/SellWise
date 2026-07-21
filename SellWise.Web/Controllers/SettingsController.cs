@@ -43,8 +43,7 @@ public class SettingsController : BaseController
         {
             Email = user.Email ?? "",
             StoreName = member?.Store?.Name ?? "",
-            Role = member?.Role ?? "",
-            PreferredLang = user.PreferredLang
+            Role = member?.Role ?? ""
         };
 
         return View(vm);
@@ -58,9 +57,6 @@ public class SettingsController : BaseController
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Login", "Auth");
-
-        user.PreferredLang = model.PreferredLang;
-        await _userManager.UpdateAsync(user);
 
         var member = await Db.StoreMembers
             .Include(sm => sm.Store)
@@ -189,8 +185,7 @@ public class SettingsController : BaseController
         var newUser = new ApplicationUser
         {
             UserName = model.Email,
-            Email = model.Email,
-            PreferredLang = "en"
+            Email = model.Email
         };
 
         using var transaction = await Db.Database.BeginTransactionAsync();

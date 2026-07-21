@@ -52,7 +52,7 @@ if (args.Contains("--seed"))
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
-            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, PreferredLang = "en" };
+            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail };
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {

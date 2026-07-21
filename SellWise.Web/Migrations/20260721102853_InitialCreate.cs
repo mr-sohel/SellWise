@@ -30,7 +30,6 @@ namespace SellWise.Web.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PreferredLang = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -57,7 +56,6 @@ namespace SellWise.Web.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    NameBn = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Timezone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BusinessType = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -175,29 +173,6 @@ namespace SellWise.Web.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Categories",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    NameBn = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsDefault = table.Column<bool>(type: "bit", nullable: false),
-                    SortOrder = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Categories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Categories_Stores_StoreId",
-                        column: x => x.StoreId,
-                        principalTable: "Stores",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Customers",
                 columns: table => new
                 {
@@ -253,7 +228,6 @@ namespace SellWise.Web.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StoreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    NameBn = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Sku = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Category = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CostPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
@@ -432,9 +406,9 @@ namespace SellWise.Web.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Alerts_StoreId",
+                name: "IX_Alerts_StoreId_IsRead",
                 table: "Alerts",
-                column: "StoreId");
+                columns: new[] { "StoreId", "IsRead" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -476,19 +450,14 @@ namespace SellWise.Web.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Categories_StoreId",
-                table: "Categories",
-                column: "StoreId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Customers_StoreId",
                 table: "Customers",
                 column: "StoreId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Expenses_StoreId",
+                name: "IX_Expenses_StoreId_ExpenseDate",
                 table: "Expenses",
-                column: "StoreId");
+                columns: new[] { "StoreId", "ExpenseDate" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Forecasts_ProductId",
@@ -516,14 +485,14 @@ namespace SellWise.Web.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Orders_StoreId",
+                name: "IX_Orders_StoreId_OrderDate",
                 table: "Orders",
-                column: "StoreId");
+                columns: new[] { "StoreId", "OrderDate" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Products_StoreId",
+                name: "IX_Products_StoreId_IsActive",
                 table: "Products",
-                column: "StoreId");
+                columns: new[] { "StoreId", "IsActive" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_StoreMembers_UserId",
@@ -551,9 +520,6 @@ namespace SellWise.Web.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
-
-            migrationBuilder.DropTable(
-                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Expenses");

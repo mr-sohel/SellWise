@@ -11,6 +11,4 @@ public class ProfileViewModel
 
     public string? Role { get; set; } = string.Empty;
 
-    [Display(Name = "Preferred Language")]
-    public string? PreferredLang { get; set; } = "en";
 }

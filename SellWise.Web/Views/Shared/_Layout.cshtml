@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SellWise</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%234338ca'/%3E%3Cpath d='M12 5L5 9L12 13L19 9L12 5Z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 9V15L12 19L19 15V9' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 13V19' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.378.0/font/lucide.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -15,21 +16,21 @@
             <div class="offcanvas-header d-lg-none border-bottom px-4">
                 <div class="d-flex align-items-center gap-2">
                     <div class="brand-logo">
-                        <svg aria-hidden="true" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="24" height="24" rx="6" fill="#6366F1"/>
+                        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="24" height="24" rx="6" fill="#4338ca"/>
                             <path d="M12 5L5 9L12 13L19 9L12 5Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M5 9V15L12 19L19 15V9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M12 13V19" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </div>
-                    <span class="brand-text mb-0" style="font-size:1.1rem; font-weight:800;">SellWise</span>
+                    <span class="brand-text mb-0">SellWise</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
             </div>
             <div class="sidebar-brand d-none d-lg-flex">
                 <div class="brand-logo">
-                    <svg aria-hidden="true" aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="24" height="24" rx="6" fill="#6366F1"/>
+                    <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="6" fill="#4338ca"/>
                         <path d="M12 5L5 9L12 13L19 9L12 5Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M5 9V15L12 19L19 15V9" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M12 13V19" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -113,7 +114,7 @@
                     </div>
                     <div class="dropdown">
                         <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle topbar-profile" id="dropdownUser" aria-label="Options" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://ui-avatars.com/api/?name=S&background=e2e8f0&color=0f172a&bold=true" alt="User Avatar">
+                            <img src="https://ui-avatars.com/api/?name=@(User.Identity?.Name?.FirstOrDefault() ?? 'S')&background=eef2ff&color=4338ca&bold=true" alt="User Avatar">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="dropdownUser">
                             <li><h6 class="dropdown-header">Account Management</h6></li>

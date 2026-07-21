@@ -1,57 +1,79 @@
 # SellWise UI Design System
 
 ## Overview
-SellWise utilizes a clean, professional, and standard enterprise UI design. By migrating to **ASP.NET Core MVC** and **Bootstrap 5**, the application sheds complex CSS-in-JS frameworks in favor of a highly readable, widely understood styling system.
+SellWise uses a warm-grounded visual identity built on top of Bootstrap 5. The design extends Bootstrap's utility system with custom CSS variables (tokens), a deliberate typography hierarchy, and signature component patterns — chosen to stand out from generic SaaS templates while remaining practical for a university defense project.
 
-This approach was chosen specifically for the university defense to demonstrate an understanding of classic web development patterns without sacrificing aesthetic quality.
+## Color Palette
 
-## Layout & Architecture
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--brand` | `#4338ca` | Primary actions, links, active nav, accent elements |
+| `--brand-hover` | `#3730a3` | Button hover, link hover |
+| `--brand-light` | `#eef2ff` | Soft backgrounds, active nav highlight |
+| `--accent` | `#d97706` | Rank badges, secondary highlights (amber) |
+| `--bg-app` | `#faf8f5` | Page background — warm off-white |
+| `--bg-sidebar` | `#f5f2ed` | Sidebar background (slightly warmer) |
+| `--border-color` | `#e7e2dc` | Card borders, dividers |
+| `--text-primary` | `#1c1917` | Headings, bold text |
+| `--text-main` | `#57534e` | Body text |
+| `--text-muted` | `#a8a29e` | Secondary text |
 
-The application uses a standard dashboard layout defined in `Views/Shared/_Layout.cshtml`:
+Brand is indigo (`#4338ca`), not the default Bootstrap blue (`#0d6efd`). The background is warm-toned (`#faf8f5`) rather than cool gray — this is the key differentiator from default Bootstrap look.
 
-1. **Sidebar Navigation:** A persistent left-hand sidebar with inline SVG icons (Lucide-style) for Dashboard, Products, Orders, Customers, Expenses, Reports, and Alerts. The active route is highlighted.
-2. **Top Bar:** Houses a search widget and a user profile dropdown (with My Profile, Settings, and Logout links).
-3. **Main Content Area:** A spacious central container where the main Razor Views are rendered.
-4. **Footer:** Copyright notice and links (Help & Support, FAQ, Privacy, Terms).
+## Typography
 
-### Auth Layout
-Login and Signup pages use a separate layout (`_AuthLayout.cshtml`) with a centered card design.
+| Role | Font | Weight |
+|------|------|--------|
+| Display / Headings | Outfit | 600-800 |
+| Body / UI text | Plus Jakarta Sans | 300-800 |
+| KPI values, page titles | Outfit | 700-800 |
 
-## UI Components (Bootstrap 5)
+Both fonts are loaded via Google Fonts CDN in `site.css`. Outfit gives headings a modern, confident look; Plus Jakarta Sans provides excellent readability at small sizes.
 
-We rely on native Bootstrap 5 classes to build responsive, robust components:
+## Layout
 
-- **Cards (`.card.shadow-sm.border-0`):** Used extensively to group information. The subtle shadow and removed border create a modern "floating" aesthetic.
-- **Tables (`.table.table-hover`):** Used for listing Products, Orders, and Customers. The hover effect provides immediate user feedback.
-- **Buttons (`.btn.btn-primary`):** Standardized, easily tappable buttons for all primary actions.
-- **Forms (`.form-control`, `.form-select`):** Clean, standard input fields with built-in ASP.NET validation styling (`.text-danger` for validation summary messages).
-- **Badges (`.badge`):** Used for status indicators (order status, stock levels, employee roles).
-- **Pagination:** Server-side pagination for large data tables.
-- **Alerts (`.alert`):** Success/error feedback messages after actions.
+- **Sidebar:** Fixed vertical nav (260px on lg+) with Lucide-style inline SVGs. Active route highlighted with `--brand-light`.
+- **Top bar:** Sticky search bar + profile dropdown with avatar initial.
+- **Main content:** Flush with the sidebar, `1.75rem 2rem` padding.
+- **Auth:** Centered card on `auth-bg` gradient (indigo radial glow).
 
-## Data Visualization
+## Signature Component: Forecast Grid
 
-- **Chart.js:** Used on the Dashboard (`Views/Dashboard/Index.cshtml`) to render Revenue Trends, AI Demand Forecasts, Category Sales, and Product Sparklines. The C# `AnalyticsService` fetches real predictions from the Python ML service, caches them in the `Forecasts` table, and passes the data to the view for Chart.js rendering.
+The demand forecast grid is the visual hero of the Dashboard:
+- 6-card responsive grid (`auto-fill, minmax(180px, 1fr)`)
+- Each card has a floating rank badge (brand-colored circle, top-left) and an AI badge (top-right)
+- Sparkline SVGs with brand palette stroke colors
+- Hover lifts card (`translateY(-3px)`) with indigo border glow
+- Card shows: rank, product name, category, sparkline, predicted units, stock level, daily average
 
-## Pages
+## Component Patterns
 
-| Page | Controller | Description |
-|------|-----------|-------------|
-| Dashboard | `DashboardController` | KPI cards, revenue chart, AI demand forecast, top products, category breakdown, low stock alerts |
-| Products | `ProductController` | Product CRUD, search, low stock filtering |
-| Orders | `OrderController` | Order list, create new order (POS), status management |
-| Customers | `CustomerController` | Customer list, recalculate totals |
-| Expenses | `ExpenseController` | Expense tracking by category |
-| Reports | `ReportController` | Revenue/expense reports with date range picker |
-| Alerts | `AlertController` | Inventory alerts (low stock), scan for new alerts |
-| Settings | `SettingsController` | Profile (email, store name, language), password change, staff management (invite/remove employees) |
-| Auth | `AuthController` | Login, Signup, Logout |
+- **KPI Cards:** 2x2 grid; title is uppercase muted, value is large Outfit bold; icon in a rounded square with soft brand-colored background.
+- **Card hover:** All cards lift 2px with `--shadow-md` on hover.
+- **Timeframe buttons:** Segmented button group (`btn-group-timeframe`) with `#f0ece6` background, active pill with white bg + shadow.
+- **Performers lists:** Ranked list with position number in a small rounded badge (amber for top, neutral for rest), stock bar indicator for at-risk items.
+- **Badge variants:** `.badge-momentum` (amber bg), `.badge-atrisk` (red bg), `.badge-champion` (indigo), `.badge-potential` (sky).
+- **Auth buttons:** `.btn-dark-pill` — dark text-colored pill button.
 
-## CSS
+## Data Visualization (Chart.js)
 
-All custom styles live in `wwwroot/css/site.css` (~400 lines). The layout-scoped CSS file (`_Layout.cshtml.css`) is intentionally empty to avoid conflicting default styles.
+- Revenue line chart: brand color line (`#4338ca`) with subtle brand fill, white dots.
+- Category doughnut: 80% cutout with brand-violet-sky-amber-green palette, center label overlay.
+- All Chart.js text uses Plus Jakarta Sans to match the app.
 
-## Philosophy
+## Responsive Behavior
 
-The design philosophy for SellWise is **"Function over Flash"**.
-By utilizing standard Bootstrap utility classes and Razor partial views, the frontend codebase remains incredibly small, easy to read, and lightning-fast to render on the server.
+- Breakpoints follow Bootstrap 5 defaults.
+- Sidebar collapses to full width on mobile.
+- Auth card reduces padding on small screens.
+- Forecast grid stacks to single column on narrow viewports.
+
+## Files
+
+| File | Role |
+|------|------|
+| `wwwroot/css/site.css` | All custom CSS (~900 lines) |
+| `Views/Shared/_Layout.cshtml` | Main layout (sidebar, topbar, footer) |
+| `Views/Shared/_AuthLayout.cshtml` | Auth layout (auth-bg gradient) |
+| `Views/Dashboard/Index.cshtml` | Dashboard with forecast grid, KPIs, charts |
+| `Views/Auth/Login.cshtml` | Login page with brand logo |

@@ -197,10 +197,6 @@ namespace SellWise.Web.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("PreferredLang")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -500,9 +496,6 @@ namespace SellWise.Web.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NameBn")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("SellingPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -548,9 +541,6 @@ namespace SellWise.Web.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameBn")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Timezone")
