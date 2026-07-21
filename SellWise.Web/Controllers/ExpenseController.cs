@@ -17,6 +17,7 @@ public class ExpenseController : BaseController
 
     public async Task<IActionResult> Index(int days = 0, int page = 1)
     {
+        if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 

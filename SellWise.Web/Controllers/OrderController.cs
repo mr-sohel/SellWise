@@ -27,6 +27,7 @@ public class OrderController : BaseController
 
     public async Task<IActionResult> Index(string search, string status, int page = 1)
     {
+        if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
@@ -123,6 +124,7 @@ public class OrderController : BaseController
     }
 
     [HttpPost]
+    [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<IActionResult> BulkImport(IFormFile file)
     {
         var storeId = GetCurrentStoreId();
@@ -214,9 +216,10 @@ public class OrderController : BaseController
                 TempData["SuccessMessage"] = $"Successfully imported {ordersToAdd.Count} orders.";
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            TempData["ErrorMessage"] = "Error processing the CSV file: " + ex.Message;
+            // Avoid exposing exception details to the end-user (Information Disclosure)
+            TempData["ErrorMessage"] = "An error occurred while processing the CSV file. Please ensure it is correctly formatted.";
         }
 
         return RedirectToAction(nameof(Index));

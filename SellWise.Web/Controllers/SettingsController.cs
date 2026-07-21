@@ -188,16 +188,16 @@ public class SettingsController : BaseController
 
         var newUser = new ApplicationUser
         {
-            UserName = model.FullName,
+            UserName = model.Email,
             Email = model.Email,
             PreferredLang = "en"
         };
 
-        var result = await _userManager.CreateAsync(newUser, model.Password);
-        if (result.Succeeded)
+        using var transaction = await Db.Database.BeginTransactionAsync();
+        try
         {
-            using var transaction = await Db.Database.BeginTransactionAsync();
-            try
+            var result = await _userManager.CreateAsync(newUser, model.Password);
+            if (result.Succeeded)
             {
                 var storeMember = new StoreMember
                 {
@@ -211,21 +211,21 @@ public class SettingsController : BaseController
 
                 TempData["Success"] = $"{model.FullName} has been invited as {model.Role}.";
             }
-            catch (Exception ex)
+            else
             {
                 await transaction.RollbackAsync();
-                await _userManager.DeleteAsync(newUser); // Clean up identity user if member creation fails
-                ModelState.AddModelError(string.Empty, "Failed to assign user to the store.");
-                TempData["Error"] = "Failed to assign user to the store. Please try again.";
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                TempData["Error"] = string.Join(" ", result.Errors.Select(e => e.Description));
             }
         }
-        else
+        catch (Exception)
         {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-            TempData["Error"] = string.Join(" ", result.Errors.Select(e => e.Description));
+            await transaction.RollbackAsync();
+            ModelState.AddModelError(string.Empty, "Failed to assign user to the store.");
+            TempData["Error"] = "Failed to assign user to the store. Please try again.";
         }
 
         return RedirectToAction(nameof(Staff));

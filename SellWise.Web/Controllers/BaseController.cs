@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc.Filters;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 
 namespace SellWise.Web.Controllers;
 
 [Authorize]
+[AutoValidateAntiforgeryToken]
 public abstract class BaseController : Controller
 {
     protected readonly AppDbContext Db;
@@ -35,5 +37,22 @@ public abstract class BaseController : Controller
         if (userIdValue == null) return false;
 
         return await Db.StoreMembers.AnyAsync(m => m.StoreId == storeId && m.UserId == userIdValue);
+    }
+
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var storeId = GetCurrentStoreId();
+            if (storeId == Guid.Empty || !await UserBelongsToStore(storeId))
+            {
+                // Clear invalid session state if it exists
+                HttpContext.Session.Remove("ActiveStoreId");
+                context.Result = new RedirectToActionResult("Login", "Auth", null);
+                return;
+            }
+        }
+
+        await base.OnActionExecutionAsync(context, next);
     }
 }

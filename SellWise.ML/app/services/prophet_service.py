@@ -187,18 +187,22 @@ def backtest_forecast(
     
     # Calculate performance metrics
     df_p = performance_metrics(df_cv)
-    
+
+    def safe_float(val, default=0.0) -> float:
+        v = float(val)
+        return default if (np.isnan(v) or np.isinf(v)) else v
+
     metrics = []
     for _, row in df_p.iterrows():
         metrics.append(BacktestMetrics(
             horizon=str(row['horizon']),
-            mse=float(row['mse']),
-            rmse=float(row['rmse']),
-            mae=float(row['mae']),
-            mape=float(row['mape']),
-            mdape=float(row['mdape']),
-            smape=float(row['smape']),
-            coverage=float(row['coverage'])
+            mse=safe_float(row['mse']),
+            rmse=safe_float(row['rmse']),
+            mae=safe_float(row['mae']),
+            mape=safe_float(row['mape']),
+            mdape=safe_float(row['mdape']),
+            smape=safe_float(row['smape']),
+            coverage=safe_float(row['coverage'])
         ))
-        
+
     return metrics

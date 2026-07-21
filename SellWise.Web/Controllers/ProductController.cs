@@ -20,6 +20,7 @@ public class ProductController : BaseController
 
     public async Task<IActionResult> Index(string search, int page = 1)
     {
+        if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
@@ -172,6 +173,7 @@ public class ProductController : BaseController
     }
 
     [HttpPost]
+    [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<IActionResult> BulkImport(IFormFile file)
     {
         var storeId = GetCurrentStoreId();
@@ -205,16 +207,27 @@ public class ProductController : BaseController
                 // Basic validation: ensure we have enough columns
                 if (values.Length >= 8)
                 {
+                    bool validCost = decimal.TryParse(values[3].Trim(), out var cp);
+                    bool validSelling = decimal.TryParse(values[4].Trim(), out var sp);
+                    bool validStock = int.TryParse(values[5].Trim(), out var sq);
+                    bool validThreshold = int.TryParse(values[6].Trim(), out var lst);
+
+                    if (!validCost || !validSelling || !validStock || !validThreshold)
+                    {
+                        TempData["ErrorMessage"] = "CSV contains malformed numerical data. Import aborted.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
                     productsToAdd.Add(new Product
                     {
                         StoreId = storeId,
                         Name = values[0].Trim(),
                         Sku = values[1].Trim(),
                         Category = values[2].Trim(),
-                        CostPrice = decimal.TryParse(values[3], out var cp) ? cp : 0,
-                        SellingPrice = decimal.TryParse(values[4], out var sp) ? sp : 0,
-                        StockQuantity = int.TryParse(values[5], out var sq) ? sq : 0,
-                        LowStockThreshold = int.TryParse(values[6], out var lst) ? lst : 0,
+                        CostPrice = cp,
+                        SellingPrice = sp,
+                        StockQuantity = sq,
+                        LowStockThreshold = lst,
                         Unit = values[7].Trim(),
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -230,9 +243,10 @@ public class ProductController : BaseController
                 TempData["SuccessMessage"] = $"Successfully imported {productsToAdd.Count} products.";
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            TempData["ErrorMessage"] = "Error processing the CSV file: " + ex.Message;
+            // Avoid exposing exception details to the end-user (Information Disclosure)
+            TempData["ErrorMessage"] = "An error occurred while processing the CSV file. Please ensure it is correctly formatted.";
         }
 
         return RedirectToAction(nameof(Index));

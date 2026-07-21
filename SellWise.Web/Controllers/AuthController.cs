@@ -7,6 +7,7 @@ using SellWise.Web.ViewModels.Auth;
 
 namespace SellWise.Web.Controllers;
 
+[AutoValidateAntiforgeryToken]
 public class AuthController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;

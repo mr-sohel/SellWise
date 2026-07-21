@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using SellWise.Web.Data;
 using SellWise.Web.Services;
 
@@ -11,12 +13,12 @@ namespace SellWise.Web.Controllers;
 public class DashboardController : BaseController
 {
     private readonly AnalyticsService _analytics;
-    private readonly DemoSeederService _seeder;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public DashboardController(AppDbContext db, AnalyticsService analytics, DemoSeederService seeder) : base(db)
+    public DashboardController(AppDbContext db, AnalyticsService analytics, IServiceScopeFactory scopeFactory) : base(db)
     {
         _analytics = analytics;
-        _seeder = seeder;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<IActionResult> Index(string range = "30d")
@@ -25,8 +27,19 @@ public class DashboardController : BaseController
         if (storeId == Guid.Empty)
             return RedirectToAction("Login", "Auth");
 
-        // Auto-seed demo data on first visit
-        await _seeder.SeedStoreAsync(storeId);
+        // Fast check to avoid spinning up background tasks unnecessarily
+        bool isSeeded = Db.Products.Any(p => p.StoreId == storeId);
+        if (!isSeeded)
+        {
+            // Auto-seed demo data in the background so dashboard doesn't block for 15s
+            _ = Task.Run(async () =>
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var backgroundSeeder = scope.ServiceProvider.GetRequiredService<DemoSeederService>();
+                await backgroundSeeder.SeedStoreAsync(storeId);
+            });
+            ViewData["SeedingInProgress"] = true;
+        }
 
         var vm = await _analytics.GetOverview(storeId, range);
         return View(vm);

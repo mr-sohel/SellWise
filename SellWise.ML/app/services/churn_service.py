@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 import os
+import re
 import joblib
 from datetime import datetime, timedelta
 from typing import List
@@ -10,6 +11,10 @@ from ..models.schemas import CustomerDataPoint, ChurnResultPoint, LabeledCustome
 
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "models")
 os.makedirs(MODEL_DIR, exist_ok=True)
+
+def sanitize_store_id(store_id: str) -> str:
+    # Remove any characters that are not alphanumeric or dashes to prevent path traversal
+    return re.sub(r'[^a-zA-Z0-9-]', '', store_id)
 
 def predict_churn(store_id: str, customers: List[CustomerDataPoint]) -> List[ChurnResultPoint]:
     """
@@ -25,6 +30,7 @@ def predict_churn(store_id: str, customers: List[CustomerDataPoint]) -> List[Chu
     if not customers:
         return []
 
+    store_id = sanitize_store_id(store_id)
     df = pd.DataFrame([c.model_dump() for c in customers])
 
     # Feature Engineering
@@ -85,7 +91,8 @@ def train_churn_model(store_id: str, customers: List[LabeledCustomerDataPoint]) 
     """
     if len(customers) < 10:
         return False
-        
+
+    store_id = sanitize_store_id(store_id)
     df = pd.DataFrame([c.model_dump() for c in customers])
     
     # Need at least 2 classes to fit LR

@@ -35,50 +35,60 @@ public class AnalyticsService
             _ => now.AddDays(-30)
         };
 
-        var currentPeriodOrders = await _db.Orders
-            .Where(o => o.StoreId == storeId && o.Status != "completed" && o.OrderDate >= startDate)
-            .ToListAsync();
+        var orderQuery = _db.Orders
+            .Where(o => o.StoreId == storeId && o.Status != "cancelled" && o.OrderDate >= startDate);
 
-        var totalRevenue = currentPeriodOrders.Sum(o => o.Total);
-        var orderCount = currentPeriodOrders.Count;
+        var totalRevenue = await orderQuery.SumAsync(o => o.Total);
+        var orderCount = await orderQuery.CountAsync();
         var avgOrderValue = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-        var revenueTrend = currentPeriodOrders
+        // EF Core translation for GroupBy on date (requires taking Date property)
+        var revenueTrendData = await orderQuery
             .GroupBy(o => o.OrderDate.Date)
-            .OrderBy(g => g.Key)
-            .Select(g => new RevenuePoint { Date = g.Key.ToString("MMM dd"), Revenue = g.Sum(o => o.Total) })
-            .ToList();
-
-        var orderItems = await _db.OrderItems
-            .Include(oi => oi.Product)
-            .Where(oi => oi.Order.StoreId == storeId && oi.Order.Status != "cancelled" && oi.Order.OrderDate >= startDate)
+            .Select(g => new { Date = g.Key, Revenue = g.Sum(o => o.Total) })
+            .OrderBy(g => g.Date)
             .ToListAsync();
 
-        var totalItemSales = orderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
-        var categorySales = orderItems
-            .GroupBy(oi => oi.Product?.Category ?? "Other")
+        var revenueTrend = revenueTrendData
+            .Select(g => new RevenuePoint { Date = g.Date.ToString("MMM dd"), Revenue = g.Revenue })
+            .ToList();
+
+        var orderItemsQuery = _db.OrderItems
+            .Where(oi => oi.Order.StoreId == storeId && oi.Order.Status != "cancelled" && oi.Order.OrderDate >= startDate);
+
+        var totalItemSales = await orderItemsQuery.SumAsync(oi => oi.Quantity * oi.UnitPrice);
+
+        var categorySalesData = await orderItemsQuery
+            .Where(oi => oi.Product != null)
+            .GroupBy(oi => oi.Product!.Category)
+            .Select(g => new { Category = g.Key, Revenue = g.Sum(oi => oi.Quantity * oi.UnitPrice) })
+            .ToListAsync();
+
+        var categorySales = categorySalesData
             .Select(g => {
-                var rev = g.Sum(oi => oi.Quantity * oi.UnitPrice);
+                var categoryName = string.IsNullOrEmpty(g.Category) ? "Other" : g.Category;
                 return new CategorySalesPoint {
-                    Category = g.Key,
-                    Revenue = rev,
-                    Percentage = totalItemSales > 0 ? (double)Math.Round((rev / totalItemSales) * 100, 1) : 0
+                    Category = categoryName,
+                    Revenue = g.Revenue,
+                    Percentage = totalItemSales > 0 ? (double)Math.Round((g.Revenue / totalItemSales) * 100, 1) : 0
                 };
             })
             .OrderByDescending(c => c.Revenue)
             .ToList();
 
-        var topPerformers = orderItems
+        var topPerformersData = await orderItemsQuery
+            .Where(oi => oi.ProductName != null)
             .GroupBy(oi => oi.ProductName)
-            .Select((g, index) => new ProductPerformancePoint {
-                ProductName = g.Key,
-                Revenue = g.Sum(oi => oi.Quantity * oi.UnitPrice)
-            })
+            .Select(g => new { ProductName = g.Key, Revenue = g.Sum(oi => oi.Quantity * oi.UnitPrice) })
             .OrderByDescending(p => p.Revenue)
             .Take(5)
-            .Select((p, idx) => {
-                p.Rank = idx + 1;
-                return p;
+            .ToListAsync();
+
+        var topPerformers = topPerformersData
+            .Select((p, idx) => new ProductPerformancePoint {
+                ProductName = p.ProductName,
+                Revenue = p.Revenue,
+                Rank = idx + 1
             })
             .ToList();
 
@@ -104,12 +114,23 @@ public class AnalyticsService
             })
             .ToList();
 
-        var topProducts = orderItems
-            .GroupBy(oi => oi.Product)
-            .Where(g => g.Key != null)
-            .OrderByDescending(g => g.Sum(oi => oi.Quantity))
+        var topProductsData = await orderItemsQuery
+            .Where(oi => oi.Product != null)
+            .GroupBy(oi => oi.ProductId)
+            .Select(g => new { ProductId = g.Key, Quantity = g.Sum(oi => oi.Quantity) })
+            .OrderByDescending(g => g.Quantity)
             .Take(6)
-            .Select(g => g.Key!)
+            .ToListAsync();
+
+        var topProductIdsRaw = topProductsData.Select(p => p.ProductId).ToList();
+
+        var topProducts = await _db.Products
+            .Where(p => topProductIdsRaw.Contains(p.Id))
+            .ToListAsync();
+
+        // Ensure order is maintained
+        topProducts = topProductsData
+            .Join(topProducts, td => td.ProductId, p => p.Id, (td, p) => p)
             .ToList();
 
         var topProductIds = topProducts.Select(p => p.Id).ToList();
@@ -126,7 +147,7 @@ public class AnalyticsService
             .Select(oi => new { ProductId = oi.ProductId.Value, oi.Order.OrderDate, oi.Quantity })
             .ToListAsync();
 
-        var forecastTasks = new List<Task<(ProductForecastCard Card, List<Forecast> NewForecasts)>>();
+        var results = new List<(ProductForecastCard Card, List<Forecast> NewForecasts)>();
 
         foreach (var product in topProducts)
         {
@@ -143,10 +164,9 @@ public class AnalyticsService
                 .OrderBy(h => h.ds)
                 .ToList();
 
-            forecastTasks.Add(GetProductForecastAsync(storeId, product, now, productCached, productHistory));
+            var forecastResult = await GetProductForecastAsync(storeId, product, now, productCached, productHistory);
+            results.Add(forecastResult);
         }
-
-        var results = await Task.WhenAll(forecastTasks);
         var productForecasts = results.Select(r => r.Card)
                                       .OrderByDescending(c => c.PredictedUnits)
                                       .ToList();
@@ -165,7 +185,7 @@ public class AnalyticsService
             TotalRevenue = totalRevenue,
             TotalOrders = orderCount,
             AvgOrderValue = avgOrderValue,
-            RevenueGrowth = await CalculateRevenueGrowth(currentPeriodOrders, startDate, now),
+            RevenueGrowth = await CalculateRevenueGrowth(storeId, totalRevenue, startDate, now),
             HealthScore = CalculateHealthScore(orderCount, topProducts),
             RevenueTrend = revenueTrend,
             DemandForecast = demandForecast,
@@ -264,38 +284,42 @@ public class AnalyticsService
             return allForecasts;
         }
 
+        var past30DaysStart = now.AddDays(-30);
+        var totalHistoricalQuantity = await _db.OrderItems
+            .Where(oi => oi.Order.StoreId == storeId
+                && oi.ProductId.HasValue && productIds.Contains(oi.ProductId.Value)
+                && oi.Order.Status != "cancelled"
+                && oi.Order.OrderDate >= past30DaysStart)
+            .SumAsync(oi => (double?)oi.Quantity) ?? 0;
+
+        double movingAverage = totalHistoricalQuantity / 30.0;
+
         var fallback = new List<ForecastPoint>();
         for (int i = 1; i <= 30; i++)
         {
             var forecastDate = now.AddDays(i);
-            double baseVal = 100 + (i * 2);
-            double noise = Math.Sin(i) * 15;
             fallback.Add(new ForecastPoint
             {
                 Date = forecastDate.ToString("MMM dd"),
-                PredictedDemand = Math.Max(0, baseVal + noise)
+                PredictedDemand = Math.Round(movingAverage, 1)
             });
         }
         return fallback;
     }
 
-    private async Task<decimal> CalculateRevenueGrowth(List<Order> currentOrders, DateTime startDate, DateTime now)
+    private async Task<decimal> CalculateRevenueGrowth(Guid storeId, decimal currentTotal, DateTime startDate, DateTime now)
     {
         var periodDays = (now - startDate).Days;
         if (periodDays <= 0) return 0;
 
-        var storeId = currentOrders.FirstOrDefault()?.StoreId;
-        if (storeId == null) return 0;
-
         var previousStart = startDate.AddDays(-periodDays);
         var previousOrders = await _db.Orders
-            .Where(o => o.StoreId == storeId.Value
+            .Where(o => o.StoreId == storeId
                 && o.Status != "cancelled"
                 && o.OrderDate >= previousStart
                 && o.OrderDate < startDate)
             .SumAsync(o => o.Total);
 
-        var currentTotal = currentOrders.Sum(o => o.Total);
         if (previousOrders == 0) return currentTotal > 0 ? 100 : 0;
 
         return Math.Round(((currentTotal - previousOrders) / previousOrders) * 100, 1);

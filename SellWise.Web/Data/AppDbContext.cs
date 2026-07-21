@@ -14,7 +14,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Customer> Customers => Set<Customer>();
-    public DbSet<Category> Categories => Set<Category>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<InventoryAlert> Alerts => Set<InventoryAlert>();
     public DbSet<Forecast> Forecasts => Set<Forecast>();
@@ -63,5 +62,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(f => f.StoreId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Multi-tenancy performance indexes
+        builder.Entity<Product>().HasIndex(p => new { p.StoreId, p.IsActive });
+        builder.Entity<Order>().HasIndex(o => new { o.StoreId, o.OrderDate });
+        builder.Entity<Customer>().HasIndex(c => c.StoreId);
+        builder.Entity<Expense>().HasIndex(e => new { e.StoreId, e.ExpenseDate });
+        builder.Entity<InventoryAlert>().HasIndex(a => new { a.StoreId, a.IsRead });
+        builder.Entity<Forecast>().HasIndex(f => f.StoreId);
     }
 }

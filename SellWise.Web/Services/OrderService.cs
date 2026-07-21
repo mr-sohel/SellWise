@@ -25,6 +25,17 @@ public class OrderService : IOrderService
         using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
+            if (model.CustomerId.HasValue)
+            {
+                var customerExists = await _db.Customers
+                    .AnyAsync(c => c.Id == model.CustomerId.Value && c.StoreId == storeId);
+                if (!customerExists)
+                {
+                    await transaction.RollbackAsync();
+                    return "Customer not found in your store.";
+                }
+            }
+
             var order = new Order
             {
                 StoreId = storeId,
@@ -59,6 +70,20 @@ public class OrderService : IOrderService
                     return $"Insufficient stock for {product.Name}. Available: {product.StockQuantity}, requested: {item.Quantity}.";
                 }
 
+                subtotal += (product.SellingPrice * item.Quantity);
+            }
+
+            if (model.Discount > subtotal + model.DeliveryCharge)
+            {
+                await transaction.RollbackAsync();
+                return "Discount cannot exceed the order total.";
+            }
+
+            foreach (var item in validItems)
+            {
+                var product = productsDict[item.ProductId];
+                product.StockQuantity -= item.Quantity;
+
                 var orderItem = new OrderItem
                 {
                     ProductId = product.Id,
@@ -68,15 +93,6 @@ public class OrderService : IOrderService
                     Quantity = item.Quantity
                 };
                 order.Items.Add(orderItem);
-                subtotal += (product.SellingPrice * item.Quantity);
-                
-                product.StockQuantity -= item.Quantity;
-            }
-
-            if (model.Discount > subtotal + model.DeliveryCharge)
-            {
-                await transaction.RollbackAsync();
-                return "Discount cannot exceed the order total.";
             }
 
             order.Total = subtotal + model.DeliveryCharge - model.Discount;

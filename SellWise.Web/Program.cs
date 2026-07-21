@@ -19,7 +19,10 @@ builder.Services.AddScoped<SellWise.Web.Services.AnalyticsService>();
 builder.Services.AddScoped<SellWise.Web.Services.DemoSeederService>();
 builder.Services.AddScoped<SellWise.Web.Services.IOrderService, SellWise.Web.Services.OrderService>();
 builder.Services.AddScoped<SellWise.Web.Services.IAlertService, SellWise.Web.Services.AlertService>();
-builder.Services.AddHttpClient<SellWise.Web.Services.ForecastService>();
+builder.Services.AddHttpClient<SellWise.Web.Services.ForecastService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 
 builder.Services.ConfigureApplicationCookie(options => {
     options.LoginPath = "/Auth/Login";

@@ -17,6 +17,7 @@ public class CustomerController : BaseController
 
     public async Task<IActionResult> Index(string search, string segment, int page = 1)
     {
+        if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
@@ -27,8 +28,24 @@ public class CustomerController : BaseController
             query = query.Where(c => c.Name.Contains(search) || c.Phone.Contains(search) || c.Email.Contains(search));
         }
 
+        if (!string.IsNullOrEmpty(segment))
+        {
+            if (segment.ToUpper() == "CHAMPION")
+                query = query.Where(c => c.TotalSpent >= 10000000);
+            else if (segment.ToUpper() == "POTENTIAL")
+                query = query.Where(c => c.TotalSpent >= 5000000 && c.TotalSpent < 10000000);
+            else if (segment.ToUpper() == "PROMISING")
+                query = query.Where(c => c.TotalSpent < 5000000);
+        }
+
+        int pageSize = 20;
+        int totalItems = await query.CountAsync();
+        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
         var customers = await query
             .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(c => new CustomerViewModel
             {
                 Id = c.Id,
@@ -39,22 +56,6 @@ public class CustomerController : BaseController
                 TotalSpent = c.TotalSpent
             })
             .ToListAsync();
-
-        if (!string.IsNullOrEmpty(segment))
-        {
-            if (segment.ToUpper() == "CHAMPION")
-                customers = customers.Where(c => c.TotalSpent >= 10000000).ToList();
-            else if (segment.ToUpper() == "POTENTIAL")
-                customers = customers.Where(c => c.TotalSpent >= 5000000 && c.TotalSpent < 10000000).ToList();
-            else if (segment.ToUpper() == "PROMISING")
-                customers = customers.Where(c => c.TotalSpent < 5000000).ToList();
-        }
-
-        int pageSize = 20;
-        int totalItems = customers.Count;
-        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-
-        customers = customers.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
         ViewData["CurrentPage"] = page;
         ViewData["TotalPages"] = totalPages;

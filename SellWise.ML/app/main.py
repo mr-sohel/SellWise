@@ -10,11 +10,15 @@ app = FastAPI(
 )
 
 # CORS — restrict origins via CORS_ORIGINS env var
-allowed_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+allowed_origins_raw = os.environ.get("CORS_ORIGINS", "http://localhost:5000,https://localhost:7288,http://localhost:5173")
+allowed_origins = [origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()]
+
+allow_credentials = os.environ.get("CORS_ALLOW_CREDENTIALS", "true").lower() in ("true", "1", "yes")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_credentials=allow_credentials,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )

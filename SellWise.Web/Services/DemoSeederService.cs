@@ -24,13 +24,6 @@ public class DemoSeederService
         var store = await _db.Stores.FindAsync(storeId);
         if (store == null) return;
 
-        // --- Categories ---
-        var categories = new[] { "Mobile Phones", "Phone Accessories", "Computers & Laptops", "Cameras", "Audio", "Wearables" };
-        foreach (var cat in categories)
-        {
-            _db.Categories.Add(new Category { StoreId = storeId, Name = cat, IsDefault = cat == "Mobile Phones", SortOrder = Array.IndexOf(categories, cat) + 1 });
-        }
-
         // --- Customers (200 Bangladeshi names) ---
         var firstNames = new[] { "Rakib", "Jahid", "Ayesha", "Sumi", "Sakib", "Ritu", "Mim", "Shapna", "Fatema", "Khadija", "Habibur", "Karim", "Belal", "Mizanur", "Shirin", "Jahangir", "Marium", "Tanvir", "Nusrat", "Farhan", "Imran", "Tasnim", "Sabrina", "Arif", "Mst", "Rafiq", "Shibli", "Farzana", "Mamun", "Hasan", "Rubel", "Kamal", "Jamal", "Salim", "Babul", "Firoz", "Rana", "Piash", "Sharmin", "Monira", "Ruma", "Jesmin", "Poly", "Tuli", "Ruma", "Shanta", "Bithi", "Lily", "Nira", "Rokeya" };
         var lastNames = new[] { "Hossain", "Ahmed", "Khan", "Begum", "Hasan", "Uddin", "Islam", "Chowdhury", "Rahman", "Akter", "Parvin", "Khatun", "Alam", "Mia", "Sheikh", "Mollah", "Sarkar", "Biswas", "Mondal", "Das", "Gupta", "Sen", "Banerjee", "Roy", "Paul", "Datta", "Majumder", "Chakraborty", "Bhowmick", "Sinha" };
