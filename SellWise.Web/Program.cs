@@ -9,7 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+})
     .AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddMemoryCache();
@@ -27,6 +31,8 @@ builder.Services.AddHttpClient<SellWise.Web.Services.ForecastService>(client =>
 builder.Services.ConfigureApplicationCookie(options => {
     options.LoginPath = "/Auth/Login";
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 var app = builder.Build();
@@ -86,9 +92,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSession();
 
 app.MapStaticAssets();
 

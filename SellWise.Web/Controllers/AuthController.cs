@@ -30,34 +30,8 @@ public class AuthController : Controller
     [HttpGet]
     public async Task<IActionResult> Login()
     {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
-            if (string.IsNullOrEmpty(storeIdStr))
-            {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
-                {
-                    var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
-                    if (member != null)
-                    {
-                        HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
-                    }
-                    else
-                    {
-                        await _signInManager.SignOutAsync();
-                        return View();
-                    }
-                }
-                else
-                {
-                    await _signInManager.SignOutAsync();
-                    return View();
-                }
-            }
-            return RedirectToAction("Index", "Dashboard");
-        }
-
+        var redirect = await RedirectIfAuthenticated();
+        if (redirect != null) return redirect;
         return View();
     }
 
@@ -67,7 +41,7 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, true, false);
+        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, true, true);
 
         if (result.Succeeded)
         {
@@ -83,41 +57,21 @@ public class AuthController : Controller
             return RedirectToAction("Index", "Dashboard");
         }
 
-        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+        if (result.IsLockedOut)
+        {
+            ModelState.AddModelError(string.Empty, "Account locked. Try again in 15 minutes.");
+            return View(model);
+        }
+
+        ModelState.AddModelError(string.Empty, "Invalid email or password.");
         return View(model);
     }
 
     [HttpGet]
     public async Task<IActionResult> Signup()
     {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
-            if (string.IsNullOrEmpty(storeIdStr))
-            {
-                var user = await _userManager.GetUserAsync(User);
-                if (user != null)
-                {
-                    var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
-                    if (member != null)
-                    {
-                        HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
-                    }
-                    else
-                    {
-                        await _signInManager.SignOutAsync();
-                        return View();
-                    }
-                }
-                else
-                {
-                    await _signInManager.SignOutAsync();
-                    return View();
-                }
-            }
-            return RedirectToAction("Index", "Dashboard");
-        }
-
+        var redirect = await RedirectIfAuthenticated();
+        if (redirect != null) return redirect;
         return View();
     }
 
@@ -181,5 +135,31 @@ public class AuthController : Controller
         await _signInManager.SignOutAsync();
         HttpContext.Session.Clear();
         return RedirectToAction(nameof(Login));
+    }
+
+    private async Task<IActionResult?> RedirectIfAuthenticated()
+    {
+        if (User.Identity?.IsAuthenticated != true) return null;
+
+        var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
+        if (!string.IsNullOrEmpty(storeIdStr))
+            return RedirectToAction("Index", "Dashboard");
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            await _signInManager.SignOutAsync();
+            return View();
+        }
+
+        var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
+        if (member == null)
+        {
+            await _signInManager.SignOutAsync();
+            return View();
+        }
+
+        HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+        return RedirectToAction("Index", "Dashboard");
     }
 }
