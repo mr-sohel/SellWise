@@ -64,9 +64,9 @@ Creating an order involves modifying multiple tables (Orders, OrderItems, Produc
 5. If everything succeeds, the transaction is committed (`CommitAsync()`). If an error occurs, it rolls back to prevent incomplete data.
 
 ### Demo Data Seeding
-- **Auto-seed:** On first Dashboard visit, `DemoSeederService.SeedStoreAsync()` runs automatically if no products exist for the store.
+- **Auto-seed:** Only for the default admin (`admin@sellwise.com`) — seeds demo data in the background on first Dashboard visit.
 - **Manual seed (Reset DB):** Run `./reset-db.sh` or `.\reset-db.ps1` to drop the DB, run migrations, and inject realistic, trend-heavy mock data.
-- **Default Admin Account:** A fresh DB seed automatically generates an admin user (`admin@sellwise.com` / `Admin123!`) so you can explore the populated dashboard instantly.
+- **Default Admin Account:** `admin@sellwise.com` / `Admin123!`. Other users start with a clean empty store.
 
 ---
 

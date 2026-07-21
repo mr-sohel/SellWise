@@ -33,9 +33,6 @@ cd SellWise.Web && dotnet run
 # Run Python ML service standalone
 cd SellWise.ML && uv run uvicorn app.main:app --port 8000 --reload
 
-# Run ML tests
-cd SellWise.ML && uv run pytest
-
 # EF Core migrations
 cd SellWise.Web
 dotnet ef migrations add <Name>
@@ -49,8 +46,6 @@ cd SellWise.Web && dotnet run --seed
 ./reset-db.sh           # macOS/Linux
 ```
 
-**No .NET test project exists.** Only the ML service has tests (pytest).
-
 ## Architecture Notes
 
 - **Auth**: ASP.NET Core Identity cookie-based sessions. Login: `/Auth/Login`. Cookie expires 7 days.
@@ -59,7 +54,7 @@ cd SellWise.Web && dotnet run --seed
 - **Transactions**: Order creation (`OrderService.CreateOrderAsync`) uses EF Core `BeginTransactionAsync()` for atomic stock deduction.
 - **Frontend**: Bootstrap 5.3.3 + jQuery 3.7.1 + Chart.js via CDN. `wwwroot/lib/` contains only **license files**. Inline SVG icons (Lucide-style). No React/Vue — vanilla JS only.
 - **PDF generation**: QuestPDF for reports.
-- **Seed data**: `DemoSeederService` auto-seeds on first Dashboard visit (background task, checks `Products.Any(p => p.StoreId == storeId)`). Default admin: `admin@sellwise.com` / `Admin123!`. Creates 53 products, 200 customers, ~11K orders with trends/seasonality.
+- **Seed data**: `DemoSeederService` auto-seeds on first Dashboard visit for `admin@sellwise.com` only (background task). Creates 53 products, 200 customers, ~11K orders with trends/seasonality. Other users get a clean empty store.
 - **`--seed` flag**: Handled in `Program.cs` before `app.Run()` — exits immediately after seeding (no web server).
 - **ML integration**: `AnalyticsService` → `ForecastService` (5s timeout) → POST to `http://localhost:8000/api/v1/ml/forecast`. Falls back to moving average if ML service is down or unavailable.
 
@@ -99,7 +94,6 @@ Dashboard loads
 - Port 5000 is default. Port 8000 for ML. Check for conflicts before starting.
 - Startup uses `dotnet watch run` — edits trigger auto-rebuild.
 - `SellWise.Web/Views/Shared/_Layout.cshtml.css` must stay empty (previously contained conflicting default styles).
-- `.env` file at root is **stale** from prior architecture (PostgreSQL/JWT config) — not used. Actual config: `appsettings.json`.
 - ML service must be running for forecasts. Falls back to moving average if unavailable.
 - `ForecastService` has a **5-second HttpClient timeout** (configured in `Program.cs`).
 - Seed data generation takes ~15s on first Dashboard load (runs in background).

@@ -18,7 +18,6 @@ AI Sales Analytics & Inventory SaaS. ASP.NET Core MVC + Python FastAPI ML servic
 - **Reset Database & Seed:** `./reset-db.sh` or `.\reset-db.ps1` (Drops DB, updates schema, and generates realistic trend/seasonality data)
 - **Run Database Migrations:** `cd SellWise.Web && dotnet ef migrations add <Name>` then `dotnet ef database update`
 - **Seed Demo Data:** `cd SellWise.Web && dotnet run --seed` (Creates `admin@sellwise.com` / `Admin123!` if DB is fresh)
-- **Run ML Tests:** `cd SellWise.ML && uv run pytest`
 - **Run ML Service Standalone:** `cd SellWise.ML && uv run uvicorn app.main:app --port 8000 --reload`
 
 ## Architecture & Rules
