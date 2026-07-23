@@ -20,6 +20,23 @@ public class OrderService : IOrderService
         _logger = logger;
     }
 
+    public async Task<(decimal TodayRevenue, int TodayOrdersCount, int PendingOrdersCount)> GetDashboardKpisAsync(Guid storeId)
+    {
+        var today = DateTime.UtcNow.Date;
+        var kpis = await _db.Orders
+            .Where(o => o.StoreId == storeId)
+            .GroupBy(o => 1)
+            .Select(g => new {
+                TodayRevenue = g.Where(o => o.OrderDate >= today && o.Status != "cancelled" && o.Status != "returned").Sum(o => o.Total),
+                TodayOrdersCount = g.Count(o => o.OrderDate >= today),
+                PendingOrdersCount = g.Count(o => o.Status == "pending" || o.Status == "processing")
+            })
+            .FirstOrDefaultAsync();
+
+        if (kpis == null) return (0m, 0, 0);
+        return (kpis.TodayRevenue, kpis.TodayOrdersCount, kpis.PendingOrdersCount);
+    }
+
     public async Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model)
     {
         // START TRANSACTION: We use a database transaction to ensure ACID properties.
@@ -28,6 +45,9 @@ public class OrderService : IOrderService
         using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
+            Guid? finalCustomerId = model.CustomerId;
+            Customer? newCustomerEntity = null;
+
             if (model.CustomerId.HasValue)
             {
                 var customerExists = await _db.Customers
@@ -38,11 +58,27 @@ public class OrderService : IOrderService
                     return "Customer not found in your store.";
                 }
             }
+            else if (!string.IsNullOrWhiteSpace(model.NewCustomerName))
+            {
+                newCustomerEntity = new Customer
+                {
+                    StoreId = storeId,
+                    Name = model.NewCustomerName,
+                    Phone = model.NewCustomerPhone,
+                    Address = model.NewCustomerAddress,
+                    TotalOrders = 0,
+                    TotalSpent = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                // Altitude #4 and Efficiency #2 fix: Do not save immediately. Let EF Core handle insertion.
+            }
 
             var order = new Order
             {
                 StoreId = storeId,
-                CustomerId = model.CustomerId,
+                CustomerId = finalCustomerId,
+                Customer = newCustomerEntity,
                 DeliveryCharge = model.DeliveryCharge,
                 Discount = model.Discount,
                 Notes = model.Notes,

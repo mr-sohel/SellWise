@@ -1,0 +1,375 @@
+@model SellWise.Web.ViewModels.Order.OrderDetailsViewModel
+@{
+    Layout = null;
+    var currency = Model.Currency ?? "৳";
+    var statusColor = Model.Status?.ToLower() switch {
+        "completed"  => "#065f46",
+        "delivered"  => "#1e40af",
+        "processing" => "#92400e",
+        "pending"    => "#92400e",
+        "cancelled"  => "#991b1b",
+        "returned"   => "#9d174d",
+        _ => "#4338ca"
+    };
+    var statusBg = Model.Status?.ToLower() switch {
+        "completed"  => "#d1fae5",
+        "delivered"  => "#dbeafe",
+        "processing" => "#fef3c7",
+        "pending"    => "#fef3c7",
+        "cancelled"  => "#fee2e2",
+        "returned"   => "#fce7f3",
+        _ => "#e0e7ff"
+    };
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice – @Model.OrderNumber</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #f4f4f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #1c1917;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ── Toolbar (hidden on print) ── */
+        .toolbar {
+            background: #fff;
+            border-bottom: 1px solid #e4e4e7;
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .tb-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            border: 1.5px solid transparent;
+        }
+        .tb-btn-primary {
+            background: #1c1917;
+            color: #fff;
+            border-color: #1c1917;
+        }
+        .tb-btn-primary:hover { background: #4338ca; border-color: #4338ca; }
+        .tb-btn-secondary {
+            background: #fff;
+            color: #57534e;
+            border-color: #d6d3d1;
+        }
+        .tb-btn-secondary:hover { border-color: #4338ca; color: #4338ca; }
+
+        /* ── Invoice Paper ── */
+        .invoice-wrapper {
+            max-width: 820px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+
+        /* ── Brand bar ── */
+        .brand-bar {
+            background: #1c1917;
+            padding: 1.5rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .brand-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+        .brand-invoice-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .invoice-number-display {
+            text-align: right;
+        }
+        .inv-num {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+        .inv-date {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.55);
+            margin-top: 2px;
+        }
+
+        /* ── Body padding ── */
+        .invoice-body { padding: 2.5rem; }
+
+        /* ── Meta row ── */
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e4e4e7;
+        }
+        .meta-section-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #a1a1aa;
+            margin-bottom: 0.5rem;
+        }
+        .meta-name { font-size: 1.05rem; font-weight: 700; color: #1c1917; }
+        .meta-detail { font-size: 0.85rem; color: #71717a; margin-top: 2px; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.85rem;
+            border-radius: 50px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Items table ── */
+        .inv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+        .inv-table thead th {
+            padding: 0.6rem 0.75rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #a1a1aa;
+            border-bottom: 1px solid #e4e4e7;
+            white-space: nowrap;
+        }
+        .inv-table thead th:first-child { padding-left: 0; }
+        .inv-table thead th:last-child { padding-right: 0; text-align: right; }
+        .inv-table thead th:nth-child(2),
+        .inv-table thead th:nth-child(3) { text-align: center; }
+
+        .inv-table tbody td {
+            padding: 0.85rem 0.75rem;
+            border-bottom: 1px solid #f4f4f5;
+            vertical-align: middle;
+        }
+        .inv-table tbody td:first-child { padding-left: 0; }
+        .inv-table tbody td:last-child { padding-right: 0; text-align: right; font-weight: 700; }
+        .inv-table tbody td:nth-child(2) { text-align: center; color: #71717a; }
+        .inv-table tbody td:nth-child(3) { text-align: center; color: #71717a; }
+        .inv-table tbody tr:last-child td { border-bottom: none; }
+
+        .item-name { font-weight: 600; color: #1c1917; }
+
+        /* ── Totals ── */
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 2rem;
+        }
+        .totals-box { width: 280px; }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.45rem 0;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f4f4f5;
+        }
+        .totals-row:last-child { border-bottom: none; }
+        .totals-label { color: #71717a; }
+        .totals-value { font-weight: 600; color: #1c1917; }
+        .totals-value.discount { color: #dc2626; }
+        .grand-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.85rem 0 0;
+            margin-top: 0.5rem;
+            border-top: 2px solid #1c1917;
+        }
+        .grand-total-label { font-size: 1rem; font-weight: 800; color: #1c1917; }
+        .grand-total-value { font-size: 1.4rem; font-weight: 800; color: #4338ca; letter-spacing: -0.5px; }
+
+        /* ── Notes ── */
+        .notes-section {
+            padding-top: 1.5rem;
+            border-top: 1px solid #e4e4e7;
+        }
+        .notes-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #a1a1aa;
+            margin-bottom: 0.5rem;
+        }
+        .notes-text { font-size: 0.875rem; color: #71717a; line-height: 1.6; }
+
+        /* ── Footer ── */
+        .invoice-footer {
+            background: #fafafa;
+            border-top: 1px solid #e4e4e7;
+            padding: 1rem 2.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #a1a1aa;
+        }
+
+        /* ── Print ── */
+        @@media print {
+            body { background: #fff; }
+            .toolbar { display: none !important; }
+            .invoice-wrapper { margin: 0; box-shadow: none; border-radius: 0; max-width: 100%; }
+            .brand-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <a href="/Order/Details/@Model.Id" class="tb-btn tb-btn-secondary">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+        </a>
+        <button onclick="window.print()" class="tb-btn tb-btn-primary">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print / Save PDF
+        </button>
+    </div>
+
+    <!-- Invoice Paper -->
+    <div class="invoice-wrapper">
+
+        <!-- Brand Bar -->
+        <div class="brand-bar">
+            <div>
+                <div class="brand-invoice-label">Invoice</div>
+                <div class="brand-name">@(Model.StoreName ?? "SellWise Store")</div>
+            </div>
+            <div class="invoice-number-display">
+                <div class="inv-num">#@Model.OrderNumber</div>
+                <div class="inv-date">@Model.OrderDate.ToString("MMMM d, yyyy")</div>
+            </div>
+        </div>
+
+        <div class="invoice-body">
+
+            <!-- Meta: Billed To + Status -->
+            <div class="meta-row">
+                <div>
+                    <div class="meta-section-label">Billed To</div>
+                    <div class="meta-name">@(Model.CustomerName ?? "Walk-in Customer")</div>
+                    @if (!string.IsNullOrEmpty(Model.CustomerPhone))
+                    {
+                        <div class="meta-detail">@Model.CustomerPhone</div>
+                    }
+                </div>
+                <div style="text-align:right;">
+                    <div class="meta-section-label">Status</div>
+                    <span class="status-badge" style="background:@statusBg; color:@statusColor;">
+                        @Model.Status?.Replace("_", " ")
+                    </span>
+                    <div class="meta-detail" style="margin-top:0.5rem;">@Model.OrderDate.ToString("h:mm tt")</div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th style="text-align:right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="item-name">@item.ProductName</td>
+                            <td>@item.Quantity</td>
+                            <td>@currency @item.UnitPrice.ToString("N0")</td>
+                            <td>@currency @item.LineTotal.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div class="totals-section">
+                <div class="totals-box">
+                    <div class="totals-row">
+                        <span class="totals-label">Subtotal</span>
+                        <span class="totals-value">@currency @Model.Items.Sum(i => i.LineTotal).ToString("N0")</span>
+                    </div>
+                    @if (Model.DeliveryCharge > 0)
+                    {
+                        <div class="totals-row">
+                            <span class="totals-label">Delivery</span>
+                            <span class="totals-value">@currency @Model.DeliveryCharge.ToString("N0")</span>
+                        </div>
+                    }
+                    @if (Model.Discount > 0)
+                    {
+                        <div class="totals-row">
+                            <span class="totals-label">Discount</span>
+                            <span class="totals-value discount">−@currency @Model.Discount.ToString("N0")</span>
+                        </div>
+                    }
+                    <div class="grand-total-row">
+                        <span class="grand-total-label">Total</span>
+                        <span class="grand-total-value">@currency @Model.Total.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="notes-section">
+                    <div class="notes-label">Notes</div>
+                    <p class="notes-text">@Model.Notes</p>
+                </div>
+            }
+
+        </div>
+
+        <div class="invoice-footer">
+            Thank you for your business · @(Model.StoreName ?? "SellWise") · Generated @DateTime.Now.ToString("MMM d, yyyy")
+        </div>
+    </div>
+
+</body>
+</html>

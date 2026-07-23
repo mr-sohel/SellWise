@@ -26,6 +26,11 @@ public class OrderDetailsViewModel
     public string? Notes { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerPhone { get; set; }
+
+    // Store Information for Invoice
+    public string? StoreName { get; set; }
+    public string? Currency { get; set; }
+
     public List<OrderDetailItemViewModel> Items { get; set; } = new();
 }
 

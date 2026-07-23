@@ -29,25 +29,44 @@ public class OrderController : BaseController
         _orderService = orderService;
     }
 
-    public async Task<IActionResult> Index(string search, string status, int page = 1)
+    public async Task<IActionResult> Index(string search, string status, string dateRange, int page = 1)
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
-        
 
         var query = Db.Orders
             .Include(o => o.Customer)
             .Where(o => o.StoreId == storeId);
+
+        // Date Range Filtering
+        var today = DateTime.UtcNow.Date;
+        if (!string.IsNullOrEmpty(dateRange))
+        {
+            if (dateRange == "today")
+                query = query.Where(o => o.OrderDate >= today);
+            else if (dateRange == "yesterday")
+                query = query.Where(o => o.OrderDate >= today.AddDays(-1) && o.OrderDate < today);
+            else if (dateRange == "week")
+                query = query.Where(o => o.OrderDate >= today.AddDays(-7));
+            else if (dateRange == "month")
+                query = query.Where(o => o.OrderDate >= today.AddMonths(-1));
+        }
 
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(o => o.OrderNumber.Contains(search) || (o.Customer != null && o.Customer.Name.Contains(search)));
         }
 
-        if (!string.IsNullOrEmpty(status))
+        if (!string.IsNullOrEmpty(status) && status != "all")
         {
             query = query.Where(o => o.Status == status.ToLower());
         }
+
+        // Calculate KPIs for the UI (using a single efficient query in the service)
+        var kpis = await _orderService.GetDashboardKpisAsync(storeId);
+        ViewBag.TodayRevenue = kpis.TodayRevenue;
+        ViewBag.TodayOrdersCount = kpis.TodayOrdersCount;
+        ViewBag.PendingOrdersCount = kpis.PendingOrdersCount;
 
         int pageSize = 20;
         int totalItems = await query.CountAsync();
@@ -72,27 +91,25 @@ public class OrderController : BaseController
         ViewData["CurrentPage"] = page;
         ViewData["TotalPages"] = totalPages;
         ViewData["Search"] = search;
-        ViewData["Status"] = status;
+        ViewData["Status"] = status ?? "all";
+        ViewData["DateRange"] = dateRange ?? "all";
         ViewData["TotalItems"] = totalItems;
 
         return View(orders);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Details(Guid id)
+    private async Task<OrderDetailsViewModel?> GetOrderDetailsViewModelAsync(Guid id, Guid storeId)
     {
-        var storeId = GetCurrentStoreId();
-        
-
         var order = await Db.Orders
+            .Include(o => o.Store)
             .Include(o => o.Customer)
             .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
             .FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
 
-        if (order == null) return RedirectToAction(nameof(Index));
+        if (order == null) return null;
 
-        var vm = new OrderDetailsViewModel
+        return new OrderDetailsViewModel
         {
             Id = order.Id,
             OrderNumber = order.OrderNumber,
@@ -104,6 +121,8 @@ public class OrderController : BaseController
             Notes = order.Notes,
             CustomerName = order.Customer?.Name,
             CustomerPhone = order.Customer?.Phone,
+            StoreName = order.Store?.Name,
+            Currency = order.Store?.Currency ?? "BDT",
             Items = order.Items.Select(i => new OrderDetailItemViewModel
             {
                 ProductName = i.ProductName,
@@ -112,7 +131,23 @@ public class OrderController : BaseController
                 LineTotal = i.Quantity * i.UnitPrice
             }).ToList()
         };
+    }
 
+    [HttpGet]
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        var vm = await GetOrderDetailsViewModelAsync(id, storeId);
+        if (vm == null) return RedirectToAction(nameof(Index));
+        return View(vm);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Invoice(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        var vm = await GetOrderDetailsViewModelAsync(id, storeId);
+        if (vm == null) return RedirectToAction(nameof(Index));
         return View(vm);
     }
 
@@ -144,15 +179,7 @@ public class OrderController : BaseController
     public async Task<IActionResult> Create()
     {
         var storeId = GetCurrentStoreId();
-        var products = await Db.Products.Where(p => p.StoreId == storeId && p.IsActive).ToListAsync();
-        var customers = await Db.Customers.Where(c => c.StoreId == storeId).ToListAsync();
-
-        var model = new OrderFormViewModel
-        {
-            AvailableProducts = products.Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Name} (৳{p.SellingPrice} - Stock: {p.StockQuantity})" }),
-            AvailableCustomers = customers.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-        };
-
+        var model = await PopulateOrderFormModelAsync(new OrderFormViewModel(), storeId);
         return View(model);
     }
 
@@ -160,7 +187,6 @@ public class OrderController : BaseController
     public async Task<IActionResult> Create(OrderFormViewModel model)
     {
         var storeId = GetCurrentStoreId();
-        
 
         if (!model.Items.Any() || model.Items.All(i => i.ProductId == Guid.Empty))
         {
@@ -177,16 +203,37 @@ public class OrderController : BaseController
             ModelState.AddModelError("", error);
         }
 
-        return await RepopulateAndReturn(model, storeId);
+        return View(await PopulateOrderFormModelAsync(model, storeId));
     }
 
-    private async Task<IActionResult> RepopulateAndReturn(OrderFormViewModel model, Guid storeId)
+    private async Task<OrderFormViewModel> PopulateOrderFormModelAsync(OrderFormViewModel model, Guid storeId)
     {
-        var products = await Db.Products.Where(p => p.StoreId == storeId && p.IsActive).ToListAsync();
-        var customers = await Db.Customers.Where(c => c.StoreId == storeId).ToListAsync();
-        model.AvailableProducts = products.Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.Name} (৳{p.SellingPrice})" });
-        model.AvailableCustomers = customers.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name });
-        return View(model);
+        var products = await Db.Products
+            .AsNoTracking()
+            .Where(p => p.StoreId == storeId && p.IsActive)
+            .Select(p => new {
+                id = p.Id,
+                name = p.Name,
+                sku = p.Sku,
+                category = p.Category ?? "Uncategorized",
+                sellingPrice = p.SellingPrice,
+                stockQuantity = p.StockQuantity
+            })
+            .ToListAsync();
+
+        var customers = await Db.Customers
+            .AsNoTracking()
+            .Where(c => c.StoreId == storeId)
+            .Select(c => new {
+                id = c.Id,
+                name = c.Name,
+                phone = c.Phone
+            })
+            .ToListAsync();
+
+        model.ProductsJson = System.Text.Json.JsonSerializer.Serialize(products);
+        model.CustomersJson = System.Text.Json.JsonSerializer.Serialize(customers);
+        return model;
     }
 
     [HttpPost]

@@ -1,139 +1,758 @@
 @model SellWise.Web.ViewModels.Order.OrderFormViewModel
 @{
-    ViewData["Title"] = "Create POS Order";
+    ViewData["Title"] = "New Order";
 }
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0 p-4 mb-4">
-            <h5 class="fw-bold mb-3">Order Details</h5>
-            <form asp-action="Create" method="post" id="orderForm">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label asp-for="CustomerId" class="form-label">Customer</label>
-                        <select asp-for="CustomerId" asp-items="Model.AvailableCustomers" class="form-select">
-                            <option value="">Walk-in Customer</option>
-                        </select>
-                        <span asp-validation-for="CustomerId" class="text-danger"></span>
-                    </div>
-                </div>
+<style>
+/* ── POS layout ── */
+.pos-wrap {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.1rem;
+    height: calc(100vh - 108px);
+    min-height: 580px;
+}
+@@media (max-width: 991.98px) { .pos-wrap { grid-template-columns: 1fr; height: auto; } }
 
-                <div class="mb-4">
-                    <label class="form-label fw-bold">Products</label>
-                    <div id="product-list">
-                        <!-- Single product dropdown for simplicity in MVC without React -->
-                        <div class="row mb-2">
-                            <div class="col-8">
-                                <select name="Items[0].ProductId" asp-items="Model.AvailableProducts" class="form-select">
-                                    <option value="">-- Select a Product --</option>
-                                </select>
-                            </div>
-                            <div class="col-4">
-                                <input name="Items[0].Quantity" type="number" class="form-control" value="1" min="1" placeholder="Qty" />
-                            </div>
-                        </div>
-                    </div>
-                    <small class="text-muted">For this simplified defense version, add one product line at a time. A real POS would use JavaScript to add multiple rows.</small>
-                </div>
+/* ── Left pane ── */
+.pos-left { display: flex; flex-direction: column; gap: .75rem; min-height: 0; overflow: hidden; }
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label asp-for="DeliveryCharge" class="form-label">Delivery Charge (৳)</label>
-                        <input asp-for="DeliveryCharge" type="number" class="form-control" value="0" />
-                        <span asp-validation-for="DeliveryCharge" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="Discount" class="form-label">Discount (৳)</label>
-                        <input asp-for="Discount" type="number" class="form-control" value="0" />
-                        <span asp-validation-for="Discount" class="text-danger"></span>
-                    </div>
-                </div>
+/* Back / title bar */
+.pos-topbar { display: flex; align-items: center; gap: .75rem; }
+.pos-back {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .8rem; font-weight: 600; color: var(--text-muted);
+    text-decoration: none; padding: .38rem .75rem;
+    border-radius: var(--radius-md); border: 1.5px solid var(--border-color);
+    background: #fff; transition: all .15s ease; white-space: nowrap;
+}
+.pos-back:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-light); }
+.pos-page-title  { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -.3px; }
+.pos-page-hint   { font-size: .72rem; color: var(--text-muted); margin: 0; }
 
-                <div class="mb-3">
-                    <label asp-for="Notes" class="form-label">Order Notes</label>
-                    <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
-                </div>
+/* Search */
+.pos-search-wrap { position: relative; }
+.pos-search-wrap input {
+    width: 100%;
+    padding: .6rem .9rem .6rem 2.4rem;
+    background: #fff;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: .875rem; color: var(--text-primary);
+    outline: none; transition: all .15s ease;
+}
+.pos-search-wrap input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(67,56,202,.08); }
+.pos-search-wrap input::placeholder { color: var(--text-muted); }
+.pos-search-icon { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Complete Order</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Cancel</a>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0 p-4 bg-light position-sticky" style="top: 80px;">
-            <h5 class="fw-bold text-dark mb-4">Order Summary</h5>
+/* Category chips */
+.cat-chips { display: flex; gap: .35rem; overflow-x: auto; padding-bottom: 2px; flex-shrink: 0; scrollbar-width: none; }
+.cat-chips::-webkit-scrollbar { display: none; }
+.cat-chip {
+    padding: .35rem .9rem; border-radius: 50px;
+    border: 1.5px solid var(--border-color); background: #fff;
+    color: var(--text-main); font-size: .78rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: all .15s ease; user-select: none;
+}
+.cat-chip:hover { background: var(--brand-light); border-color: #c7d2fe; color: var(--brand); }
+.cat-chip.active { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 2px 6px rgba(67,56,202,.25); }
 
-            <div class="d-flex justify-content-between mb-2">
-                <span class="text-muted">Subtotal</span>
-                <span class="fw-bold text-dark" id="summarySubtotal">৳0</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-                <span class="text-muted">Delivery</span>
-                <span class="fw-bold text-dark" id="summaryDelivery">৳0</span>
-            </div>
-            <div class="d-flex justify-content-between mb-3 text-danger">
-                <span>Discount</span>
-                <span class="fw-bold" id="summaryDiscount">-৳0</span>
-            </div>
+/* Product grid */
+.pos-products-scroll {
+    flex: 1; overflow-y: auto; padding-right: 2px; min-height: 0;
+    scrollbar-width: thin; scrollbar-color: var(--border-color) transparent;
+}
+.pos-products-scroll::-webkit-scrollbar { width: 4px; }
+.pos-products-scroll::-webkit-scrollbar-track { background: transparent; }
+.pos-products-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+@@media (max-width: 991.98px) { .pos-products-scroll { max-height: 440px; } }
 
-            <hr />
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .75rem; }
 
-            <div class="d-flex justify-content-between mb-2">
-                <span class="fw-bold" style="font-size: 1.1rem;">Total</span>
-                <span class="fw-bold text-primary" style="font-size: 1.25rem;" id="summaryTotal">৳0</span>
-            </div>
+.product-card {
+    background: #fff;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 1rem .85rem;
+    cursor: pointer; transition: all .15s ease;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden; user-select: none;
+}
+/* top accent bar */
+.product-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--brand); transform: scaleX(0);
+    transition: transform .15s ease; transform-origin: left;
+}
+.product-card:hover { border-color: var(--brand); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.product-card:hover::before { transform: scaleX(1); }
+.product-card:active { transform: scale(.98); }
 
-            <p class="small text-muted mt-4 mb-0">Stock will be automatically deducted upon completion.</p>
-        </div>
+/* in-cart highlight */
+.product-card.in-cart { border-color: var(--brand); background: var(--brand-lighter); }
+.product-card.in-cart::before { transform: scaleX(1); }
+
+.product-card.oos { opacity: .5; cursor: not-allowed; }
+.product-card.oos:hover { border-color: var(--border-color); box-shadow: none; transform: none; }
+.product-card.oos::before { display: none; }
+
+.prod-cat {
+    font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    padding: .15rem .5rem; border-radius: 4px;
+    background: var(--brand-light); color: var(--brand);
+    align-self: flex-start; margin-bottom: .5rem;
+}
+.prod-name { font-size: .875rem; font-weight: 700; color: var(--text-primary); line-height: 1.35; margin-bottom: .2rem; flex: 1; }
+.prod-sku  { font-size: .68rem; color: var(--text-muted); margin-bottom: .5rem; }
+.prod-footer {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: auto; padding-top: .5rem; border-top: 1px solid var(--border-light);
+}
+.prod-price { font-size: 1.05rem; font-weight: 800; color: var(--brand); font-family: 'Outfit', sans-serif; }
+.prod-stock { font-size: .68rem; font-weight: 600; color: var(--text-muted); }
+.prod-stock.oos-label { color: var(--danger); }
+
+/* qty badge on product card */
+.prod-qty-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--brand); color: #fff; border-radius: 50px;
+    font-size: .65rem; font-weight: 800; padding: .1rem .48rem;
+    min-width: 20px; text-align: center;
+}
+
+/* ── Right pane: Cart ── */
+.pos-right { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+@@media (max-width: 991.98px) { .pos-right { min-height: 500px; } }
+
+.cart-panel {
+    background: #fff;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    display: flex; flex-direction: column; height: 100%;
+    box-shadow: var(--shadow-md); overflow: hidden;
+}
+
+/* Cart header */
+.cart-hd {
+    padding: .9rem 1.1rem .75rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.cart-hd-title {
+    font-size: .875rem; font-weight: 800; color: var(--text-primary);
+    display: flex; align-items: center; gap: .45rem;
+}
+.cart-count {
+    background: var(--brand); color: #fff; border-radius: 50px;
+    font-size: .68rem; font-weight: 700; padding: .1rem .5rem;
+    display: none; min-width: 20px; text-align: center;
+}
+.cart-clear-btn {
+    font-size: .75rem; font-weight: 600; color: var(--text-muted);
+    background: none; border: none; cursor: pointer; padding: .2rem .5rem;
+    border-radius: 6px; transition: color .15s ease; display: none;
+}
+.cart-clear-btn:hover { color: var(--danger); }
+
+/* Customer section */
+.cart-customer {
+    padding: .8rem 1.1rem;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+.sect-label {
+    font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--text-muted); margin-bottom: .55rem;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.cust-linked-tag {
+    display: none; align-items: center; gap: .35rem;
+    font-size: .7rem; font-weight: 700; color: var(--success-text);
+    background: var(--success-bg); padding: .15rem .55rem; border-radius: 50px;
+}
+.cust-search-wrap { position: relative; margin-bottom: .45rem; }
+.cust-search-wrap input {
+    width: 100%; padding: .5rem .85rem;
+    border: 1.5px solid var(--border-color); border-radius: var(--radius-md);
+    font-size: .82rem; color: var(--text-primary);
+    background: var(--bg-app); outline: none; transition: all .15s ease;
+}
+.cust-search-wrap input:focus { border-color: var(--brand); background: #fff; box-shadow: 0 0 0 3px rgba(67,56,202,.08); }
+.cust-search-wrap input::placeholder { color: var(--text-muted); }
+.cust-search-wrap input.locked { background: var(--brand-lighter); border-color: #c7d2fe; }
+
+.autocomplete-list {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #fff; border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+    z-index: 200; display: none; max-height: 170px; overflow-y: auto;
+}
+.autocomplete-row {
+    padding: .55rem .85rem; cursor: pointer; font-size: .82rem;
+    border-bottom: 1px solid var(--border-light); transition: background .1s;
+}
+.autocomplete-row:last-child { border-bottom: none; }
+.autocomplete-row:hover { background: var(--brand-light); }
+.autocomplete-row .row-phone { font-weight: 700; color: var(--text-primary); }
+.autocomplete-row .row-name  { color: var(--text-muted); font-size: .75rem; }
+
+.cust-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.cust-fields input {
+    padding: .42rem .75rem; border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md); font-size: .8rem; color: var(--text-primary);
+    background: var(--bg-app); outline: none; transition: all .15s ease; width: 100%;
+}
+.cust-fields input:focus { border-color: var(--brand); background: #fff; box-shadow: 0 0 0 3px rgba(67,56,202,.08); }
+.cust-fields input::placeholder { color: var(--text-muted); }
+.cust-fields input.locked { background: var(--brand-lighter); border-color: #c7d2fe; }
+
+.cust-footer-row {
+    margin-top: .4rem; font-size: .72rem; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.cust-clear-btn {
+    font-size: .72rem; font-weight: 600; color: var(--brand);
+    cursor: pointer; background: none; border: none; padding: 0; display: none;
+}
+.cust-clear-btn:hover { text-decoration: underline; }
+
+/* Cart items area */
+.cart-items {
+    flex: 1; overflow-y: auto; padding: .7rem 1.1rem;
+    background: var(--bg-app); min-height: 0;
+    scrollbar-width: thin; scrollbar-color: var(--border-color) transparent;
+}
+.cart-items::-webkit-scrollbar { width: 4px; }
+.cart-items::-webkit-scrollbar-track { background: transparent; }
+.cart-items::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+
+.cart-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; min-height: 120px; color: var(--text-muted);
+    gap: .45rem; padding: 1.5rem 0; text-align: center;
+}
+.cart-empty-icon {
+    width: 48px; height: 48px; border-radius: var(--radius-md);
+    background: var(--border-light); display: flex; align-items: center; justify-content: center;
+    margin-bottom: .1rem;
+}
+.cart-empty p { font-size: .82rem; margin: 0; }
+
+.cart-item {
+    background: #fff; border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md); padding: .65rem .85rem;
+    margin-bottom: .45rem; display: flex; align-items: center; gap: .7rem;
+    transition: border-color .15s; animation: fadeIn .15s ease-out;
+}
+.cart-item:hover { border-color: var(--brand); }
+.ci-info { flex: 1; min-width: 0; }
+.ci-name  { font-size: .82rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-price { font-size: .72rem; color: var(--text-muted); margin-top: 1px; }
+.ci-right { display: flex; align-items: center; gap: .55rem; flex-shrink: 0; }
+.qty-ctrl { display: flex; align-items: center; gap: .35rem; }
+.qty-btn {
+    width: 28px; height: 28px; border-radius: 7px;
+    border: 1.5px solid var(--border-color); background: var(--bg-app);
+    color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1.1rem; line-height: 1; font-weight: 700;
+    transition: all .12s ease; user-select: none;
+}
+.qty-btn:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
+.qty-val { font-size: .9rem; font-weight: 800; color: var(--text-primary); min-width: 22px; text-align: center; }
+.ci-total { font-size: .9rem; font-weight: 800; color: var(--text-primary); min-width: 64px; text-align: right; font-family: 'Outfit', sans-serif; }
+.ci-remove {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; padding: 2px; border-radius: 4px;
+    display: flex; transition: all .12s ease;
+}
+.ci-remove:hover { color: var(--danger); background: var(--danger-bg); }
+
+/* Cart footer */
+.cart-footer { padding: .85rem 1.1rem; flex-shrink: 0; border-top: 1px solid var(--border-light); }
+
+.totals-block { margin-bottom: .8rem; }
+.total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: .35rem; font-size: .82rem;
+}
+.total-lbl { color: var(--text-muted); font-weight: 500; }
+.total-val { font-weight: 700; color: var(--text-primary); }
+.total-input {
+    width: 88px; padding: .3rem .6rem;
+    border: 1.5px solid var(--border-color); border-radius: 6px;
+    font-size: .82rem; text-align: right; font-weight: 700;
+    color: var(--text-primary); background: var(--bg-app);
+    outline: none; transition: all .15s ease;
+}
+.total-input:focus { border-color: var(--brand); background: #fff; box-shadow: 0 0 0 2px rgba(67,56,202,.08); }
+.total-input.discount { color: var(--danger); }
+
+.grand-total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .8rem 0 0; border-top: 2px solid var(--border-color); margin-top: .35rem;
+}
+.grand-lbl { font-size: 1rem; font-weight: 800; color: var(--text-primary); }
+.grand-val { font-size: 1.55rem; font-weight: 800; color: var(--brand); font-family: 'Outfit', sans-serif; letter-spacing: -.5px; }
+
+.notes-row { margin-bottom: .7rem; }
+.notes-row textarea {
+    width: 100%; padding: .45rem .75rem;
+    border: 1.5px solid var(--border-color); border-radius: var(--radius-md);
+    font-size: .8rem; color: var(--text-primary); resize: none;
+    background: var(--bg-app); outline: none; transition: all .15s ease;
+    font-family: inherit;
+}
+.notes-row textarea:focus { border-color: var(--brand); background: #fff; box-shadow: 0 0 0 3px rgba(67,56,202,.08); }
+.notes-row textarea::placeholder { color: var(--text-muted); }
+
+/* Error banner */
+.cart-error {
+    display: none; background: var(--danger-bg); color: var(--danger-text);
+    border: 1px solid #fca5a5; border-radius: var(--radius-md);
+    padding: .5rem .85rem; font-size: .8rem; font-weight: 600;
+    margin-bottom: .6rem; align-items: center; gap: .45rem;
+}
+
+/* Checkout button — the hero CTA */
+.checkout-btn {
+    width: 100%; padding: .95rem;
+    border-radius: var(--radius-md); border: none;
+    background: var(--brand); color: #fff;
+    font-size: 1rem; font-weight: 800;
+    cursor: pointer; transition: all .15s ease;
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+    box-shadow: 0 4px 14px rgba(67,56,202,.35);
+    letter-spacing: .01em;
+}
+.checkout-btn:hover:not(:disabled) {
+    background: var(--brand-hover);
+    box-shadow: 0 6px 20px rgba(67,56,202,.4);
+    transform: translateY(-1px);
+}
+.checkout-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+</style>
+
+<!-- ── Page header ── -->
+<div class="pos-topbar mb-3">
+    <a asp-action="Index" class="pos-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Orders
+    </a>
+    <div>
+        <h2 class="pos-page-title">New Order</h2>
+        <p class="pos-page-hint">Tap a product to add it to the cart</p>
     </div>
 </div>
 
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:var(--radius-md); font-size:.875rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <div asp-validation-summary="ModelOnly"></div>
+    </div>
+}
+
+<!-- ── POS layout ── -->
+<div class="pos-wrap">
+
+    <!-- LEFT: Products -->
+    <div class="pos-left">
+
+        <div class="pos-search-wrap">
+            <svg class="pos-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="posSearch" placeholder="Search by name or SKU…" autocomplete="off" />
+        </div>
+
+        <div class="cat-chips" id="catChips"></div>
+
+        <div class="pos-products-scroll">
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT: Cart -->
+    <div class="pos-right">
+        <div class="cart-panel">
+
+            <!-- Header -->
+            <div class="cart-hd">
+                <div class="cart-hd-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    Cart
+                    <span class="cart-count" id="cartCountBadge">0</span>
+                </div>
+                <button type="button" onclick="clearCart()" id="btnClearCart" class="cart-clear-btn">Clear all</button>
+            </div>
+
+            <!-- Customer -->
+            <div class="cart-customer">
+                <div class="sect-label">
+                    Customer
+                    <span class="cust-linked-tag" id="customerSelectedTag">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Linked
+                    </span>
+                </div>
+                <div class="cust-search-wrap">
+                    <input type="text" id="custSearch" placeholder="Search by phone or name…" autocomplete="off" />
+                    <div class="autocomplete-list" id="custDropdown"></div>
+                </div>
+                <div class="cust-fields">
+                    <input type="text" id="custName"    placeholder="Full Name" />
+                    <input type="text" id="custAddress" placeholder="Address (optional)" />
+                </div>
+                <div class="cust-footer-row">
+                    <span id="custHelperText">Leave blank for walk-in</span>
+                    <button type="button" class="cust-clear-btn" id="btnClearCustomer" onclick="clearCustomer()">✕ Clear</button>
+                </div>
+            </div>
+
+            <!-- Cart items -->
+            <div class="cart-items" id="cartItems">
+                <div class="cart-empty" id="cartEmpty">
+                    <div class="cart-empty-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    </div>
+                    <p style="font-weight:600; color:var(--text-primary);">Cart is empty</p>
+                    <p style="font-size:.75rem;">Tap a product on the left to add it</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="cart-footer">
+
+                <div class="totals-block">
+                    <div class="total-row">
+                        <span class="total-lbl">Subtotal</span>
+                        <span class="total-val" id="cartSubtotal">৳0</span>
+                    </div>
+                    <div class="total-row">
+                        <span class="total-lbl">Delivery</span>
+                        <input type="number" id="cartDelivery" class="total-input" value="0" min="0" placeholder="0" />
+                    </div>
+                    <div class="total-row">
+                        <span class="total-lbl">Discount</span>
+                        <input type="number" id="cartDiscount" class="total-input discount" value="0" min="0" placeholder="0" />
+                    </div>
+                </div>
+
+                <div class="grand-total-row">
+                    <span class="grand-lbl">Total</span>
+                    <span class="grand-val" id="cartTotal">৳0</span>
+                </div>
+
+                <div class="notes-row mt-2">
+                    <textarea id="orderNotes" rows="2" placeholder="Order notes (optional)…"></textarea>
+                </div>
+
+                <div class="cart-error" id="cartError">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span id="cartErrorMsg"></span>
+                </div>
+
+                <button type="button" class="checkout-btn" id="btnCheckout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Place Order
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Hidden form for submission — kept identical to original -->
+<form asp-action="Create" method="post" id="hiddenPosForm" style="display:none;">
+    <input type="hidden" name="CustomerId"         id="hfCustomerId" />
+    <input type="hidden" name="NewCustomerName"    id="hfCustName" />
+    <input type="hidden" name="NewCustomerPhone"   id="hfCustPhone" />
+    <input type="hidden" name="NewCustomerAddress" id="hfCustAddress" />
+    <input type="hidden" name="DeliveryCharge"     id="hfDelivery" />
+    <input type="hidden" name="Discount"           id="hfDiscount" />
+    <input type="hidden" name="Notes"              id="hfNotes" />
+    <div id="hiddenItems"></div>
+</form>
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const productSelect = document.querySelector("select[name='Items[0].ProductId']");
-            const quantityInput = document.querySelector("input[name='Items[0].Quantity']");
-            const deliveryInput = document.getElementById("DeliveryCharge");
-            const discountInput = document.getElementById("Discount");
+<script>
+const ALL_PRODUCTS  = @Html.Raw(Model.ProductsJson);
+const ALL_CUSTOMERS = @Html.Raw(Model.CustomersJson);
 
-            const summarySubtotal = document.getElementById("summarySubtotal");
-            const summaryDelivery = document.getElementById("summaryDelivery");
-            const summaryDiscount = document.getElementById("summaryDiscount");
-            const summaryTotal = document.getElementById("summaryTotal");
+let state = {
+    products:   ALL_PRODUCTS,
+    customers:  ALL_CUSTOMERS,
+    cart:       [],
+    search:     '',
+    category:   'All',
+    delivery:   0,
+    discount:   0,
+    customerId: null,
+};
 
-            function calculateSummary() {
-                let subtotal = 0;
-                const qty = parseInt(quantityInput.value) || 0;
+// ── DOM refs ──
+const productGrid    = document.getElementById('productGrid');
+const catChips       = document.getElementById('catChips');
+const cartItems      = document.getElementById('cartItems');
+const cartEmpty      = document.getElementById('cartEmpty');
+const cartSubtotal   = document.getElementById('cartSubtotal');
+const cartTotal      = document.getElementById('cartTotal');
+const cartCountBadge = document.getElementById('cartCountBadge');
+const btnClearCart   = document.getElementById('btnClearCart');
+const cartError      = document.getElementById('cartError');
+const cartErrorMsg   = document.getElementById('cartErrorMsg');
+const custSearch     = document.getElementById('custSearch');
+const custDropdown   = document.getElementById('custDropdown');
+const custName       = document.getElementById('custName');
+const custAddress    = document.getElementById('custAddress');
+const custHelperText = document.getElementById('custHelperText');
+const btnClearCust   = document.getElementById('btnClearCustomer');
+const custSelTag     = document.getElementById('customerSelectedTag');
+const deliveryInput  = document.getElementById('cartDelivery');
+const discountInput  = document.getElementById('cartDiscount');
 
-                if (productSelect.selectedIndex > 0) {
-                    const optionText = productSelect.options[productSelect.selectedIndex].text;
-                    const priceMatch = optionText.match(/\(৳([\d.]+)\s-/);
-                    if (priceMatch && priceMatch[1]) {
-                        subtotal = parseFloat(priceMatch[1]) * qty;
-                    }
-                }
+// ── Init ──
+function init() {
+    const cats = ['All', ...new Set(ALL_PRODUCTS.map(p => p.category))];
+    cats.forEach(cat => {
+        const el = document.createElement('span');
+        el.className = `cat-chip${cat === 'All' ? ' active' : ''}`;
+        el.textContent = cat;
+        el.onclick = () => {
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            state.category = cat;
+            renderProducts();
+        };
+        catChips.appendChild(el);
+    });
 
-                const delivery = parseFloat(deliveryInput.value) || 0;
-                const discount = parseFloat(discountInput.value) || 0;
+    document.getElementById('posSearch').addEventListener('input', e => {
+        state.search = e.target.value.toLowerCase();
+        renderProducts();
+    });
 
-                const total = Math.max(0, subtotal + delivery - discount);
+    custSearch.addEventListener('input', onCustomerSearch);
+    custSearch.addEventListener('focus', onCustomerSearch);
+    document.addEventListener('click', e => {
+        if (!custSearch.contains(e.target)) custDropdown.style.display = 'none';
+    });
 
-                summarySubtotal.innerText = `৳${subtotal.toLocaleString()}`;
-                summaryDelivery.innerText = `৳${delivery.toLocaleString()}`;
-                summaryDiscount.innerText = `-৳${discount.toLocaleString()}`;
-                summaryTotal.innerText = `৳${total.toLocaleString()}`;
-            }
+    deliveryInput.addEventListener('input', e => { state.delivery = parseFloat(e.target.value) || 0; renderTotals(); });
+    discountInput.addEventListener('input', e => { state.discount = parseFloat(e.target.value) || 0; renderTotals(); });
 
-            productSelect.addEventListener("change", calculateSummary);
-            quantityInput.addEventListener("input", calculateSummary);
-            deliveryInput.addEventListener("input", calculateSummary);
-            discountInput.addEventListener("input", calculateSummary);
+    document.getElementById('btnCheckout').addEventListener('click', submitOrder);
+
+    renderProducts();
+}
+
+// ── Products ──
+function renderProducts() {
+    productGrid.innerHTML = '';
+    const filtered = ALL_PRODUCTS.filter(p => {
+        const matchCat    = state.category === 'All' || p.category === state.category;
+        const matchSearch = !state.search ||
+            p.name.toLowerCase().includes(state.search) ||
+            (p.sku && p.sku.toLowerCase().includes(state.search));
+        return matchCat && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+        productGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem 1rem; color:var(--text-muted); font-size:.875rem;">
+            <div style="font-size:2rem; margin-bottom:.5rem;">🔍</div>No products match your search</div>`;
+        return;
+    }
+
+    filtered.forEach(p => {
+        const oos    = p.stockQuantity <= 0;
+        const inCart = state.cart.find(i => i.id === p.id);
+        const card   = document.createElement('div');
+        card.className = `product-card${oos ? ' oos' : ''}${inCart ? ' in-cart' : ''}`;
+        card.innerHTML = `
+            <span class="prod-cat">${p.category}</span>
+            <div class="prod-name">${p.name}</div>
+            ${p.sku ? `<div class="prod-sku">${p.sku}</div>` : ''}
+            <div class="prod-footer">
+                <span class="prod-price">৳${p.sellingPrice.toLocaleString('en-BD', {minimumFractionDigits:0, maximumFractionDigits:0})}</span>
+                <span class="prod-stock${oos ? ' oos-label' : ''}">${oos ? 'Out of stock' : `${p.stockQuantity} left`}</span>
+            </div>
+            ${inCart ? `<div class="prod-qty-badge">${inCart.qty}</div>` : ''}
+        `;
+        if (!oos) card.addEventListener('click', () => addToCart(p));
+        productGrid.appendChild(card);
+    });
+}
+
+// ── Cart ──
+function addToCart(p) {
+    hideError();
+    const existing = state.cart.find(i => i.id === p.id);
+    if (existing) {
+        if (existing.qty < p.stockQuantity) existing.qty++;
+        else { showError(`Only ${p.stockQuantity} units available for "${p.name}".`); return; }
+    } else {
+        state.cart.push({ ...p, qty: 1 });
+    }
+    renderCart();
+    renderProducts();
+}
+
+function updateQty(id, delta) {
+    const item = state.cart.find(i => i.id === id);
+    if (!item) return;
+    const newQty = item.qty + delta;
+    if (newQty <= 0) {
+        state.cart = state.cart.filter(i => i.id !== id);
+    } else if (newQty > item.stockQuantity) {
+        showError(`Max ${item.stockQuantity} for "${item.name}".`); return;
+    } else {
+        item.qty = newQty;
+    }
+    hideError();
+    renderCart();
+    renderProducts();
+}
+
+function removeItem(id) {
+    state.cart = state.cart.filter(i => i.id !== id);
+    hideError(); renderCart(); renderProducts();
+}
+
+function clearCart() {
+    state.cart = [];
+    hideError(); renderCart(); renderProducts();
+}
+
+function renderCart() {
+    Array.from(cartItems.children).forEach(el => { if (el !== cartEmpty) el.remove(); });
+
+    const hasItems = state.cart.length > 0;
+    cartEmpty.style.display        = hasItems ? 'none'         : 'flex';
+    btnClearCart.style.display     = hasItems ? 'block'        : 'none';
+    cartCountBadge.style.display   = hasItems ? 'inline-block' : 'none';
+    cartCountBadge.textContent     = state.cart.reduce((s, i) => s + i.qty, 0);
+
+    state.cart.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+            <div class="ci-info">
+                <div class="ci-name" title="${item.name}">${item.name}</div>
+                <div class="ci-price">৳${item.sellingPrice.toLocaleString('en-BD', {minimumFractionDigits:0})} × ${item.qty}</div>
+            </div>
+            <div class="ci-right">
+                <div class="qty-ctrl">
+                    <div class="qty-btn" onclick="updateQty('${item.id}', -1)">−</div>
+                    <span class="qty-val">${item.qty}</span>
+                    <div class="qty-btn" onclick="updateQty('${item.id}', 1)">+</div>
+                </div>
+                <div class="ci-total">৳${(item.sellingPrice * item.qty).toLocaleString('en-BD', {minimumFractionDigits:0})}</div>
+                <button class="ci-remove" onclick="removeItem('${item.id}')" title="Remove">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+        `;
+        cartItems.insertBefore(div, cartEmpty);
+    });
+
+    renderTotals();
+}
+
+function renderTotals() {
+    const subtotal = state.cart.reduce((s, i) => s + i.sellingPrice * i.qty, 0);
+    const total    = Math.max(0, subtotal + state.delivery - state.discount);
+    cartSubtotal.textContent = `৳${subtotal.toLocaleString('en-BD', {minimumFractionDigits:0})}`;
+    cartTotal.textContent    = `৳${total.toLocaleString('en-BD', {minimumFractionDigits:0})}`;
+}
+
+// ── Customer autocomplete ──
+function onCustomerSearch() {
+    if (state.customerId) return;
+    const val = custSearch.value.toLowerCase().trim();
+    custDropdown.innerHTML = '';
+    if (!val) { custDropdown.style.display = 'none'; return; }
+
+    const matches = ALL_CUSTOMERS.filter(c =>
+        (c.phone && c.phone.toLowerCase().includes(val)) ||
+        (c.name  && c.name.toLowerCase().includes(val))
+    ).slice(0, 6);
+
+    if (matches.length) {
+        matches.forEach(c => {
+            const row = document.createElement('div');
+            row.className = 'autocomplete-row';
+            row.innerHTML = `<div class="row-phone">${c.phone || '—'}</div><div class="row-name">${c.name}</div>`;
+            row.onclick = () => selectCustomer(c);
+            custDropdown.appendChild(row);
         });
-    </script>
+        custDropdown.style.display = 'block';
+    } else {
+        custDropdown.style.display = 'none';
+    }
+}
+
+function selectCustomer(c) {
+    state.customerId = c.id;
+    custSearch.value  = c.phone || '';
+    custName.value    = c.name  || '';
+    custAddress.value = c.address || '';
+    [custSearch, custName, custAddress].forEach(el => el.classList.add('locked'));
+    custSearch.readOnly = custName.readOnly = custAddress.readOnly = true;
+    custDropdown.style.display = 'none';
+    btnClearCust.style.display = 'inline';
+    custSelTag.style.display   = 'inline-flex';
+    custHelperText.textContent = c.name;
+}
+
+function clearCustomer() {
+    state.customerId = null;
+    custSearch.value = custName.value = custAddress.value = '';
+    [custSearch, custName, custAddress].forEach(el => el.classList.remove('locked'));
+    custSearch.readOnly = custName.readOnly = custAddress.readOnly = false;
+    btnClearCust.style.display = 'none';
+    custSelTag.style.display   = 'none';
+    custHelperText.textContent = 'Leave blank for walk-in';
+    custSearch.focus();
+}
+
+// ── Errors ──
+function showError(msg) {
+    cartErrorMsg.textContent = msg;
+    cartError.style.display  = 'flex';
+    setTimeout(hideError, 4000);
+}
+function hideError() { cartError.style.display = 'none'; }
+
+// ── Submit ──
+function submitOrder() {
+    if (state.cart.length === 0) { showError('Add at least one product to place an order.'); return; }
+    const subtotal = state.cart.reduce((s, i) => s + i.sellingPrice * i.qty, 0);
+    if (state.discount > subtotal + state.delivery) { showError('Discount cannot exceed the total.'); return; }
+
+    const btn = document.getElementById('btnCheckout');
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Placing Order…`;
+
+    document.getElementById('hfCustomerId').value  = state.customerId || '';
+    document.getElementById('hfCustName').value    = state.customerId ? '' : custName.value.trim();
+    document.getElementById('hfCustPhone').value   = state.customerId ? '' : custSearch.value.trim();
+    document.getElementById('hfCustAddress').value = state.customerId ? '' : custAddress.value.trim();
+    document.getElementById('hfDelivery').value    = state.delivery;
+    document.getElementById('hfDiscount').value    = state.discount;
+    document.getElementById('hfNotes').value       = document.getElementById('orderNotes').value.trim();
+
+    const itemsContainer = document.getElementById('hiddenItems');
+    itemsContainer.innerHTML = '';
+    state.cart.forEach((item, i) => {
+        itemsContainer.innerHTML += `<input type="hidden" name="Items[${i}].ProductId" value="${item.id}" />`;
+        itemsContainer.innerHTML += `<input type="hidden" name="Items[${i}].Quantity"  value="${item.qty}" />`;
+    });
+
+    document.getElementById('hiddenPosForm').submit();
+}
+
+init();
+</script>
 }

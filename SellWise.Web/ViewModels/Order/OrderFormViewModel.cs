@@ -8,7 +8,12 @@ namespace SellWise.Web.ViewModels.Order;
 public class OrderFormViewModel
 {
     public Guid? CustomerId { get; set; }
-    
+
+    // Optional fields to create a new customer on the fly
+    public string? NewCustomerName { get; set; }
+    public string? NewCustomerPhone { get; set; }
+    public string? NewCustomerAddress { get; set; }
+
     [Required]
     
     [Range(0, 100000)]
@@ -20,9 +25,10 @@ public class OrderFormViewModel
     public string? Notes { get; set; }
     
     public List<OrderItemViewModel> Items { get; set; } = new List<OrderItemViewModel> { new OrderItemViewModel() };
-    
-    public IEnumerable<SelectListItem> AvailableProducts { get; set; } = new List<SelectListItem>();
-    public IEnumerable<SelectListItem> AvailableCustomers { get; set; } = new List<SelectListItem>();
+
+    // JSON Strings for POS Vanilla JS State
+    public string ProductsJson { get; set; } = "[]";
+    public string CustomersJson { get; set; } = "[]";
 }
 
 public class OrderItemViewModel
