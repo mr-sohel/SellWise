@@ -36,7 +36,7 @@ public class AnalyticsService
         };
 
         var orderQuery = _db.Orders
-            .Where(o => o.StoreId == storeId && o.Status != "cancelled" && o.OrderDate >= startDate);
+            .Where(o => o.StoreId == storeId && o.Status != "cancelled" && o.Status != "returned" && o.OrderDate >= startDate);
 
         var totalRevenue = await orderQuery.SumAsync(o => o.Total);
         var orderCount = await orderQuery.CountAsync();
@@ -54,7 +54,7 @@ public class AnalyticsService
             .ToList();
 
         var orderItemsQuery = _db.OrderItems
-            .Where(oi => oi.Order.StoreId == storeId && oi.Order.Status != "cancelled" && oi.Order.OrderDate >= startDate);
+            .Where(oi => oi.Order.StoreId == storeId && oi.Order.Status != "cancelled" && oi.Order.Status != "returned" && oi.Order.OrderDate >= startDate);
 
         var totalItemSales = await orderItemsQuery.SumAsync(oi => oi.Quantity * oi.UnitPrice);
 
@@ -143,6 +143,7 @@ public class AnalyticsService
             .Where(oi => oi.ProductId.HasValue && topProductIds.Contains(oi.ProductId.Value)
                 && oi.Order.StoreId == storeId
                 && oi.Order.Status != "cancelled"
+                && oi.Order.Status != "returned"
                 && oi.Order.OrderDate >= now.AddDays(-90))
             .Select(oi => new { ProductId = oi.ProductId.Value, oi.Order.OrderDate, oi.Quantity })
             .ToListAsync();
@@ -289,6 +290,7 @@ public class AnalyticsService
             .Where(oi => oi.Order.StoreId == storeId
                 && oi.ProductId.HasValue && productIds.Contains(oi.ProductId.Value)
                 && oi.Order.Status != "cancelled"
+                && oi.Order.Status != "returned"
                 && oi.Order.OrderDate >= past30DaysStart)
             .SumAsync(oi => (double?)oi.Quantity) ?? 0;
 
@@ -316,6 +318,7 @@ public class AnalyticsService
         var previousOrders = await _db.Orders
             .Where(o => o.StoreId == storeId
                 && o.Status != "cancelled"
+                && o.Status != "returned"
                 && o.OrderDate >= previousStart
                 && o.OrderDate < startDate)
             .SumAsync(o => o.Total);

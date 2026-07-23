@@ -44,7 +44,7 @@ public class OrderService : IOrderService
                 DeliveryCharge = model.DeliveryCharge,
                 Discount = model.Discount,
                 Notes = model.Notes,
-                Status = "completed",
+                Status = "pending",
                 OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}"
             };
 

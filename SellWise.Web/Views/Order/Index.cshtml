@@ -42,9 +42,12 @@
         </div>
         <select class="form-select" name="status" style="width: 100%; max-width: 200px; background-color: #ffffff; border-color: #cbd5e1;" onchange="this.form.submit();">
             <option value="">All Statuses</option>
-            <option value="COMPLETED" selected="@((ViewData["Status"]?.ToString() == "COMPLETED") ? "selected" : null)">Completed</option>
-            <option value="PENDING" selected="@((ViewData["Status"]?.ToString() == "PENDING") ? "selected" : null)">Pending</option>
-            <option value="DELIVERED" selected="@((ViewData["Status"]?.ToString() == "DELIVERED") ? "selected" : null)">Delivered</option>
+            <option value="pending" selected="@(ViewData["Status"]?.ToString()?.ToLower() == "pending")">Pending</option>
+            <option value="processing" selected="@(ViewData["Status"]?.ToString()?.ToLower() == "processing")">Processing</option>
+            <option value="delivered" selected="@(ViewData["Status"]?.ToString()?.ToLower() == "delivered")">Delivered</option>
+            <option value="completed" selected="@(ViewData["Status"]?.ToString()?.ToLower() == "completed")">Completed</option>
+            <option value="cancelled" selected="@(ViewData["Status"]?.ToString()?.ToLower() == "cancelled")">Cancelled</option>
+            <option value="returned" selected="@(ViewData["Status"]?.ToString()?.ToLower() == "returned")">Returned</option>
         </select>
         <button type="submit" class="btn btn-primary d-none">Search</button>
     </form>
@@ -78,9 +81,43 @@
                         <td class="align-middle text-muted">@o.OrderDate.ToString("M/d/yyyy")</td>
                         <td class="align-middle fw-bold text-dark">৳@o.Total.ToString("N0")</td>
                         <td class="align-middle">
-                            <span class="text-decoration-none fw-bold" style="color: #2563eb; font-size: 0.85rem;">
-                                @(o.Status.ToLower() == "completed" ? "delivered" : o.Status.ToLower())
-                            </span>
+                            @{
+                                var statusCls = o.Status?.ToLower() switch {
+                                    "completed" => "status-completed",
+                                    "delivered" => "status-delivered",
+                                    "pending" => "status-pending",
+                                    "processing" => "status-processing",
+                                    "cancelled" => "status-cancelled",
+                                    "returned" => "status-returned",
+                                    _ => "status-pending"
+                                };
+                            }
+                            <div class="dropdown">
+                                <button class="btn btn-sm dropdown-toggle fw-semibold order-status-badge @statusCls" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.75rem; border: none; cursor: pointer;">
+                                    @(o.Status?.Replace("_", " ") ?? "pending")
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="min-width: 160px; font-size: 0.8rem;">
+                                    <li class="dropdown-header text-muted" style="font-size: 0.7rem;">Change Status</li>
+                                    <li><hr class="dropdown-divider my-1"></li>
+                                    @foreach (var s in new[] { "pending", "processing", "delivered", "completed", "cancelled", "returned" })
+                                    {
+                                        <li>
+                                            <form asp-action="ChangeStatus" asp-route-id="@o.Id" method="post" class="m-0 p-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="status" value="@s" />
+                                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2 @(o.Status?.ToLower() == s ? "fw-bold" : "")">
+                                                    <span class="order-status-dot @("status-dot-" + s)"></span>
+                                                    @s
+                                                    @if (o.Status?.ToLower() == s)
+                                                    {
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ms-auto"><polyline points="20 6 9 17 4 12"/></svg>
+                                                    }
+                                                </button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
                         </td>
                         <td class="align-middle text-end">
                             <div class="dropdown">

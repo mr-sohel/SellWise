@@ -905,6 +905,39 @@ h1, h2, h3, h4, h5, h6,
   -webkit-mask-image: linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 12px), transparent 100%);
 }
 
+/* ==================== ORDER STATUS BADGES ==================== */
+.order-status-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.order-status-badge.status-pending { background: #fef3c7; color: #92400e; }
+.order-status-badge.status-processing { background: #dbeafe; color: #1e40af; }
+.order-status-badge.status-delivered { background: #d1fae5; color: #065f46; }
+.order-status-badge.status-completed { background: #d1fae5; color: #065f46; }
+.order-status-badge.status-cancelled { background: #fee2e2; color: #991b1b; }
+.order-status-badge.status-returned { background: #fce7f3; color: #9d174d; }
+
+.order-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot-pending { background-color: #f59e0b; }
+.status-dot-processing { background-color: #3b82f6; }
+.status-dot-delivered { background-color: #10b981; }
+.status-dot-completed { background-color: #10b981; }
+.status-dot-cancelled { background-color: #ef4444; }
+.status-dot-returned { background-color: #ec4899; }
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 991.98px) {
   .main-content { max-width: 100%; }

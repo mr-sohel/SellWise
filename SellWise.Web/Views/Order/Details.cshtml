@@ -2,19 +2,15 @@
 @{
     ViewData["Title"] = "Order Details";
 
-    var statusColor = Model.Status?.ToLower() switch {
-        "completed" => "var(--success)",
-        "delivered" => "var(--success)",
-        "pending" => "var(--warning)",
-        "cancelled" => "var(--danger)",
-        _ => "var(--text-muted)"
-    };
-    var statusBg = Model.Status?.ToLower() switch {
-        "completed" => "var(--success-bg)",
-        "delivered" => "var(--success-bg)",
-        "pending" => "var(--warning-bg)",
-        "cancelled" => "var(--danger-bg)",
-        _ => "#f1f5f9"
+    var allStatuses = new[] { "pending", "processing", "delivered", "completed", "cancelled", "returned" };
+    var statusCssClass = Model.Status?.ToLower() switch {
+        "completed" => "status-completed",
+        "delivered" => "status-delivered",
+        "pending" => "status-pending",
+        "processing" => "status-processing",
+        "cancelled" => "status-cancelled",
+        "returned" => "status-returned",
+        _ => "status-pending"
     };
 }
 
@@ -29,9 +25,32 @@
         </div>
         <div class="d-flex align-items-center gap-3">
             <h2 class="fw-bold mb-0">@Model.OrderNumber</h2>
-            <span class="fw-semibold" style="font-size: 0.75rem; background: @statusBg; color: @statusColor; padding: 0.2rem 0.6rem; border-radius: 6px;">
-                @Model.Status?.ToUpper()
-            </span>
+            <div class="dropdown">
+                <button class="btn dropdown-toggle fw-semibold order-status-badge @statusCssClass" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.75rem; border: none; cursor: pointer;">
+                    @Model.Status?.Replace("_", " ")
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="min-width: 200px; font-size: 0.8rem;">
+                    <li class="dropdown-header text-muted" style="font-size: 0.7rem;">Change Status</li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    @foreach (var s in allStatuses)
+                    {
+                        <li>
+                            <form asp-action="ChangeStatus" asp-route-id="@Model.Id" method="post" class="m-0 p-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="status" value="@s" />
+                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2 @(Model.Status?.ToLower() == s ? "fw-bold" : "")">
+                                    <span class="order-status-dot @("status-dot-" + s)"></span>
+                                    @s.Replace("_", " ")
+                                    @if (Model.Status?.ToLower() == s)
+                                    {
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ms-auto"><polyline points="20 6 9 17 4 12"/></svg>
+                                    }
+                                </button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            </div>
         </div>
         <p class="text-muted small mb-0 mt-1">Placed on @Model.OrderDate.ToString("MMMM dd, yyyy 'at' h:mm tt")</p>
     </div>

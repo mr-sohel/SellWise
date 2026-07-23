@@ -117,18 +117,97 @@ public class OrderController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(Guid id)
     {
+        return await ChangeStatusInternal(id, "cancelled");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeStatus(Guid id, string status)
+    {
+        return await ChangeStatusInternal(id, status);
+    }
+
+    private async Task<IActionResult> ChangeStatusInternal(Guid id, string newStatus)
+    {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        var order = await Db.Orders.FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
+        var order = await Db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
         if (order == null) return RedirectToAction(nameof(Index));
 
-        if (order.Status != "cancelled")
+        var allowedStatuses = new[] { "pending", "processing", "delivered", "completed", "cancelled", "returned" };
+        var sanitized = newStatus?.ToLower().Trim();
+
+        if (string.IsNullOrEmpty(sanitized) || !allowedStatuses.Contains(sanitized))
         {
-            order.Status = "cancelled";
+            TempData["ErrorMessage"] = "Invalid status.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (order.Status == sanitized)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+
+        var oldStatus = order.Status;
+        var wasActive = oldStatus != "cancelled" && oldStatus != "returned";
+        var willBeActive = sanitized != "cancelled" && sanitized != "returned";
+
+        using var transaction = await Db.Database.BeginTransactionAsync();
+        try
+        {
+            // Restore stock when cancelling or returning a previously active order
+            if (wasActive && !willBeActive)
+            {
+                foreach (var item in order.Items)
+                {
+                    if (item.ProductId.HasValue)
+                    {
+                        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId.Value && p.StoreId == storeId);
+                        if (product != null)
+                        {
+                            product.StockQuantity += item.Quantity;
+                            product.UpdatedAt = DateTime.UtcNow;
+                        }
+                    }
+                }
+            }
+            // Re-deduct stock when reactivating a cancelled/returned order
+            else if (!wasActive && willBeActive)
+            {
+                foreach (var item in order.Items)
+                {
+                    if (item.ProductId.HasValue)
+                    {
+                        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId.Value && p.StoreId == storeId);
+                        if (product != null)
+                        {
+                            if (product.StockQuantity < item.Quantity)
+                            {
+                                await transaction.RollbackAsync();
+                                TempData["ErrorMessage"] = $"Insufficient stock for {product.Name} to reactivate this order. Available: {product.StockQuantity}, needed: {item.Quantity}.";
+                                return RedirectToAction(nameof(Index));
+                            }
+                            product.StockQuantity -= item.Quantity;
+                            product.UpdatedAt = DateTime.UtcNow;
+                        }
+                    }
+                }
+            }
+
+            order.Status = sanitized;
             order.UpdatedAt = DateTime.UtcNow;
             await Db.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Order {order.OrderNumber} has been cancelled.";
+            await transaction.CommitAsync();
+
+            TempData["SuccessMessage"] = $"Order {order.OrderNumber} status changed to {sanitized.Replace("_", " ")}.";
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            TempData["ErrorMessage"] = "An error occurred while updating the order status.";
         }
 
         return RedirectToAction(nameof(Index));
