@@ -88,9 +88,14 @@
                                     •••
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end border-1 mt-1">
-                                    <li><a href="#" class="dropdown-item">View Details</a></li>
+                                    <li><a asp-action="Details" asp-route-id="@o.Id" class="dropdown-item">View Details</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a href="#" class="dropdown-item text-danger">Cancel Order</a></li>
+                                    <li>
+                                        <form asp-action="Cancel" asp-route-id="@o.Id" method="post" onsubmit="return confirm('Are you sure you want to cancel order @o.OrderNumber?');" class="m-0 p-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">Cancel Order</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
                         </td>

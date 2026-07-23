@@ -1,0 +1,171 @@
+@model SellWise.Web.ViewModels.Order.OrderDetailsViewModel
+@{
+    ViewData["Title"] = "Order Details";
+
+    var statusColor = Model.Status?.ToLower() switch {
+        "completed" => "var(--success)",
+        "delivered" => "var(--success)",
+        "pending" => "var(--warning)",
+        "cancelled" => "var(--danger)",
+        _ => "var(--text-muted)"
+    };
+    var statusBg = Model.Status?.ToLower() switch {
+        "completed" => "var(--success-bg)",
+        "delivered" => "var(--success-bg)",
+        "pending" => "var(--warning-bg)",
+        "cancelled" => "var(--danger-bg)",
+        _ => "#f1f5f9"
+    };
+}
+
+<!-- Page Header -->
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <a asp-action="Index" class="text-muted text-decoration-none d-flex align-items-center" style="font-size: 0.85rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Orders
+            </a>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <h2 class="fw-bold mb-0">@Model.OrderNumber</h2>
+            <span class="fw-semibold" style="font-size: 0.75rem; background: @statusBg; color: @statusColor; padding: 0.2rem 0.6rem; border-radius: 6px;">
+                @Model.Status?.ToUpper()
+            </span>
+        </div>
+        <p class="text-muted small mb-0 mt-1">Placed on @Model.OrderDate.ToString("MMMM dd, yyyy 'at' h:mm tt")</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Order Items -->
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm border-1 p-4 mb-4">
+            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                Order Items (@Model.Items.Count)
+            </h6>
+
+            @if (Model.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table mb-0" style="font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th class="text-muted fw-semibold" style="border: none; padding: 0.5rem 0;">Product</th>
+                                <th class="text-muted fw-semibold text-center" style="border: none; padding: 0.5rem 0;">Qty</th>
+                                <th class="text-muted fw-semibold text-end" style="border: none; padding: 0.5rem 0;">Unit Price</th>
+                                <th class="text-muted fw-semibold text-end" style="border: none; padding: 0.5rem 0;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <td class="fw-semibold text-dark align-middle" style="padding: 0.75rem 0;">@item.ProductName</td>
+                                    <td class="text-center align-middle" style="padding: 0.75rem 0;">@item.Quantity</td>
+                                    <td class="text-end text-muted align-middle" style="padding: 0.75rem 0;">৳@item.UnitPrice.ToString("N2")</td>
+                                    <td class="text-end fw-bold text-dark align-middle" style="padding: 0.75rem 0;">৳@item.LineTotal.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-4">No items in this order.</div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Notes))
+        {
+            <div class="card shadow-sm border-1 p-4">
+                <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand);"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Notes
+                </h6>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">@Model.Notes</p>
+            </div>
+        }
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-12 col-lg-4">
+        <!-- Summary Card -->
+        <div class="card shadow-sm border-1 p-4 mb-4">
+            <h6 class="fw-bold text-dark mb-3">Order Summary</h6>
+            <div class="d-flex flex-column gap-2" style="font-size: 0.85rem;">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Subtotal</span>
+                    <span class="fw-semibold text-dark">৳@Model.Items.Sum(i => i.LineTotal).ToString("N2")</span>
+                </div>
+                @if (Model.DeliveryCharge > 0)
+                {
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Delivery</span>
+                        <span class="fw-semibold text-dark">৳@Model.DeliveryCharge.ToString("N2")</span>
+                    </div>
+                }
+                @if (Model.Discount > 0)
+                {
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Discount</span>
+                        <span class="fw-semibold" style="color: var(--danger);">-৳@Model.Discount.ToString("N2")</span>
+                    </div>
+                }
+                <hr class="my-1" style="border-color: var(--border-color);">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-dark">Total</span>
+                    <span class="fw-bold text-dark" style="font-size: 1.1rem;">৳@Model.Total.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Card -->
+        <div class="card shadow-sm border-1 p-4 mb-4">
+            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Customer
+            </h6>
+            <div class="d-flex flex-column gap-2" style="font-size: 0.85rem;">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Name</span>
+                    <span class="fw-semibold text-dark">@(Model.CustomerName ?? "Walk-in")</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CustomerPhone))
+                {
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Phone</span>
+                        <span class="fw-semibold text-dark">@Model.CustomerPhone</span>
+                    </div>
+                }
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Source</span>
+                    <span class="fw-semibold text-dark" style="text-transform: capitalize;">@(Model.Source ?? "Walk-in")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card shadow-sm border-1 p-4">
+            <h6 class="fw-bold text-dark mb-3">Actions</h6>
+            <div class="d-flex flex-column gap-2">
+                @if (Model.Status?.ToLower() != "cancelled")
+                {
+                    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Are you sure you want to cancel order @Model.OrderNumber?');" class="m-0 p-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100" style="border-radius: var(--radius-md);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            Cancel Order
+                        </button>
+                    </form>
+                }
+                <a asp-action="Index" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2" style="border-radius: var(--radius-md);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    Back to Orders
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

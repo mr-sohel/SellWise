@@ -139,18 +139,62 @@
                         <div class="product-category mb-2">@f.Category</div>
                         
                         <!-- Sparkline SVG -->
-                        <div class="forecast-sparkline">
+                        @{
+                            var sparkMin = f.SparklineData.Any() ? f.SparklineData.Min() : 0.0;
+                            var sparkMax = f.SparklineData.Any() ? f.SparklineData.Max() : 1.0;
+                        }
+                        <div class="forecast-sparkline" data-values="@string.Join(",", f.SparklineData)" data-color="@sparkColor" data-min="@sparkMin" data-max="@sparkMax">
                             <svg aria-hidden="true" viewBox="0 0 100 30" class="w-100 h-100">
+                                <defs>
+                                    <linearGradient id="sparkFill@(i)" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="@sparkColor" stop-opacity="0.2"/>
+                                        <stop offset="100%" stop-color="@sparkColor" stop-opacity="0.0"/>
+                                    </linearGradient>
+                                </defs>
                                 @{
-                                    var points = "";
+                                    var sPadX = 2.0;
+                                    var sPadY = 2.0;
+                                    var sW = 100.0 - 2 * sPadX;
+                                    var sH = 30.0 - 2 * sPadY;
+                                    var sRange = sparkMax - sparkMin;
+                                    if (sRange < 1e-9) sRange = 1.0;
+
+                                    var pts = new List<(double x, double y)>();
                                     for(int k=0; k<f.SparklineData.Count; k++) {
-                                        var x = (k * 11).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                                        var y = (30 - (f.SparklineData[k] * 0.8)).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                                        points += (k == 0 ? "M" : "L") + $" {x} {y} ";
+                                        var px = sPadX + (f.SparklineData.Count > 1 ? k * sW / (f.SparklineData.Count - 1) : sW / 2);
+                                        var normalized = (f.SparklineData[k] - sparkMin) / sRange;
+                                        var py = sPadY + sH * (1.0 - normalized);
+                                        pts.Add((px, py));
+                                    }
+
+                                    string smoothPath = "";
+                                    string fillPath = "";
+                                    if (pts.Count > 1) {
+                                        smoothPath = "M " + pts[0].x.ToString("F2") + " " + pts[0].y.ToString("F2");
+                                        for (int s = 0; s < pts.Count - 1; s++) {
+                                            var p0 = pts[Math.Max(0, s - 1)];
+                                            var p1 = pts[s];
+                                            var p2 = pts[s + 1];
+                                            var p3 = pts[Math.Min(pts.Count - 1, s + 2)];
+
+                                            var cp1x = p1.x + (p2.x - p0.x) / 6.0;
+                                            var cp1y = p1.y + (p2.y - p0.y) / 6.0;
+                                            var cp2x = p2.x - (p3.x - p1.x) / 6.0;
+                                            var cp2y = p2.y - (p3.y - p1.y) / 6.0;
+
+                                            smoothPath += $" C {cp1x.ToString("F2")} {cp1y.ToString("F2")}, {cp2x.ToString("F2")} {cp2y.ToString("F2")}, {p2.x.ToString("F2")} {p2.y.ToString("F2")}";
+                                        }
+
+                                        var lastX = pts[pts.Count - 1].x.ToString("F2");
+                                        var firstX = pts[0].x.ToString("F2");
+                                        fillPath = smoothPath + $" L {lastX} 30 L {firstX} 30 Z";
                                     }
                                 }
-                                <path d="@points" fill="none" stroke="@sparkColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="@fillPath" fill="url(#sparkFill@(i))" />
+                                <path d="@smoothPath" fill="none" stroke="@sparkColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle class="spark-dot" cx="0" cy="0" r="2.5" fill="@sparkColor" stroke="#fff" stroke-width="1.5" opacity="0"/>
                             </svg>
+                            <div class="spark-hover-tooltip"></div>
                         </div>
                         
                         <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="font-size: 0.75rem;">
@@ -285,7 +329,12 @@
     const revData = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Revenue)));
 
     if (document.getElementById('revenueChart')) {
-        new Chart(document.getElementById('revenueChart'), {
+        var revCtx = document.getElementById('revenueChart').getContext('2d');
+        var revGradient = revCtx.createLinearGradient(0, 0, 0, 240);
+        revGradient.addColorStop(0, 'rgba(67, 56, 202, 0.12)');
+        revGradient.addColorStop(1, 'rgba(67, 56, 202, 0.0)');
+
+        new Chart(revCtx, {
             type: 'line',
             data: {
                 labels: revLabels,
@@ -293,34 +342,57 @@
                     label: 'Revenue (৳)',
                     data: revData,
                     borderColor: '#4338ca',
-                    backgroundColor: 'rgba(67, 56, 202, 0.06)',
+                    backgroundColor: revGradient,
                     borderWidth: 2,
-                    tension: 0.4,
+                    tension: 0.35,
                     fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
                     pointBackgroundColor: '#4338ca',
                     pointBorderColor: '#ffffff',
-                    pointBorderWidth: 1.5,
-                    pointRadius: 3,
-                    pointHoverRadius: 5
+                    pointBorderWidth: 2,
+                    pointHoverBorderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart'
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#4338ca',
-                        titleColor: '#ffffff',
+                        backgroundColor: '#1c1917',
+                        titleColor: '#a8a29e',
                         bodyColor: '#ffffff',
-                        padding: 10,
-                        titleFont: { size: 12, weight: 'bold' },
-                        bodyFont: { size: 12 }
+                        padding: { top: 8, bottom: 8, left: 12, right: 12 },
+                        cornerRadius: 6,
+                        caretPadding: 8,
+                        displayColors: false,
+                        titleFont: { size: 11, weight: '500' },
+                        bodyFont: { size: 13, weight: '700' },
+                        callbacks: {
+                            title: function(items) {
+                                return items[0].label;
+                            },
+                            label: function(context) {
+                                var val = context.parsed.y;
+                                if (val >= 1000000) return '৳' + (val / 1000000).toFixed(2) + 'M';
+                                return '৳' + val.toLocaleString();
+                            }
+                        }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
+                        border: { display: false },
                         grid: { color: '#f1f5f9' },
                         ticks: {
                             color: '#64748b',
@@ -332,8 +404,15 @@
                         }
                     },
                     x: {
+                        border: { display: false },
                         grid: { display: false },
-                        ticks: { color: '#64748b', font: { size: 10 } }
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 10 },
+                            maxRotation: -30,
+                            autoSkip: true,
+                            maxTicksLimit: 15
+                        }
                     }
                 }
             }
@@ -353,23 +432,89 @@
                     data: catPercentages,
                     backgroundColor: ['#4338ca', '#8b5cf6', '#0ea5e9', '#f97316', '#10b981'],
                     borderWidth: 3,
-                    borderColor: '#ffffff'
+                    borderColor: '#ffffff',
+                    hoverOffset: 8,
+                    hoverBorderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '80%',
+                cutout: '75%',
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        backgroundColor: '#1c1917',
+                        titleColor: '#a8a29e',
+                        bodyColor: '#ffffff',
+                        padding: { top: 8, bottom: 8, left: 12, right: 12 },
+                        cornerRadius: 6,
+                        caretPadding: 8,
+                        displayColors: true,
+                        boxPadding: 4,
+                        titleFont: { size: 11, weight: '500' },
+                        bodyFont: { size: 13, weight: '700' },
                         callbacks: {
-                            label: function(context) { return ' ' + context.label + ': ' + context.parsed + '%'; }
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + context.parsed + '%';
+                            }
                         }
                     }
                 }
             }
         });
     }
+
+    // Sparkline hover interaction
+    document.querySelectorAll('.forecast-sparkline').forEach(function(el) {
+        var svg = el.querySelector('svg');
+        var dot = el.querySelector('.spark-dot');
+        var tooltip = el.querySelector('.spark-hover-tooltip');
+        var values = (el.getAttribute('data-values') || '').split(',').map(Number);
+        var sMin = parseFloat(el.getAttribute('data-min')) || 0;
+        var sMax = parseFloat(el.getAttribute('data-max')) || 1;
+        if (!values.length || !svg || !dot) return;
+
+        var sPadX = 2, sPadY = 2, sW = 96, sH = 26;
+        var sRange = sMax - sMin;
+        if (sRange < 1e-9) sRange = 1;
+
+        el.addEventListener('mousemove', function(e) {
+            var rect = svg.getBoundingClientRect();
+            var mouseX = e.clientX - rect.left;
+            var ratio = mouseX / rect.width;
+            var idx = Math.round(ratio * (values.length - 1));
+            idx = Math.max(0, Math.min(values.length - 1, idx));
+
+            var ptX = sPadX + (values.length > 1 ? idx * sW / (values.length - 1) : sW / 2);
+            var normalized = (values[idx] - sMin) / sRange;
+            var ptY = sPadY + sH * (1.0 - normalized);
+
+            dot.setAttribute('cx', ptX);
+            dot.setAttribute('cy', ptY);
+            dot.setAttribute('opacity', '1');
+
+            var ctm = svg.getScreenCTM();
+            if (!ctm) return;
+            var screenX = ptX * ctm.a + ctm.e;
+            var screenY = ptY * ctm.d + ctm.f;
+
+            tooltip.textContent = Math.round(values[idx]) + ' units';
+            tooltip.style.left = (screenX - rect.left) + 'px';
+            tooltip.style.top = (screenY - rect.top) + 'px';
+            tooltip.style.opacity = '1';
+        });
+
+        el.addEventListener('mouseleave', function() {
+            dot.setAttribute('opacity', '0');
+            tooltip.style.opacity = '0';
+        });
+    });
 </script>
 }

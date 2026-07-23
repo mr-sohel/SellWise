@@ -3,16 +3,166 @@
     ViewData["Title"] = "Edit Product";
 }
 
-<div class="card shadow-sm border-0 p-4" style="max-width: 800px;">
-    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
-        <input type="hidden" asp-for="Id" />
-        <partial name="_ProductForm" model="Model" />
-        
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+<!-- Page Header -->
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <a asp-action="Index" class="text-muted text-decoration-none d-flex align-items-center" style="font-size: 0.85rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Products
+            </a>
         </div>
-    </form>
+        <h2 class="fw-bold mb-0">Edit Product</h2>
+        <p class="text-muted small mb-0 mt-1">Update product details and inventory levels</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Form -->
+    <div class="col-12 col-lg-8">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="card shadow-sm border-1 p-4 mb-4">
+                <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    Basic Information
+                </h6>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="Name" class="form-label fw-semibold">Product Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Canon EF 50mm Lens" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Sku" class="form-label fw-semibold">SKU / Barcode</label>
+                        <input asp-for="Sku" class="form-control" placeholder="e.g. SKU-001" />
+                        <span asp-validation-for="Sku" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Category" class="form-label fw-semibold">Category</label>
+                        <input asp-for="Category" class="form-control" placeholder="e.g. Cameras" />
+                        <span asp-validation-for="Category" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-1 p-4 mb-4">
+                <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand);"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Pricing
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="CostPrice" class="form-label fw-semibold">Cost Price <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text fw-semibold" style="background: #f8fafc; border-color: #e2e8f0; font-size: 0.85rem;">৳</span>
+                            <input asp-for="CostPrice" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                        </div>
+                        <span asp-validation-for="CostPrice" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="SellingPrice" class="form-label fw-semibold">Selling Price <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text fw-semibold" style="background: #f8fafc; border-color: #e2e8f0; font-size: 0.85rem;">৳</span>
+                            <input asp-for="SellingPrice" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                        </div>
+                        <span asp-validation-for="SellingPrice" class="text-danger small"></span>
+                        @if (Model.SellingPrice > 0 && Model.CostPrice > 0)
+                        {
+                            var margin = ((Model.SellingPrice - Model.CostPrice) / Model.CostPrice * 100);
+                            <div class="form-text">
+                                Margin: <span class="fw-semibold" style="color: @(margin > 0 ? "var(--success)" : "var(--danger)");">@margin.ToString("N1")%</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-1 p-4 mb-4">
+                <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    Inventory
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="StockQuantity" class="form-label fw-semibold">Stock Quantity <span class="text-danger">*</span></label>
+                        <input asp-for="StockQuantity" type="number" class="form-control" placeholder="0" />
+                        <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="LowStockThreshold" class="form-label fw-semibold">Low Stock Alert</label>
+                        <input asp-for="LowStockThreshold" type="number" class="form-control" placeholder="10" />
+                        <span asp-validation-for="LowStockThreshold" class="text-danger small"></span>
+                        <div class="form-text">Trigger alert when stock falls below this</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Unit" class="form-label fw-semibold">Unit</label>
+                        <input asp-for="Unit" class="form-control" placeholder="pcs" />
+                        <span asp-validation-for="Unit" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex align-items-center gap-3">
+                <button type="submit" class="btn px-4 py-2 fw-semibold" style="background-color: var(--brand); color: #fff; border: none; border-radius: var(--radius-md);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Changes
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary px-4 py-2 fw-semibold" style="border-radius: var(--radius-md);">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm border-1 p-4 mb-4">
+            <h6 class="fw-bold text-dark mb-3">Quick Summary</h6>
+            <div class="d-flex flex-column gap-3" style="font-size: 0.85rem;">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Product Name</span>
+                    <span class="fw-semibold text-dark text-truncate ms-2" style="max-width: 180px;">@(Model.Name ?? "—")</span>
+                </div>
+                <hr class="my-0" style="border-color: var(--border-light);">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">SKU</span>
+                    <span class="fw-semibold text-dark">@(Model.Sku ?? "—")</span>
+                </div>
+                <hr class="my-0" style="border-color: var(--border-light);">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Category</span>
+                    <span class="fw-semibold text-dark">@(Model.Category ?? "—")</span>
+                </div>
+                <hr class="my-0" style="border-color: var(--border-light);">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Cost Price</span>
+                    <span class="fw-semibold text-dark">৳@Model.CostPrice.ToString("N2")</span>
+                </div>
+                <hr class="my-0" style="border-color: var(--border-light);">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Selling Price</span>
+                    <span class="fw-semibold text-dark">৳@Model.SellingPrice.ToString("N2")</span>
+                </div>
+                <hr class="my-0" style="border-color: var(--border-light);">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Stock</span>
+                    <span class="fw-semibold @(Model.StockQuantity <= Model.LowStockThreshold ? "text-danger" : "text-dark")">
+                        @Model.StockQuantity @Model.Unit
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-1 p-4">
+            <h6 class="fw-bold text-dark mb-2">Tips</h6>
+            <ul class="mb-0" style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.1rem;">
+                <li class="mb-1">Set the <strong>Low Stock Alert</strong> to get notified before running out.</li>
+                <li class="mb-1">Use a unique <strong>SKU</strong> for barcode scanning.</li>
+                <li class="mb-0">Cost price is used for <strong>profit margin</strong> calculations.</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

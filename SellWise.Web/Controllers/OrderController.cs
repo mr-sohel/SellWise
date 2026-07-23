@@ -75,6 +75,66 @@ public class OrderController : BaseController
     }
 
     [HttpGet]
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var order = await Db.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
+
+        if (order == null) return RedirectToAction(nameof(Index));
+
+        var vm = new OrderDetailsViewModel
+        {
+            Id = order.Id,
+            OrderNumber = order.OrderNumber,
+            Status = order.Status,
+            Source = order.Source,
+            OrderDate = order.OrderDate,
+            Total = order.Total,
+            DeliveryCharge = order.DeliveryCharge,
+            Discount = order.Discount,
+            Notes = order.Notes,
+            CustomerName = order.Customer?.Name,
+            CustomerPhone = order.Customer?.Phone,
+            Items = order.Items.Select(i => new OrderDetailItemViewModel
+            {
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                LineTotal = i.Quantity * i.UnitPrice
+            }).ToList()
+        };
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var order = await Db.Orders.FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
+        if (order == null) return RedirectToAction(nameof(Index));
+
+        if (order.Status != "cancelled")
+        {
+            order.Status = "cancelled";
+            order.UpdatedAt = DateTime.UtcNow;
+            await Db.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"Order {order.OrderNumber} has been cancelled.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Create()
     {
         var storeId = GetCurrentStoreId();
