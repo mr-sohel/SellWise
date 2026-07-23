@@ -5,7 +5,7 @@ Write-Host "Dropping existing database..." -ForegroundColor Yellow
 dotnet ef database drop -f
 
 Write-Host "Applying migrations..." -ForegroundColor Yellow
-dotnet ef database update
+dotnet ef database update --quiet
 
 Write-Host "Seeding new realistic demo data..." -ForegroundColor Yellow
 dotnet run --seed

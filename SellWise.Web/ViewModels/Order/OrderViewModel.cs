@@ -19,7 +19,6 @@ public class OrderDetailsViewModel
     public Guid Id { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public string? Status { get; set; }
-    public string? Source { get; set; }
     public DateTime OrderDate { get; set; }
     public decimal Total { get; set; }
     public decimal DeliveryCharge { get; set; }

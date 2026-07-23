@@ -179,7 +179,6 @@ public class DemoSeederService
                     CustomerId = customer.Id,
                     OrderNumber = $"SW-V{orderNum + orderCount}",
                     Status = status,
-                    Source = isDelivery ? "online" : "walk_in",
                     Total = product.SellingPrice * qty,
                     DeliveryCharge = isDelivery ? 60 : 0,
                     Discount = 0,

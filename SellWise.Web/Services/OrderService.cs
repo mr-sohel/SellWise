@@ -43,7 +43,6 @@ public class OrderService : IOrderService
             {
                 StoreId = storeId,
                 CustomerId = model.CustomerId,
-                Source = model.Source!,
                 DeliveryCharge = model.DeliveryCharge,
                 Discount = model.Discount,
                 Notes = model.Notes,

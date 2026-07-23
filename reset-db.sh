@@ -6,7 +6,7 @@ echo -e "\033[1;33mDropping existing database...\033[0m"
 dotnet ef database drop -f
 
 echo -e "\033[1;33mApplying migrations...\033[0m"
-dotnet ef database update
+dotnet ef database update --quiet
 
 echo -e "\033[1;33mSeeding new realistic demo data...\033[0m"
 dotnet run --seed

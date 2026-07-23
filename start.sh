@@ -65,7 +65,7 @@ fi
 echo "[3/4] Checking database..."
 if [ -d "SellWise.Web" ]; then
     cd SellWise.Web
-    dotnet ef database update --no-build
+    dotnet ef database update --no-build --quiet
     echo "[OK] Database ready."
 else
     echo "[ERROR] SellWise.Web not found!"

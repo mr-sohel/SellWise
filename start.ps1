@@ -54,7 +54,7 @@ try {
     Write-Host "[3/4] Checking database..." -ForegroundColor Yellow
     if (Test-Path "SellWise.Web") {
         Push-Location SellWise.Web
-        dotnet ef database update --no-build
+        dotnet ef database update --no-build --quiet
         Pop-Location
         Write-Host "[OK] Database ready." -ForegroundColor Green
     } else {

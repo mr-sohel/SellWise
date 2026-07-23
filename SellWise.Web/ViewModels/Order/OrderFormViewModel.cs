@@ -10,7 +10,6 @@ public class OrderFormViewModel
     public Guid? CustomerId { get; set; }
     
     [Required]
-    public string? Source { get; set; } = "walk_in";
     
     [Range(0, 100000)]
     public decimal DeliveryCharge { get; set; }

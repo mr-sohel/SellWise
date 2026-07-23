@@ -14,7 +14,6 @@ public class Order
 
     public string OrderNumber { get; set; } = string.Empty;
     public string Status { get; set; } = "pending";
-    public string Source { get; set; } = "walk_in";
     
     public decimal Total { get; set; }
     public decimal DeliveryCharge { get; set; }

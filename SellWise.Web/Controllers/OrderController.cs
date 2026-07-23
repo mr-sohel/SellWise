@@ -97,7 +97,6 @@ public class OrderController : BaseController
             Id = order.Id,
             OrderNumber = order.OrderNumber,
             Status = order.Status,
-            Source = order.Source,
             OrderDate = order.OrderDate,
             Total = order.Total,
             DeliveryCharge = order.DeliveryCharge,
@@ -226,7 +225,7 @@ public class OrderController : BaseController
 
                 var values = ParseCsvLine(line);
 
-                // CSV Format: OrderNumber,CustomerName,CustomerPhone,Total,Status,Source,OrderDate
+                // CSV Format: OrderNumber,CustomerName,CustomerPhone,Total,Status,OrderDate
                 if (values.Length >= 6)
                 {
                     var phone = values[2].Trim();
@@ -268,7 +267,6 @@ public class OrderController : BaseController
                         Customer = customer,
                         Total = total,
                         Status = string.IsNullOrEmpty(values[4].Trim()) ? "pending" : values[4].Trim().ToLower(),
-                        Source = string.IsNullOrEmpty(values[5].Trim()) ? "walk_in" : values[5].Trim().ToLower(),
                         OrderDate = values.Length >= 7 && DateTime.TryParse(values[6].Trim(), out var date) ? date : DateTime.UtcNow,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
