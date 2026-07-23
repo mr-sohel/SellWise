@@ -1,0 +1,79 @@
+@model SellWise.Web.ViewModels.Customer.CustomerEditViewModel
+@{
+    ViewData["Title"] = "Edit Customer";
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb" style="font-size: 0.85rem;">
+        <li class="breadcrumb-item"><a asp-action="Index" class="text-decoration-none" style="color: #4338ca;">Customers</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Edit</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex align-items-center mb-4">
+            <div class="d-flex align-items-center justify-content-center rounded-circle me-3" style="width: 48px; height: 48px; background-color: #eef2ff;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+                <h2 class="fw-bold text-dark mb-0" style="font-size: 1.4rem;">Edit Customer</h2>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">Update customer information</p>
+            </div>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card border-1 shadow-sm">
+            <div class="card-body p-4">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;"></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Rahim Uddin" style="border-color: #d1d5db; font-size: 0.9rem;" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;"></label>
+                            <input asp-for="Phone" class="form-control" placeholder="e.g. 01712345678" style="border-color: #d1d5db; font-size: 0.9rem;" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;"></label>
+                            <input asp-for="Email" class="form-control" placeholder="e.g. rahim@example.com" style="border-color: #d1d5db; font-size: 0.9rem;" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Address" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3" placeholder="e.g. 123 Mirpur Road, Dhaka" style="border-color: #d1d5db; font-size: 0.9rem;"></textarea>
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn" style="color: #6b7280; background-color: #f3f4f6; border: none; font-weight: 600;">Cancel</a>
+                        <button type="submit" class="btn" style="background-color: #4338ca; color: #ffffff; border: none; font-weight: 600;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

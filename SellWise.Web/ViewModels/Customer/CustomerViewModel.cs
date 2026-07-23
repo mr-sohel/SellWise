@@ -11,13 +11,17 @@ public class CustomerViewModel
     public int TotalOrders { get; set; }
     public decimal TotalSpent { get; set; }
 
+    public int RecencyScore { get; set; }
+    public int FrequencyScore { get; set; }
+    public int MonetaryScore { get; set; }
+    public string RfmSegment { get; set; } = string.Empty;
+
     public string Segment
     {
         get
         {
-            if (TotalSpent >= 10000000) return "Champion";
-            if (TotalSpent >= 5000000) return "Potential";
-            return "Promising";
+            if (string.IsNullOrEmpty(RfmSegment)) return "Unscored";
+            return RfmSegment;
         }
     }
 
@@ -25,8 +29,17 @@ public class CustomerViewModel
     {
         get
         {
-            if (TotalSpent >= 10000000) return "badge-champion";
-            return "badge-potential";
+            return RfmSegment switch
+            {
+                "Champion" => "badge-champion",
+                "Loyal" => "badge-loyal",
+                "Potential Loyalist" => "badge-potential",
+                "New Customer" => "badge-new",
+                "At Risk" => "badge-risk",
+                "Can't Lose Them" => "badge-danger",
+                "Lost" => "badge-lost",
+                _ => "badge-potential"
+            };
         }
     }
 
@@ -34,9 +47,9 @@ public class CustomerViewModel
     {
         get
         {
-            if (TotalSpent >= 10000000) return "R:5 F:5 M:5";
-            if (TotalSpent >= 5000000) return "R:2 F:5 M:5";
-            return "R:3 F:3 M:3";
+            if (RecencyScore == 0 && FrequencyScore == 0 && MonetaryScore == 0)
+                return "Not calculated";
+            return $"R:{RecencyScore} F:{FrequencyScore} M:{MonetaryScore}";
         }
     }
 }

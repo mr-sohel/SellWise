@@ -7,15 +7,21 @@ using System;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Customer;
+using SellWise.Web.Services;
 
 namespace SellWise.Web.Controllers;
 
 [Authorize]
 public class CustomerController : BaseController
 {
-    public CustomerController(AppDbContext db) : base(db) { }
+    private readonly IRfmService _rfmService;
 
-    public async Task<IActionResult> Index(string search, string segment, int page = 1)
+    public CustomerController(AppDbContext db, IRfmService rfmService) : base(db)
+    {
+        _rfmService = rfmService;
+    }
+
+    public async Task<IActionResult> Index(string search, string segment, string sort, int page = 1)
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
@@ -30,20 +36,43 @@ public class CustomerController : BaseController
 
         if (!string.IsNullOrEmpty(segment))
         {
-            if (segment.ToUpper() == "CHAMPION")
-                query = query.Where(c => c.TotalSpent >= 10000000);
-            else if (segment.ToUpper() == "POTENTIAL")
-                query = query.Where(c => c.TotalSpent >= 5000000 && c.TotalSpent < 10000000);
-            else if (segment.ToUpper() == "PROMISING")
-                query = query.Where(c => c.TotalSpent < 5000000);
+            var segmentFilter = segment.ToUpper() switch
+            {
+                "CHAMPION" => "Champion",
+                "LOYAL" => "Loyal",
+                "POTENTIAL_LOYALIST" => "Potential Loyalist",
+                "NEW_CUSTOMER" => "New Customer",
+                "AT_RISK" => "At Risk",
+                "CANT_LOSE_THEM" => "Can't Lose Them",
+                "NEED_ATTENTION" => "Need Attention",
+                "LOST" => "Lost",
+                _ => null
+            };
+
+            if (segmentFilter != null)
+                query = query.Where(c => c.RfmSegment == segmentFilter);
         }
+
+        query = sort?.ToLower() switch
+        {
+            "name_asc" => query.OrderBy(c => c.Name),
+            "name_desc" => query.OrderByDescending(c => c.Name),
+            "spent_desc" => query.OrderByDescending(c => c.TotalSpent),
+            "spent_asc" => query.OrderBy(c => c.TotalSpent),
+            "orders_desc" => query.OrderByDescending(c => c.TotalOrders),
+            "orders_asc" => query.OrderBy(c => c.TotalOrders),
+            "rfm_desc" => query.OrderByDescending(c => c.RecencyScore * 100 + c.FrequencyScore * 10 + c.MonetaryScore),
+            "rfm_asc" => query.OrderBy(c => c.RecencyScore * 100 + c.FrequencyScore * 10 + c.MonetaryScore),
+            "recent_desc" => query.OrderByDescending(c => c.LastOrderDate),
+            "recent_asc" => query.OrderBy(c => c.LastOrderDate),
+            _ => query.OrderByDescending(c => c.CreatedAt)
+        };
 
         int pageSize = 20;
         int totalItems = await query.CountAsync();
         int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
         var customers = await query
-            .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(c => new CustomerViewModel
@@ -53,7 +82,11 @@ public class CustomerController : BaseController
                 Phone = c.Phone,
                 Email = c.Email,
                 TotalOrders = c.TotalOrders,
-                TotalSpent = c.TotalSpent
+                TotalSpent = c.TotalSpent,
+                RecencyScore = c.RecencyScore,
+                FrequencyScore = c.FrequencyScore,
+                MonetaryScore = c.MonetaryScore,
+                RfmSegment = c.RfmSegment
             })
             .ToListAsync();
 
@@ -61,8 +94,67 @@ public class CustomerController : BaseController
         ViewData["TotalPages"] = totalPages;
         ViewData["Search"] = search;
         ViewData["Segment"] = segment;
+        ViewData["Sort"] = sort;
         ViewData["TotalItems"] = totalItems;
 
         return View(customers);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RecalculateRfm()
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        await _rfmService.RecalculateAllAsync(storeId);
+
+        TempData["SuccessMessage"] = "RFM scores recalculated successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
+        if (customer == null) return NotFound();
+
+        var model = new CustomerEditViewModel
+        {
+            Id = customer.Id,
+            Name = customer.Name,
+            Phone = customer.Phone,
+            Email = customer.Email,
+            Address = customer.Address
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(Guid id, CustomerEditViewModel model)
+    {
+        if (id != model.Id) return BadRequest();
+
+        if (!ModelState.IsValid) return View(model);
+
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
+        if (customer == null) return NotFound();
+
+        customer.Name = model.Name;
+        customer.Phone = model.Phone;
+        customer.Email = model.Email;
+        customer.Address = model.Address;
+        customer.UpdatedAt = DateTime.UtcNow;
+
+        await Db.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = $"Customer \"{customer.Name}\" updated successfully.";
+        return RedirectToAction(nameof(Index));
     }
 }
