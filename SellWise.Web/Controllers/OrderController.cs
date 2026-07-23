@@ -211,11 +211,11 @@ public class OrderController : BaseController
 
             // Fix ToDictionary duplicate key error by grouping by phone and selecting the first
             var customerList = await Db.Customers.Where(c => c.StoreId == storeId && !string.IsNullOrEmpty(c.Phone)).ToListAsync();
-            var existingCustomers = customerList.GroupBy(c => c.Phone).ToDictionary(g => g.Key, g => g.First());
+            var existingCustomers = customerList.GroupBy(c => c.Phone!).ToDictionary(g => g.Key, g => g.First());
 
-            while (!reader.EndOfStream)
+            string? line;
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 if (isFirstRow)
@@ -230,7 +230,7 @@ public class OrderController : BaseController
                 if (values.Length >= 6)
                 {
                     var phone = values[2].Trim();
-                    Customer customer = null;
+                    Customer? customer = null;
                     if (!string.IsNullOrEmpty(phone))
                     {
                         if (existingCustomers.ContainsKey(phone))

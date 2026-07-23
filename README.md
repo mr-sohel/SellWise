@@ -79,9 +79,7 @@ The Python service runs independently on port 8000. It provides an endpoint `/ap
 2. For each product, it gathers 90 days of sales history from `OrderItems`.
 3. Missing days are padded with zeros to create continuous daily data.
 4. `ForecastService` sends the history to the Python ML service.
-5. The Python service selects the algorithm based on data availability:
-   - **Prophet** (≥30 days history): Meta's Prophet model with weekly/yearly seasonality and Bangladesh holidays
-   - **EWMA** (<30 days history): Exponential Weighted Moving Average for sparse data
+5. The Python service processes the sales history through Meta's Prophet model (configured with weekly/yearly seasonality and Bangladesh holidays).
 6. The prediction (30-day demand forecast) is returned and stored in the `Forecasts` table for caching.
 7. The Dashboard strictly ranks these resulting cards by **highest predicted demand** (so #1 mathematically forecasts the most units), and renders the curves.
 

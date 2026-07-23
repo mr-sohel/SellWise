@@ -196,9 +196,9 @@ public class ProductController : BaseController
             var isFirstRow = true;
             var productsToAdd = new List<Product>();
 
-            while (!reader.EndOfStream)
+            string? line;
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 if (isFirstRow)

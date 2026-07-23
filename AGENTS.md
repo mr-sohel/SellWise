@@ -63,7 +63,7 @@ cd SellWise.Web && dotnet run --seed
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/ml/health` | Health check |
-| POST | `/api/v1/ml/forecast` | Demand forecast (Prophet ≥30d history, EWMA <30d) |
+| POST | `/api/v1/ml/forecast` | Demand forecast (Prophet model) |
 | POST | `/api/v1/ml/backtest` | Backtest forecast against history |
 | POST | `/api/v1/ml/churn` | Churn probability (heuristic + optional LR ensemble) |
 | POST | `/api/v1/ml/churn/train` | Train + persist logistic regression churn model to `data/models/` |
@@ -80,7 +80,7 @@ Dashboard loads
           → Pad missing days with zeros
           → Call ForecastService.GetForecastAsync()
             → POST http://localhost:8000/api/v1/ml/forecast
-            → Python uses Prophet (≥30 days) or EWMA (<30 days)
+            → Python uses Prophet to generate 30-day forecast
           → Store results in Forecasts table
     → Aggregate product forecasts into demand chart
     → Calculate revenue growth (vs previous period of same length)
