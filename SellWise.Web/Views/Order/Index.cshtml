@@ -280,6 +280,10 @@
         <p class="ord-sub">Track and manage every sale in one place</p>
     </div>
     <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;">
+        <button type="button" class="btn-ghost-sm" data-bs-toggle="modal" data-bs-target="#bulkImportModal">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Import
+        </button>
         <button type="button" class="btn-ghost-sm" onclick="window.print()" title="Print list">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print
@@ -578,6 +582,31 @@
             </a>
         </div>
     }
+</div>
+
+<!-- Bulk Import Modal -->
+<div class="modal fade no-print" id="bulkImportModal" tabindex="-1" aria-labelledby="bulkImportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-action="BulkImport" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="bulkImportModalLabel">Bulk Import Orders</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Upload a CSV file containing orders. The CSV should have headers: <strong>OrderNumber, CustomerName, CustomerPhone, Total, Status, OrderDate</strong>.</p>
+                    <div class="mb-3">
+                        <label for="csvFile" class="form-label fw-bold">Select CSV File</label>
+                        <input type="file" class="form-control" id="csvFile" name="file" accept=".csv" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #18181b; border: none;">Import Orders</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
