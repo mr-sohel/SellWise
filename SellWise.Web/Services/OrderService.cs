@@ -22,6 +22,9 @@ public class OrderService : IOrderService
 
     public async Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model)
     {
+        // START TRANSACTION: We use a database transaction to ensure ACID properties.
+        // If anything fails (e.g., out of stock), the entire operation rolls back,
+        // preventing partial data like saving an order but not deducting stock.
         using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
@@ -79,9 +82,12 @@ public class OrderService : IOrderService
                 return "Discount cannot exceed the order total.";
             }
 
+            // DEDUCT STOCK & CREATE ORDER ITEMS
             foreach (var item in validItems)
             {
                 var product = productsDict[item.ProductId];
+                
+                // Crucial business logic: deduct the exact quantity ordered from the inventory
                 product.StockQuantity -= item.Quantity;
 
                 var orderItem = new OrderItem
@@ -98,6 +104,8 @@ public class OrderService : IOrderService
             order.Total = subtotal + model.DeliveryCharge - model.Discount;
 
             _db.Orders.Add(order);
+            
+            // Save changes to the database and commit the transaction permanently
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
 

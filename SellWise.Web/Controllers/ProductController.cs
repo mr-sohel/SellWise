@@ -13,11 +13,15 @@ using SellWise.Web.Models;
 
 namespace SellWise.Web.Controllers;
 
+// [Authorize] ensures security by forcing users to be logged in. 
+// BaseController provides GetCurrentStoreId() for tenant isolation (so sellers only see their own products).
 [Authorize]
 public class ProductController : BaseController
 {
+    // Inject the Entity Framework Core database context
     public ProductController(AppDbContext db) : base(db) { }
 
+    // READ: Displays a paginated and searchable list of products.
     public async Task<IActionResult> Index(string search, int page = 1)
     {
         if (page < 1) page = 1;
@@ -65,6 +69,7 @@ public class ProductController : BaseController
         return View(new ProductFormViewModel());
     }
 
+    // CREATE: Handles the form submission to add a new product.
     [HttpPost]
     public async Task<IActionResult> Create(ProductFormViewModel model)
     {
@@ -153,6 +158,7 @@ public class ProductController : BaseController
         return RedirectToAction(nameof(Index));
     }
 
+    // DELETE: Removes a product.
     [HttpPost]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -162,7 +168,9 @@ public class ProductController : BaseController
 
         if (product != null)
         {
-            product.IsActive = false; // Soft delete
+            // SOFT DELETE: We set IsActive = false instead of deleting the row from the database.
+            // This preserves historical order data that references this product.
+            product.IsActive = false; 
             await Db.SaveChangesAsync();
         }
 

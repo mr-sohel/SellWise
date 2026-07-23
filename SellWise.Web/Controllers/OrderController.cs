@@ -15,11 +15,15 @@ using SellWise.Web.Services;
 
 namespace SellWise.Web.Controllers;
 
+// [Authorize] ensures only logged-in users can access this controller.
+// Inherits from BaseController which provides multi-tenancy support (GetCurrentStoreId).
 [Authorize]
 public class OrderController : BaseController
 {
     private readonly IOrderService _orderService;
 
+    // DEPENDENCY INJECTION: We inject AppDbContext (database) and IOrderService (business logic).
+    // This keeps the controller thin, modular, and highly testable.
     public OrderController(AppDbContext db, IOrderService orderService) : base(db)
     {
         _orderService = orderService;
@@ -113,6 +117,8 @@ public class OrderController : BaseController
         return View(vm);
     }
 
+    // Action to handle Order Cancellation. 
+    // [ValidateAntiForgeryToken] prevents Cross-Site Request Forgery (CSRF) attacks.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(Guid id)
@@ -127,6 +133,8 @@ public class OrderController : BaseController
         return await ChangeStatusInternal(id, status);
     }
 
+    // Internal helper method to process status changes (e.g., pending -> cancelled).
+    // This involves complex logic like restoring inventory stock if an order is cancelled.
     private async Task<IActionResult> ChangeStatusInternal(Guid id, string newStatus)
     {
         var storeId = GetCurrentStoreId();
