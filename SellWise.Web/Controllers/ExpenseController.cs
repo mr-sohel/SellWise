@@ -70,7 +70,7 @@ public class ExpenseController : BaseController
         var expense = new Expense
         {
             StoreId = storeId,
-            Category = model.Category,
+            Category = model.Category!,
             Amount = model.Amount,
             ExpenseDate = model.ExpenseDate,
             Notes = model.Notes,

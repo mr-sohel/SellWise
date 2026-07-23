@@ -32,7 +32,7 @@ public class ProductController : BaseController
 
         if (!string.IsNullOrEmpty(search))
         {
-            query = query.Where(p => p.Name.Contains(search) || p.Sku.Contains(search));
+            query = query.Where(p => p.Name!.Contains(search) || p.Sku!.Contains(search));
         }
 
         int pageSize = 20;
@@ -82,14 +82,14 @@ public class ProductController : BaseController
         var product = new Product
         {
             StoreId = storeId,
-            Name = model.Name,
+            Name = model.Name!,
             Sku = model.Sku,
-            Category = model.Category,
+            Category = model.Category!,
             CostPrice = model.CostPrice,
             SellingPrice = model.SellingPrice,
             StockQuantity = model.StockQuantity,
             LowStockThreshold = model.LowStockThreshold,
-            Unit = model.Unit,
+            Unit = model.Unit!,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -144,14 +144,14 @@ public class ProductController : BaseController
         if (product == null)
             return NotFound();
 
-        product.Name = model.Name;
+        product.Name = model.Name!;
         product.Sku = model.Sku;
-        product.Category = model.Category;
+        product.Category = model.Category!;
         product.CostPrice = model.CostPrice;
         product.SellingPrice = model.SellingPrice;
         product.StockQuantity = model.StockQuantity;
         product.LowStockThreshold = model.LowStockThreshold;
-        product.Unit = model.Unit;
+        product.Unit = model.Unit!;
         product.UpdatedAt = DateTime.UtcNow;
 
         await Db.SaveChangesAsync();

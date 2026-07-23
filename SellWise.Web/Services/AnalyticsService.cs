@@ -145,7 +145,7 @@ public class AnalyticsService
                 && oi.Order.Status != "cancelled"
                 && oi.Order.Status != "returned"
                 && oi.Order.OrderDate >= now.AddDays(-90))
-            .Select(oi => new { ProductId = oi.ProductId.Value, oi.Order.OrderDate, oi.Quantity })
+            .Select(oi => new { ProductId = oi.ProductId ?? Guid.Empty, oi.Order.OrderDate, oi.Quantity })
             .ToListAsync();
 
         var results = new List<(ProductForecastCard Card, List<Forecast> NewForecasts)>();

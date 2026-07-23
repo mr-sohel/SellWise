@@ -63,7 +63,7 @@ public class SettingsController : BaseController
             .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == user.Id);
         if (member?.Store != null)
         {
-            member.Store.Name = model.StoreName;
+            member.Store.Name = model.StoreName!;
             await Db.SaveChangesAsync();
         }
 
@@ -82,7 +82,7 @@ public class SettingsController : BaseController
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Login", "Auth");
 
-        var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+        var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword!, model.NewPassword!);
 
         if (result.Succeeded)
         {
@@ -160,7 +160,7 @@ public class SettingsController : BaseController
             return RedirectToAction(nameof(Staff));
         }
 
-        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        var existingUser = await _userManager.FindByEmailAsync(model.Email!);
         if (existingUser != null)
         {
             var alreadyMember = await Db.StoreMembers
@@ -193,7 +193,7 @@ public class SettingsController : BaseController
         using var transaction = await Db.Database.BeginTransactionAsync();
         try
         {
-            var result = await _userManager.CreateAsync(newUser, model.Password);
+            var result = await _userManager.CreateAsync(newUser, model.Password!);
             if (result.Succeeded)
             {
                 var storeMember = new StoreMember

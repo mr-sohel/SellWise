@@ -43,7 +43,7 @@ public class OrderService : IOrderService
             {
                 StoreId = storeId,
                 CustomerId = model.CustomerId,
-                Source = model.Source,
+                Source = model.Source!,
                 DeliveryCharge = model.DeliveryCharge,
                 Discount = model.Discount,
                 Notes = model.Notes,
@@ -149,7 +149,7 @@ public class OrderService : IOrderService
         try
         {
             // Batch fetch all products for the order items to avoid N+1 query issue (Efficiency #2 / Simplification #5)
-            var productIds = order.Items.Where(i => i.ProductId.HasValue).Select(i => i.ProductId.Value).ToList();
+            var productIds = order.Items.Where(i => i.ProductId.HasValue).Select(i => i.ProductId ?? Guid.Empty).ToList();
             var productsDict = await _db.Products
                 .Where(p => productIds.Contains(p.Id) && p.StoreId == storeId)
                 .ToDictionaryAsync(p => p.Id);

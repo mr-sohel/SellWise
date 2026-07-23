@@ -31,7 +31,7 @@ public class CustomerController : BaseController
 
         if (!string.IsNullOrEmpty(search))
         {
-            query = query.Where(c => c.Name.Contains(search) || c.Phone.Contains(search) || c.Email.Contains(search));
+            query = query.Where(c => c.Name!.Contains(search) || c.Phone!.Contains(search) || c.Email!.Contains(search));
         }
 
         if (!string.IsNullOrEmpty(segment))

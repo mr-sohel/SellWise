@@ -133,7 +133,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    @if (ViewData["ShowExpenseModal"] != null && (bool)ViewData["ShowExpenseModal"])
+    @if (ViewData["ShowExpenseModal"] != null && ((bool?)ViewData["ShowExpenseModal"] ?? false))
     {
         <script>
             document.addEventListener("DOMContentLoaded", function () {

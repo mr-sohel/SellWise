@@ -41,11 +41,11 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, true, true);
+        var result = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, true, true);
 
         if (result.Succeeded)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email!);
             if (user != null)
             {
                 var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
@@ -90,11 +90,11 @@ public class AuthController : Controller
                 Email = model.Email
             };
             
-            var result = await _userManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(user, model.Password!);
 
             if (result.Succeeded)
             {
-                var store = new Store { Name = model.StoreName };
+                var store = new Store { Name = model.StoreName! };
                 _db.Stores.Add(store);
                 
                 var storeMember = new StoreMember
