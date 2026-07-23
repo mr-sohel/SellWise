@@ -25,7 +25,7 @@ public class CustomerController : BaseController
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         var query = Db.Customers.Where(c => c.StoreId == storeId);
 
@@ -104,7 +104,7 @@ public class CustomerController : BaseController
     public async Task<IActionResult> RecalculateRfm()
     {
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         await _rfmService.RecalculateAllAsync(storeId);
 
@@ -116,7 +116,7 @@ public class CustomerController : BaseController
     public async Task<IActionResult> Edit(Guid id)
     {
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
         if (customer == null) return NotFound();
@@ -141,7 +141,7 @@ public class CustomerController : BaseController
         if (!ModelState.IsValid) return View(model);
 
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
         if (customer == null) return NotFound();

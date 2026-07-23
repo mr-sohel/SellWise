@@ -118,4 +118,84 @@ public class OrderService : IOrderService
             return "An error occurred while creating the order.";
         }
     }
+
+
+    public async Task<string?> ChangeOrderStatusAsync(Guid orderId, Guid storeId, string newStatus)
+    {
+        var order = await _db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == orderId && o.StoreId == storeId);
+        
+        if (order == null) return "Order not found.";
+
+        var allowedStatuses = new[] { "pending", "processing", "delivered", "completed", "cancelled", "returned" };
+        var sanitized = newStatus?.ToLower().Trim();
+
+        if (string.IsNullOrEmpty(sanitized) || !allowedStatuses.Contains(sanitized))
+        {
+            return "Invalid status.";
+        }
+
+        if (order.Status == sanitized)
+        {
+            return null; // No change needed
+        }
+
+        var oldStatus = order.Status;
+        var wasActive = oldStatus != "cancelled" && oldStatus != "returned";
+        var willBeActive = sanitized != "cancelled" && sanitized != "returned";
+
+        using var transaction = await _db.Database.BeginTransactionAsync();
+        try
+        {
+            // Batch fetch all products for the order items to avoid N+1 query issue (Efficiency #2 / Simplification #5)
+            var productIds = order.Items.Where(i => i.ProductId.HasValue).Select(i => i.ProductId.Value).ToList();
+            var productsDict = await _db.Products
+                .Where(p => productIds.Contains(p.Id) && p.StoreId == storeId)
+                .ToDictionaryAsync(p => p.Id);
+
+            // Restore stock when cancelling or returning a previously active order
+            if (wasActive && !willBeActive)
+            {
+                foreach (var item in order.Items)
+                {
+                    if (item.ProductId.HasValue && productsDict.TryGetValue(item.ProductId.Value, out var product))
+                    {
+                        product.StockQuantity += item.Quantity;
+                        product.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+            }
+            // Re-deduct stock when reactivating a cancelled/returned order
+            else if (!wasActive && willBeActive)
+            {
+                foreach (var item in order.Items)
+                {
+                    if (item.ProductId.HasValue && productsDict.TryGetValue(item.ProductId.Value, out var product))
+                    {
+                        if (product.StockQuantity < item.Quantity)
+                        {
+                            await transaction.RollbackAsync();
+                            return $"Insufficient stock for {product.Name} to reactivate this order. Available: {product.StockQuantity}, needed: {item.Quantity}.";
+                        }
+                        product.StockQuantity -= item.Quantity;
+                        product.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+            }
+
+            order.Status = sanitized;
+            order.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return null; // Success
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "An error occurred while updating the order status for Order ID {OrderId}.", orderId); // Altitude #4 fix
+            return "An error occurred while updating the order status.";
+        }
+    }
 }

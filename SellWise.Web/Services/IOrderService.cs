@@ -7,4 +7,5 @@ namespace SellWise.Web.Services;
 public interface IOrderService
 {
     Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model);
+    Task<string?> ChangeOrderStatusAsync(Guid orderId, Guid storeId, string newStatus);
 }

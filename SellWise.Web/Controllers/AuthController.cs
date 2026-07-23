@@ -145,18 +145,18 @@ public class AuthController : Controller
         if (!string.IsNullOrEmpty(storeIdStr))
             return RedirectToAction("Index", "Dashboard");
 
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        var userId = _userManager.GetUserId(User);
+        if (userId == null)
         {
             await _signInManager.SignOutAsync();
-            return View();
+            return null;
         }
 
-        var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
+        var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == userId);
         if (member == null)
         {
             await _signInManager.SignOutAsync();
-            return View();
+            return null;
         }
 
         HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());

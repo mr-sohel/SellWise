@@ -33,7 +33,7 @@ public class OrderController : BaseController
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         var query = Db.Orders
             .Include(o => o.Customer)
@@ -82,7 +82,7 @@ public class OrderController : BaseController
     public async Task<IActionResult> Details(Guid id)
     {
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         var order = await Db.Orders
             .Include(o => o.Customer)
@@ -117,107 +117,27 @@ public class OrderController : BaseController
         return View(vm);
     }
 
-    // Action to handle Order Cancellation. 
+    // Action to handle Order Cancellation.
     // [ValidateAntiForgeryToken] prevents Cross-Site Request Forgery (CSRF) attacks.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(Guid id)
     {
-        return await ChangeStatusInternal(id, "cancelled");
+        var storeId = GetCurrentStoreId();
+        var error = await _orderService.ChangeOrderStatusAsync(id, storeId, "cancelled");
+        if (error != null) TempData["ErrorMessage"] = error;
+        else TempData["SuccessMessage"] = "Order cancelled successfully.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangeStatus(Guid id, string status)
     {
-        return await ChangeStatusInternal(id, status);
-    }
-
-    // Internal helper method to process status changes (e.g., pending -> cancelled).
-    // This involves complex logic like restoring inventory stock if an order is cancelled.
-    private async Task<IActionResult> ChangeStatusInternal(Guid id, string newStatus)
-    {
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-
-        var order = await Db.Orders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == id && o.StoreId == storeId);
-        if (order == null) return RedirectToAction(nameof(Index));
-
-        var allowedStatuses = new[] { "pending", "processing", "delivered", "completed", "cancelled", "returned" };
-        var sanitized = newStatus?.ToLower().Trim();
-
-        if (string.IsNullOrEmpty(sanitized) || !allowedStatuses.Contains(sanitized))
-        {
-            TempData["ErrorMessage"] = "Invalid status.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        if (order.Status == sanitized)
-        {
-            return RedirectToAction(nameof(Index));
-        }
-
-        var oldStatus = order.Status;
-        var wasActive = oldStatus != "cancelled" && oldStatus != "returned";
-        var willBeActive = sanitized != "cancelled" && sanitized != "returned";
-
-        using var transaction = await Db.Database.BeginTransactionAsync();
-        try
-        {
-            // Restore stock when cancelling or returning a previously active order
-            if (wasActive && !willBeActive)
-            {
-                foreach (var item in order.Items)
-                {
-                    if (item.ProductId.HasValue)
-                    {
-                        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId.Value && p.StoreId == storeId);
-                        if (product != null)
-                        {
-                            product.StockQuantity += item.Quantity;
-                            product.UpdatedAt = DateTime.UtcNow;
-                        }
-                    }
-                }
-            }
-            // Re-deduct stock when reactivating a cancelled/returned order
-            else if (!wasActive && willBeActive)
-            {
-                foreach (var item in order.Items)
-                {
-                    if (item.ProductId.HasValue)
-                    {
-                        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId.Value && p.StoreId == storeId);
-                        if (product != null)
-                        {
-                            if (product.StockQuantity < item.Quantity)
-                            {
-                                await transaction.RollbackAsync();
-                                TempData["ErrorMessage"] = $"Insufficient stock for {product.Name} to reactivate this order. Available: {product.StockQuantity}, needed: {item.Quantity}.";
-                                return RedirectToAction(nameof(Index));
-                            }
-                            product.StockQuantity -= item.Quantity;
-                            product.UpdatedAt = DateTime.UtcNow;
-                        }
-                    }
-                }
-            }
-
-            order.Status = sanitized;
-            order.UpdatedAt = DateTime.UtcNow;
-            await Db.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            TempData["SuccessMessage"] = $"Order {order.OrderNumber} status changed to {sanitized.Replace("_", " ")}.";
-        }
-        catch (Exception)
-        {
-            await transaction.RollbackAsync();
-            TempData["ErrorMessage"] = "An error occurred while updating the order status.";
-        }
-
+        var error = await _orderService.ChangeOrderStatusAsync(id, storeId, status);
+        if (error != null) TempData["ErrorMessage"] = error;
+        else TempData["SuccessMessage"] = $"Order status changed to {status.Replace("_", " ")}.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -241,7 +161,7 @@ public class OrderController : BaseController
     public async Task<IActionResult> Create(OrderFormViewModel model)
     {
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         if (!model.Items.Any() || model.Items.All(i => i.ProductId == Guid.Empty))
         {
@@ -275,7 +195,7 @@ public class OrderController : BaseController
     public async Task<IActionResult> BulkImport(IFormFile file)
     {
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         if (file == null || file.Length == 0)
         {

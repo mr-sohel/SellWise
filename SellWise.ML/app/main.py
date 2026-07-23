@@ -1,11 +1,11 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import health, forecast, churn
+from .routers import health, forecast
 
 app = FastAPI(
     title="SellWise ML Service",
-    description="Machine Learning service for demand forecasting and churn prediction",
+    description="Machine Learning service for demand forecasting",
     version="1.0.0"
 )
 
@@ -25,7 +25,6 @@ app.add_middleware(
 
 app.include_router(health.router, prefix="/api/v1/ml", tags=["Health"])
 app.include_router(forecast.router, prefix="/api/v1/ml", tags=["Forecast"])
-app.include_router(churn.router, prefix="/api/v1/ml", tags=["Churn"])
 
 @app.get("/")
 async def root():

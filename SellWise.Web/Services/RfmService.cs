@@ -45,7 +45,17 @@ public class RfmService : IRfmService
         var orderData = customerOrders.ToDictionary(x => x.CustomerId);
 
         var allMonetary = customerOrders.Select(x => x.Monetary).OrderBy(x => x).ToList();
-        var allFrequency = customerOrders.Select(x => x.Frequency).OrderBy(x => x).ToList();
+        var allFrequency = customerOrders.Select(x => (decimal)x.Frequency).OrderBy(x => x).ToList();
+
+        decimal f25 = GetPercentile(allFrequency, 25);
+        decimal f50 = GetPercentile(allFrequency, 50);
+        decimal f75 = GetPercentile(allFrequency, 75);
+        decimal f90 = GetPercentile(allFrequency, 90);
+
+        decimal m25 = GetPercentile(allMonetary, 25);
+        decimal m50 = GetPercentile(allMonetary, 50);
+        decimal m75 = GetPercentile(allMonetary, 75);
+        decimal m90 = GetPercentile(allMonetary, 90);
 
         foreach (var customer in customers)
         {
@@ -67,8 +77,8 @@ public class RfmService : IRfmService
                 : 999;
 
             customer.RecencyScore = CalculateRecencyScore(daysSinceLastOrder);
-            customer.FrequencyScore = CalculateFrequencyScore(customer.TotalOrders, allFrequency);
-            customer.MonetaryScore = CalculateMonetaryScore(customer.TotalSpent, allMonetary);
+            customer.FrequencyScore = CalculateScore(customer.TotalOrders, f25, f50, f75, f90);
+            customer.MonetaryScore = CalculateScore(customer.TotalSpent, m25, m50, m75, m90);
             customer.RfmSegment = DetermineSegment(customer.RecencyScore, customer.FrequencyScore, customer.MonetaryScore);
             customer.UpdatedAt = now;
         }
@@ -88,46 +98,13 @@ public class RfmService : IRfmService
         };
     }
 
-    private static int CalculateFrequencyScore(int frequency, System.Collections.Generic.List<int> allFrequencies)
+    private static int CalculateScore(decimal value, decimal p25, decimal p50, decimal p75, decimal p90)
     {
-        if (allFrequencies.Count == 0) return 1;
-
-        var p25 = GetPercentile(allFrequencies, 25);
-        var p50 = GetPercentile(allFrequencies, 50);
-        var p75 = GetPercentile(allFrequencies, 75);
-        var p90 = GetPercentile(allFrequencies, 90);
-
-        if (frequency >= p90) return 5;
-        if (frequency >= p75) return 4;
-        if (frequency >= p50) return 3;
-        if (frequency >= p25) return 2;
+        if (value >= p90) return 5;
+        if (value >= p75) return 4;
+        if (value >= p50) return 3;
+        if (value >= p25) return 2;
         return 1;
-    }
-
-    private static int CalculateMonetaryScore(decimal monetary, System.Collections.Generic.List<decimal> allMonetary)
-    {
-        if (allMonetary.Count == 0) return 1;
-
-        var p25 = GetPercentile(allMonetary, 25);
-        var p50 = GetPercentile(allMonetary, 50);
-        var p75 = GetPercentile(allMonetary, 75);
-        var p90 = GetPercentile(allMonetary, 90);
-
-        if (monetary >= p90) return 5;
-        if (monetary >= p75) return 4;
-        if (monetary >= p50) return 3;
-        if (monetary >= p25) return 2;
-        return 1;
-    }
-
-    private static int GetPercentile(System.Collections.Generic.List<int> sortedValues, int percentile)
-    {
-        if (sortedValues.Count == 0) return 0;
-        var index = (percentile / 100.0) * (sortedValues.Count - 1);
-        var lower = (int)Math.Floor(index);
-        var upper = (int)Math.Ceiling(index);
-        if (lower == upper) return sortedValues[lower];
-        return (int)(sortedValues[lower] + (index - lower) * (sortedValues[upper] - sortedValues[lower]));
     }
 
     private static decimal GetPercentile(System.Collections.Generic.List<decimal> sortedValues, int percentile)

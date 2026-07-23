@@ -19,7 +19,7 @@ public class ExpenseController : BaseController
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        
 
         var query = Db.Expenses.Where(e => e.StoreId == storeId);
 
@@ -52,7 +52,7 @@ public class ExpenseController : BaseController
         ViewData["Days"] = days;
         ViewData["TotalItems"] = totalItems;
 
-        return View(expenses);
+        return View("Index", expenses);
     }
 
     [HttpPost]
@@ -60,33 +60,12 @@ public class ExpenseController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            var currentStoreId = GetCurrentStoreId();
-            int pageSize = 20;
-            var query = Db.Expenses.Where(e => e.StoreId == currentStoreId);
-            int totalItems = await query.CountAsync();
-            var expenses = await query
-                .OrderByDescending(e => e.ExpenseDate)
-                .Take(pageSize)
-                .Select(e => new ExpenseViewModel
-                {
-                    Id = e.Id,
-                    Category = e.Category,
-                    Amount = e.Amount,
-                    ExpenseDate = e.ExpenseDate,
-                    Notes = e.Notes
-                })
-                .ToListAsync();
-
-            ViewData["CurrentPage"] = 1;
-            ViewData["TotalPages"] = (int)Math.Ceiling(totalItems / (double)pageSize);
-            ViewData["Days"] = 0;
-            ViewData["TotalItems"] = totalItems;
             ViewData["ShowExpenseModal"] = true;
             ViewData["NewExpense"] = model;
-            return View("Index", expenses);
+            return await Index(0, 1);
         }
         var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
 
         var expense = new Expense
         {

@@ -46,7 +46,7 @@ public class SettingsController : BaseController
             Role = member?.Role ?? ""
         };
 
-        return View(vm);
+        return View("Index", vm);
     }
 
     [HttpPost]
@@ -76,12 +76,7 @@ public class SettingsController : BaseController
     {
         if (!ModelState.IsValid)
         {
-            var storeId = GetCurrentStoreId();
-            var u = await _userManager.GetUserAsync(User);
-            var userId = u?.Id;
-            var member = await Db.StoreMembers.Include(sm => sm.Store).FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == userId);
-            var vm = new ProfileViewModel { Email = u?.Email ?? "", StoreName = member?.Store?.Name ?? "", Role = member?.Role ?? "" };
-            return View("Index", vm);
+            return await Index();
         }
 
         var user = await _userManager.GetUserAsync(User);
@@ -100,10 +95,7 @@ public class SettingsController : BaseController
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-            var storeId = GetCurrentStoreId();
-            var member = await Db.StoreMembers.Include(sm => sm.Store).FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == user.Id);
-            var vm = new ProfileViewModel { Email = user.Email ?? "", StoreName = member?.Store?.Name ?? "", Role = member?.Role ?? "" };
-            return View("Index", vm);
+            return await Index();
         }
 
         return RedirectToAction(nameof(Index));
