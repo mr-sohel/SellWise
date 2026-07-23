@@ -263,7 +263,7 @@ public class DemoSeederService
                 StoreId = storeId,
                 ProductId = p.Id,
                 Type = "Low Stock",
-                Message = $"{p.Name} — current stock: {p.StockQuantity}, predicted demand: {rnd.Next(10, 50)} in 30 days. Restock recommended: {rnd.Next(5, 20)} units",
+                Message = $"Only {p.StockQuantity} unit{(p.StockQuantity == 1 ? "" : "s")} left — predicted demand: {rnd.Next(10, 50)} in 30 days. Recommend ordering {rnd.Next(5, 20)} units.",
                 Severity = p.StockQuantity <= p.LowStockThreshold ? "critical" : "warning",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow

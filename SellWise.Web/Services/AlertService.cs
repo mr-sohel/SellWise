@@ -58,7 +58,9 @@ public class AlertService : IAlertService
                 StoreId = storeId,
                 ProductId = product.Id,
                 Type = "Low Stock",
-                Message = $"{product.Name} is running low — current stock: {product.StockQuantity}, threshold: {product.LowStockThreshold}. Consider restocking soon.",
+                Message = product.StockQuantity == 0
+                    ? $"Out of stock. Currently at zero units — threshold is {product.LowStockThreshold}."
+                    : $"Only {product.StockQuantity} unit{(product.StockQuantity == 1 ? "" : "s")} left — threshold is {product.LowStockThreshold}.",
                 Severity = product.StockQuantity == 0 ? "Critical" : "Warning",
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow

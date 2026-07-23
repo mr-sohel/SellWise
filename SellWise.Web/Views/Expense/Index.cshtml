@@ -5,16 +5,6 @@
 }
 
 <style>
-.btn-ghost-sm {
-    padding: .48rem 1rem;
-    border-radius: var(--radius-md);
-    border: 1.5px solid var(--border-color);
-    background: #fff; color: var(--text-main);
-    font-size: .82rem; font-weight: 600;
-    display: inline-flex; align-items: center; gap: .4rem;
-    cursor: pointer; transition: all .15s ease; text-decoration: none;
-}
-.btn-ghost-sm:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
 @@media print {
     .d-print-none, .d-print-none * { display: none !important; }
     body { background: #fff; }
@@ -30,11 +20,11 @@
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3 d-print-none">
     <h2 class="fw-bold text-dark mb-0">Expenses</h2>
     <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:center;">
-        <button type="button" class="btn-ghost-sm" onclick="window.print()" title="Print list">
+        <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2" onclick="window.print()" title="Print list">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print
         </button>
-        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: #18181b; border: none;" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Expense
         </button>
@@ -172,7 +162,7 @@
                 </div>
                 <div class="modal-footer bg-light border-top p-4 d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background-color: #18181b; border: none;">Save Expense</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
                 </div>
             </form>
         </div>

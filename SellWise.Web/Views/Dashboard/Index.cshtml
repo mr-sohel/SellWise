@@ -6,11 +6,8 @@
 <!-- Top Header section matching 02_dashboard.png -->
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
     <div>
-        <h2 class="fw-bold mb-1">Overview</h2>
-        <p class="text-muted small mb-0 d-flex align-items-center gap-1">
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Store performance for the last 30D
-        </p>
+        <h2 class="fw-bold mb-1">Dashboard</h2>
+        <p class="text-muted small mb-0">Your business at a glance</p>
     </div>
     <div class="btn-group-timeframe">
         <a href="?range=7d" class="btn-timeframe @(Context.Request.Query["range"] == "7d" ? "active" : "")">7D</a>
@@ -27,7 +24,7 @@
         <div class="row g-3 h-100">
             <!-- Total Revenue Card -->
             <div class="col-12 col-sm-6">
-                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                <div class="card p-4 h-100 border-1 shadow-sm">
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="kpi-title">Total Revenue</span>
@@ -35,13 +32,12 @@
                         </div>
                         <div class="kpi-value text-truncate">৳@Model.TotalRevenue.ToString("N0")</div>
                     </div>
-                    <div class="text-muted small mt-2">Store performance this month</div>
                 </div>
             </div>
             
             <!-- Total Orders Card -->
             <div class="col-12 col-sm-6">
-                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                <div class="card p-4 h-100 border-1 shadow-sm">
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="kpi-title">Total Orders</span>
@@ -51,13 +47,12 @@
                         </div>
                         <div class="kpi-value">@Model.TotalOrders.ToString("N0")</div>
                     </div>
-                    <div class="text-muted small mt-2">Completed in the last 30 days</div>
                 </div>
             </div>
-
+            
             <!-- Avg Order Value Card -->
             <div class="col-12 col-sm-6">
-                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                <div class="card p-4 h-100 border-1 shadow-sm">
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="kpi-title">Avg Order Value</span>
@@ -67,13 +62,12 @@
                         </div>
                         <div class="kpi-value">৳@Model.AvgOrderValue.ToString("N0")</div>
                     </div>
-                    <div class="text-muted small mt-2">Across all completed orders</div>
                 </div>
             </div>
-
+            
             <!-- Health Score Card -->
             <div class="col-12 col-sm-6">
-                <div class="card p-4 h-100 border-1 shadow-sm d-flex flex-column justify-content-between">
+                <div class="card p-4 h-100 border-1 shadow-sm">
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="kpi-title">Health Score</span>
@@ -83,7 +77,6 @@
                         </div>
                         <div class="kpi-value">@Model.HealthScore<span class="fs-6 text-muted">/100</span></div>
                     </div>
-                    <div class="text-muted small mt-2">Based on store activity</div>
                 </div>
             </div>
         </div>
@@ -267,10 +260,8 @@
                 @foreach (var item in Model.TopPerformers)
                 {
                     <div class="performers-item">
-                        <div class="d-flex align-items-center">
-                            <span class="performers-num top-rank">#@item.Rank</span>
-                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">@item.ProductName</span>
-                        </div>
+                        <span class="performers-num top-rank">@item.Rank</span>
+                        <span class="fw-bold text-dark flex-grow-1 text-truncate" style="font-size: 0.85rem;">@item.ProductName</span>
                         <span class="fw-bold text-dark" style="font-size: 0.85rem;">৳@item.Revenue.ToString("N0")</span>
                     </div>
                 }
@@ -294,21 +285,10 @@
             <div class="performers-list">
                 @foreach (var item in Model.NeedsAttention)
                 {
-                    // Calculate filled percentage for stock indicator bar
-                    var pct = (double)item.Stock / Math.Max(1, item.Threshold) * 100;
-                    var barColor = pct < 50 ? "#ef4444" : "#f97316";
-
                     <div class="performers-item">
-                        <div class="d-flex align-items-center" style="width: 70%;">
-                            <span class="performers-num normal-rank">@item.Rank</span>
-                            <div class="text-truncate" style="width: 100%;">
-                                <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.85rem;">@item.ProductName</span>
-                                <div class="performers-bar" style="max-width: 120px;">
-                                    <div class="performers-bar-fill" style="width: @Math.Min(100, pct).ToString(System.Globalization.CultureInfo.InvariantCulture)%; background-color: @barColor;"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="fw-bold text-dark" style="font-size: 0.85rem;">@item.Stock left</span>
+                        <span class="performers-num normal-rank">@item.Rank</span>
+                        <span class="fw-bold text-dark flex-grow-1 text-truncate" style="font-size: 0.85rem;">@item.ProductName</span>
+                        <span class="performers-stock">@item.Stock left</span>
                     </div>
                 }
                 @if (!Model.NeedsAttention.Any())
@@ -369,7 +349,7 @@
                     legend: { display: false },
                     tooltip: {
                         backgroundColor: '#1c1917',
-                        titleColor: '#a8a29e',
+                        titleColor: '#78716c',
                         bodyColor: '#ffffff',
                         padding: { top: 8, bottom: 8, left: 12, right: 12 },
                         cornerRadius: 6,
@@ -451,7 +431,7 @@
                     legend: { display: false },
                     tooltip: {
                         backgroundColor: '#1c1917',
-                        titleColor: '#a8a29e',
+                        titleColor: '#78716c',
                         bodyColor: '#ffffff',
                         padding: { top: 8, bottom: 8, left: 12, right: 12 },
                         cornerRadius: 6,

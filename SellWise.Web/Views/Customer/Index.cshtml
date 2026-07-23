@@ -1,7 +1,12 @@
 @model IEnumerable<SellWise.Web.ViewModels.Customer.CustomerViewModel>
 @{
     ViewData["Title"] = "Customers";
-    var customerCount = Model.Count();
+    int currentPage = (int)ViewData["CurrentPage"]!;
+    int totalPages = (int)ViewData["TotalPages"]!;
+    var searchVal  = ViewData["Search"]?.ToString();
+    var segmentVal = ViewData["Segment"]?.ToString();
+    var sortVal    = ViewData["Sort"]?.ToString();
+    var totalItems = (int)(ViewData["TotalItems"] ?? 0);
 }
 
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
@@ -22,7 +27,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
-
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -30,46 +34,65 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
+
 <div class="card border-1 shadow-sm p-3 mb-4">
     <form method="get" class="d-flex flex-column flex-sm-row gap-3">
         <div class="search-widget" style="width: 100%; max-width: 400px;">
             <svg aria-hidden="true" class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" name="search" value="@ViewData["Search"]" aria-label="Search" placeholder="Search by name, phone or email...">
+            <input type="text" name="search" value="@searchVal" aria-label="Search" placeholder="Search by name, phone or email...">
         </div>
-        <select class="form-select" name="segment" style="width: 100%; max-width: 200px; background-color: #ffffff; border-color: #cbd5e1;" onchange="this.form.submit();">
+        <select class="form-select" name="segment" style="width: 100%; max-width: 200px;" onchange="this.form.submit();">
             <option value="">All Segments</option>
-            <option value="CHAMPION" selected="@((ViewData["Segment"]?.ToString() == "CHAMPION") ? "selected" : null)">Champion</option>
-            <option value="LOYAL" selected="@((ViewData["Segment"]?.ToString() == "LOYAL") ? "selected" : null)">Loyal</option>
-            <option value="POTENTIAL_LOYALIST" selected="@((ViewData["Segment"]?.ToString() == "POTENTIAL_LOYALIST") ? "selected" : null)">Potential Loyalist</option>
-            <option value="NEW_CUSTOMER" selected="@((ViewData["Segment"]?.ToString() == "NEW_CUSTOMER") ? "selected" : null)">New Customer</option>
-            <option value="AT_RISK" selected="@((ViewData["Segment"]?.ToString() == "AT_RISK") ? "selected" : null)">At Risk</option>
-            <option value="CANT_LOSE_THEM" selected="@((ViewData["Segment"]?.ToString() == "CANT_LOSE_THEM") ? "selected" : null)">Can't Lose Them</option>
-            <option value="NEED_ATTENTION" selected="@((ViewData["Segment"]?.ToString() == "NEED_ATTENTION") ? "selected" : null)">Need Attention</option>
-            <option value="LOST" selected="@((ViewData["Segment"]?.ToString() == "LOST") ? "selected" : null)">Lost</option>
+            <option value="CHAMPION" selected="@(segmentVal == "CHAMPION")">Champion</option>
+            <option value="LOYAL" selected="@(segmentVal == "LOYAL")">Loyal</option>
+            <option value="POTENTIAL_LOYALIST" selected="@(segmentVal == "POTENTIAL_LOYALIST")">Potential Loyalist</option>
+            <option value="NEW_CUSTOMER" selected="@(segmentVal == "NEW_CUSTOMER")">New Customer</option>
+            <option value="AT_RISK" selected="@(segmentVal == "AT_RISK")">At Risk</option>
+            <option value="CANT_LOSE_THEM" selected="@(segmentVal == "CANT_LOSE_THEM")">Can't Lose Them</option>
+            <option value="NEED_ATTENTION" selected="@(segmentVal == "NEED_ATTENTION")">Need Attention</option>
+            <option value="LOST" selected="@(segmentVal == "LOST")">Lost</option>
         </select>
-        <select class="form-select" name="sort" style="width: 100%; max-width: 200px; background-color: #ffffff; border-color: #cbd5e1;" onchange="this.form.submit();">
-            <option value="">Sort: Newest First</option>
-            <optgroup label="Name">
-                <option value="name_asc" selected="@((ViewData["Sort"]?.ToString() == "name_asc") ? "selected" : null)">Name A-Z</option>
-                <option value="name_desc" selected="@((ViewData["Sort"]?.ToString() == "name_desc") ? "selected" : null)">Name Z-A</option>
-            </optgroup>
-            <optgroup label="Total Spent">
-                <option value="spent_desc" selected="@((ViewData["Sort"]?.ToString() == "spent_desc") ? "selected" : null)">Highest Spent</option>
-                <option value="spent_asc" selected="@((ViewData["Sort"]?.ToString() == "spent_asc") ? "selected" : null)">Lowest Spent</option>
-            </optgroup>
-            <optgroup label="Orders">
-                <option value="orders_desc" selected="@((ViewData["Sort"]?.ToString() == "orders_desc") ? "selected" : null)">Most Orders</option>
-                <option value="orders_asc" selected="@((ViewData["Sort"]?.ToString() == "orders_asc") ? "selected" : null)">Fewest Orders</option>
-            </optgroup>
-            <optgroup label="RFM Score">
-                <option value="rfm_desc" selected="@((ViewData["Sort"]?.ToString() == "rfm_desc") ? "selected" : null)">Best RFM Score</option>
-                <option value="rfm_asc" selected="@((ViewData["Sort"]?.ToString() == "rfm_asc") ? "selected" : null)">Worst RFM Score</option>
-            </optgroup>
-            <optgroup label="Last Order">
-                <option value="recent_desc" selected="@((ViewData["Sort"]?.ToString() == "recent_desc") ? "selected" : null)">Most Recent</option>
-                <option value="recent_asc" selected="@((ViewData["Sort"]?.ToString() == "recent_asc") ? "selected" : null)">Least Recent</option>
-            </optgroup>
-        </select>
+        <div class="dropdown">
+            <button class="sort-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                <span id="sortLabel">@(sortVal switch {
+                    "name_asc" => "Name A-Z",
+                    "name_desc" => "Name Z-A",
+                    "spent_desc" => "Highest Spent",
+                    "spent_asc" => "Lowest Spent",
+                    "orders_desc" => "Most Orders",
+                    "orders_asc" => "Fewest Orders",
+                    "rfm_desc" => "Best RFM Score",
+                    "rfm_asc" => "Worst RFM Score",
+                    "recent_desc" => "Most Recent",
+                    "recent_asc" => "Least Recent",
+                    _ => "Newest First"
+                })</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow sort-dropdown-menu">
+                <li><span class="dropdown-header">Name</span></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "name_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('name_asc')">Name A-Z</a></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "name_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('name_desc')">Name Z-A</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><span class="dropdown-header">Total Spent</span></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "spent_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('spent_desc')">Highest Spent</a></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "spent_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('spent_asc')">Lowest Spent</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><span class="dropdown-header">Orders</span></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "orders_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('orders_desc')">Most Orders</a></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "orders_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('orders_asc')">Fewest Orders</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><span class="dropdown-header">RFM Score</span></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "rfm_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('rfm_desc')">Best RFM Score</a></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "rfm_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('rfm_asc')">Worst RFM Score</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><span class="dropdown-header">Last Order</span></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "recent_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('recent_desc')">Most Recent</a></li>
+                <li><a class="dropdown-item sort-item @(sortVal == "recent_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('recent_asc')">Least Recent</a></li>
+            </ul>
+        </div>
+        <input type="hidden" name="sort" id="sortInput" value="@sortVal" />
         <button type="submit" class="btn btn-primary d-none">Search</button>
     </form>
 </div>
@@ -84,7 +107,7 @@
                     <th style="width: 15%;">Orders</th>
                     <th style="width: 15%;">Segment (RFM)</th>
                     <th style="width: 12%;">Total Spent</th>
-                    <th style="width: 8%;"></th>
+                    <th style="width: 8%;" class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -103,10 +126,21 @@
                         </td>
                         <td class="align-middle fw-bold text-dark">৳@c.TotalSpent.ToString("N0")</td>
                         <td class="align-middle text-end">
-                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm d-inline-flex align-items-center gap-1" style="color: #4338ca; background-color: #eef2ff; border: none; font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.6rem;" title="Edit">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                                Edit
-                            </a>
+                            <div class="d-flex align-items-center justify-content-end">
+                                <div class="dropdown">
+                                    <button class="order-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                        <li>
+                                            <a asp-action="Edit" asp-route-id="@c.Id" class="dropdown-item d-flex align-items-center gap-2">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                                Edit
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -120,18 +154,11 @@
 </div>
 
 <div class="pagination-wrap">
-    <div>Showing <strong>@Model.Count()</strong> of <strong>@ViewData["TotalItems"]</strong> results</div>
+    <div>Showing <strong>@Model.Count()</strong> of <strong>@totalItems</strong> customers</div>
     <div class="d-flex gap-2">
-        @{
-            int currentPage = (int)ViewData["CurrentPage"]!;
-            int totalPages = (int)ViewData["TotalPages"]!;
-            var search = ViewData["Search"]?.ToString();
-            var segment = ViewData["Segment"]?.ToString();
-            var sort = ViewData["Sort"]?.ToString();
-        }
         @if (currentPage > 1)
         {
-            <a href="?page=@(currentPage - 1)&search=@(search != null ? Uri.EscapeDataString(search) : "")&segment=@(segment != null ? Uri.EscapeDataString(segment) : "")&sort=@(sort != null ? Uri.EscapeDataString(sort) : "")" class="pagination-btn">Previous</a>
+            <a href="?page=@(currentPage - 1)&search=@Uri.EscapeDataString(searchVal ?? "")&segment=@Uri.EscapeDataString(segmentVal ?? "")&sort=@Uri.EscapeDataString(sortVal ?? "")" class="pagination-btn">Previous</a>
         }
         else
         {
@@ -140,7 +167,7 @@
 
         @if (currentPage < totalPages)
         {
-            <a href="?page=@(currentPage + 1)&search=@(search != null ? Uri.EscapeDataString(search) : "")&segment=@(segment != null ? Uri.EscapeDataString(segment) : "")&sort=@(sort != null ? Uri.EscapeDataString(sort) : "")" class="pagination-btn">Next</a>
+            <a href="?page=@(currentPage + 1)&search=@Uri.EscapeDataString(searchVal ?? "")&segment=@Uri.EscapeDataString(segmentVal ?? "")&sort=@Uri.EscapeDataString(sortVal ?? "")" class="pagination-btn">Next</a>
         }
         else
         {
@@ -150,4 +177,10 @@
 </div>
 
 @section Scripts {
+<script>
+function setSort(val) {
+    document.getElementById('sortInput').value = val;
+    document.querySelector('form[method="get"]').submit();
+}
+</script>
 }
