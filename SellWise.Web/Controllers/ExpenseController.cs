@@ -58,7 +58,33 @@ public class ExpenseController : BaseController
     [HttpPost]
     public async Task<IActionResult> Create(ExpenseCreateViewModel model)
     {
-        if (!ModelState.IsValid) return RedirectToAction(nameof(Index));
+        if (!ModelState.IsValid)
+        {
+            var currentStoreId = GetCurrentStoreId();
+            int pageSize = 20;
+            var query = Db.Expenses.Where(e => e.StoreId == currentStoreId);
+            int totalItems = await query.CountAsync();
+            var expenses = await query
+                .OrderByDescending(e => e.ExpenseDate)
+                .Take(pageSize)
+                .Select(e => new ExpenseViewModel
+                {
+                    Id = e.Id,
+                    Category = e.Category,
+                    Amount = e.Amount,
+                    ExpenseDate = e.ExpenseDate,
+                    Notes = e.Notes
+                })
+                .ToListAsync();
+
+            ViewData["CurrentPage"] = 1;
+            ViewData["TotalPages"] = (int)Math.Ceiling(totalItems / (double)pageSize);
+            ViewData["Days"] = 0;
+            ViewData["TotalItems"] = totalItems;
+            ViewData["ShowExpenseModal"] = true;
+            ViewData["NewExpense"] = model;
+            return View("Index", expenses);
+        }
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 

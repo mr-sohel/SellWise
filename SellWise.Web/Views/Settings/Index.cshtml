@@ -180,6 +180,11 @@
             // Read hash on load
             activateTab(window.location.hash);
 
+            if (document.querySelector('#security .text-danger:not(.field-validation-valid)') || 
+                document.querySelector('#security .validation-summary-errors')) {
+                activateTab('#security');
+            }
+
             window.addEventListener('hashchange', () => {
                 activateTab(window.location.hash);
             });

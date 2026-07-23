@@ -75,7 +75,14 @@ public class SettingsController : BaseController
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
     {
         if (!ModelState.IsValid)
-            return RedirectToAction(nameof(Index));
+        {
+            var storeId = GetCurrentStoreId();
+            var u = await _userManager.GetUserAsync(User);
+            var userId = u?.Id;
+            var member = await Db.StoreMembers.Include(sm => sm.Store).FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == userId);
+            var vm = new ProfileViewModel { Email = u?.Email ?? "", StoreName = member?.Store?.Name ?? "", Role = member?.Role ?? "" };
+            return View("Index", vm);
+        }
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Login", "Auth");
@@ -93,7 +100,10 @@ public class SettingsController : BaseController
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
-            TempData["Error"] = string.Join(" ", result.Errors.Select(e => e.Description));
+            var storeId = GetCurrentStoreId();
+            var member = await Db.StoreMembers.Include(sm => sm.Store).FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == user.Id);
+            var vm = new ProfileViewModel { Email = user.Email ?? "", StoreName = member?.Store?.Name ?? "", Role = member?.Role ?? "" };
+            return View("Index", vm);
         }
 
         return RedirectToAction(nameof(Index));

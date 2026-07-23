@@ -31,7 +31,7 @@
                     <div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="kpi-title">Total Revenue</span>
-                            <span class="kpi-badge badge-success">↗ @Model.RevenueGrowth%</span>
+                            <span class="kpi-badge @(Model.RevenueGrowth >= 0 ? "badge-success" : "badge-danger")">@(Model.RevenueGrowth >= 0 ? "↗" : "↘") @Math.Abs(Model.RevenueGrowth)%</span>
                         </div>
                         <div class="kpi-value text-truncate">৳@Model.TotalRevenue.ToString("N0")</div>
                     </div>

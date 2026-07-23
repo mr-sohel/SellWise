@@ -159,7 +159,7 @@
         }
         @if (currentPage > 1)
         {
-            <a href="?page=@(currentPage - 1)&search=@search&status=@status" class="pagination-btn">Previous</a>
+            <a href="?page=@(currentPage - 1)&search=@(search != null ? Uri.EscapeDataString(search) : "")&status=@(status != null ? Uri.EscapeDataString(status) : "")" class="pagination-btn">Previous</a>
         }
         else
         {
@@ -168,7 +168,7 @@
 
         @if (currentPage < totalPages)
         {
-            <a href="?page=@(currentPage + 1)&search=@search&status=@status" class="pagination-btn">Next</a>
+            <a href="?page=@(currentPage + 1)&search=@(search != null ? Uri.EscapeDataString(search) : "")&status=@(status != null ? Uri.EscapeDataString(status) : "")" class="pagination-btn">Next</a>
         }
         else
         {

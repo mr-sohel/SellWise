@@ -89,32 +89,36 @@
             </div>
             <form asp-action="Create" method="post">
                 <div class="modal-body p-4">
+                    @{
+                        var newExpense = ViewData["NewExpense"] as SellWise.Web.ViewModels.Expense.ExpenseCreateViewModel;
+                    }
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="mb-3">
                         <label class="form-label">Category</label>
                         <select name="Category" class="form-select" required>
-                            <option value="Rent">Rent</option>
-                            <option value="Salary">Salary</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Packaging">Packaging</option>
-                            <option value="Supplies">Supplies</option>
-                            <option value="Other">Other</option>
+                            <option value="Rent" selected="@(newExpense?.Category == "Rent")">Rent</option>
+                            <option value="Salary" selected="@(newExpense?.Category == "Salary")">Salary</option>
+                            <option value="Utilities" selected="@(newExpense?.Category == "Utilities")">Utilities</option>
+                            <option value="Marketing" selected="@(newExpense?.Category == "Marketing")">Marketing</option>
+                            <option value="Packaging" selected="@(newExpense?.Category == "Packaging")">Packaging</option>
+                            <option value="Supplies" selected="@(newExpense?.Category == "Supplies")">Supplies</option>
+                            <option value="Other" selected="@(newExpense?.Category == "Other")">Other</option>
                         </select>
                         <span class="text-danger field-validation-valid" data-valmsg-for="Category" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Amount (৳)</label>
-                        <input type="number" name="Amount" class="form-control" placeholder="e.g. 5000" min="1" required />
+                        <input type="number" name="Amount" class="form-control" placeholder="e.g. 5000" min="1" value="@(newExpense?.Amount)" required />
                         <span class="text-danger field-validation-valid" data-valmsg-for="Amount" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Expense Date</label>
-                        <input type="date" name="ExpenseDate" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                        <input type="date" name="ExpenseDate" class="form-control" value="@(newExpense?.ExpenseDate.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" required />
                         <span class="text-danger field-validation-valid" data-valmsg-for="ExpenseDate" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
-                        <textarea name="Notes" class="form-control" rows="3" placeholder="Describe the expense details..."></textarea>
+                        <textarea name="Notes" class="form-control" rows="3" placeholder="Describe the expense details...">@(newExpense?.Notes)</textarea>
                         <span class="text-danger field-validation-valid" data-valmsg-for="Notes" data-valmsg-replace="true"></span>
                     </div>
                 </div>
@@ -128,4 +132,14 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @if (ViewData["ShowExpenseModal"] != null && (bool)ViewData["ShowExpenseModal"])
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var myModal = new bootstrap.Modal(document.getElementById('addExpenseModal'));
+                myModal.show();
+            });
+        </script>
+    }
 }
