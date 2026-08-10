@@ -1,3 +1,22 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject SellWise.Web.Data.AppDbContext _db
+@inject UserManager<ApplicationUser> _userManager
+@{
+    var userId = _userManager.GetUserId(User);
+    var activeStoreId = Context.Session.GetString("ActiveStoreId");
+
+    var userStores = new List<SellWise.Web.Models.Store>();
+    if (userId != null)
+    {
+        userStores = _db.StoreMembers
+            .Include(m => m.Store)
+            .Where(m => m.UserId == userId)
+            .Select(m => m.Store)
+            .ToList();
+    }
+    var currentStore = userStores.FirstOrDefault(s => s.Id.ToString() == activeStoreId);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -109,6 +128,31 @@
                         <span class="search-shortcut d-none d-md-inline-block">&#8984; K</span>
                         <ul class="dropdown-menu shadow-lg border-0 mt-1" id="omnisearch-results" style="width: 320px; max-height: 400px; overflow-y: auto;">
                             <!-- Results will be injected here via JS -->
+                        </ul>
+                    </div>
+                    <div class="dropdown me-2">
+                        <a href="#" class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-1" id="dropdownStore" aria-label="Switch Store" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                            <span>@(currentStore?.Name ?? "Select Store")</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="dropdownStore">
+                            <li><h6 class="dropdown-header">Your Stores</h6></li>
+                            @foreach (var store in userStores)
+                            {
+                                <li>
+                                    <form asp-controller="Auth" asp-action="SwitchStore" method="post" class="m-0 p-0 d-inline">
+                                        <input type="hidden" name="storeId" value="@store.Id" />
+                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                        <button type="submit" class="dropdown-item @(store.Id.ToString() == activeStoreId ? "active fw-bold" : "")">
+                                            @if (store.Id.ToString() == activeStoreId)
+                                            {
+                                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            }
+                                            @store.Name
+                                        </button>
+                                    </form>
+                                </li>
+                            }
                         </ul>
                     </div>
                     <div class="dropdown">

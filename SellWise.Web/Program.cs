@@ -46,40 +46,58 @@ if (args.Contains("--seed"))
     var userManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
     var seeder = scope.ServiceProvider.GetRequiredService<SellWise.Web.Services.DemoSeederService>();
 
-    // Grab the first available store to seed (or create one if none exist)
-    var store = db.Stores.FirstOrDefault();
-    if (store == null)
-    {
-        store = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "Demo Store", CreatedAt = DateTime.UtcNow };
-        db.Stores.Add(store);
-        await db.SaveChangesAsync();
+    const string adminEmail = "admin@sellwise.com";
 
-        // Create a default admin user for this store so you can actually log in and see it!
-        var adminEmail = "admin@sellwise.com";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
+    // Ensure admin user exists
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail };
+        var result = await userManager.CreateAsync(adminUser, "Admin123!");
+        if (result.Succeeded)
+            Console.WriteLine($"[INFO] Created admin user: {adminEmail} / Admin123!");
+        else
         {
-            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail };
-            var result = await userManager.CreateAsync(adminUser, "Admin123!");
-            if (result.Succeeded)
-            {
-                db.StoreMembers.Add(new StoreMember
-                {
-                    StoreId = store.Id,
-                    UserId = adminUser.Id,
-                    Role = "owner"
-                });
-                await db.SaveChangesAsync();
-                Console.WriteLine($"[INFO] Created default admin user: {adminEmail} (Password: Admin123!)");
-            }
+            Console.WriteLine($"[ERROR] Failed to create admin: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            return;
         }
     }
 
-    Console.WriteLine($"[INFO] Seeding data for Store: {store.Name} ({store.Id})...");
-    await seeder.SeedStoreAsync(store.Id);
-    Console.WriteLine("[SUCCESS] Data seeded successfully!");
+    // --- Store 1: SellWise Tech BD (electronics) ---
+    var store1 = db.Stores.FirstOrDefault(s => s.Name == "SellWise Tech BD");
+    if (store1 == null)
+    {
+        store1 = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "SellWise Tech BD", CreatedAt = DateTime.UtcNow };
+        db.Stores.Add(store1);
+        await db.SaveChangesAsync();
+    }
+    if (!db.StoreMembers.Any(m => m.StoreId == store1.Id && m.UserId == adminUser.Id))
+    {
+        db.StoreMembers.Add(new StoreMember { StoreId = store1.Id, UserId = adminUser.Id, Role = "owner" });
+        await db.SaveChangesAsync();
+    }
+    Console.WriteLine($"[INFO] Seeding Store 1: {store1.Name}...");
+    await seeder.SeedStoreAsync(store1.Id, randomSeed: 42);
+    Console.WriteLine($"[OK]   Store 1 done.");
 
-    // Exit application after seeding
+    // --- Store 2: StyleHub BD (fashion/clothing) ---
+    var store2 = db.Stores.FirstOrDefault(s => s.Name == "StyleHub BD");
+    if (store2 == null)
+    {
+        store2 = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "StyleHub BD", CreatedAt = DateTime.UtcNow };
+        db.Stores.Add(store2);
+        await db.SaveChangesAsync();
+    }
+    if (!db.StoreMembers.Any(m => m.StoreId == store2.Id && m.UserId == adminUser.Id))
+    {
+        db.StoreMembers.Add(new StoreMember { StoreId = store2.Id, UserId = adminUser.Id, Role = "owner" });
+        await db.SaveChangesAsync();
+    }
+    Console.WriteLine($"[INFO] Seeding Store 2: {store2.Name}...");
+    await seeder.SeedSecondStoreAsync(store2.Id, randomSeed: 99);
+    Console.WriteLine($"[OK]   Store 2 done.");
+
+    Console.WriteLine("[SUCCESS] All stores seeded. Login: admin@sellwise.com / Admin123!");
     return;
 }
 

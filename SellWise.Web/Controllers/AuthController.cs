@@ -137,6 +137,26 @@ public class AuthController : Controller
         return RedirectToAction(nameof(Login));
     }
 
+    [HttpPost]
+    public async Task<IActionResult> SwitchStore(Guid storeId, string returnUrl = "/")
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null) return RedirectToAction(nameof(Login));
+
+        var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == userId && m.StoreId == storeId);
+        if (member != null)
+        {
+            HttpContext.Session.SetString("ActiveStoreId", storeId.ToString());
+        }
+
+        if (Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        return RedirectToAction("Index", "Dashboard");
+    }
+
     private async Task<IActionResult?> RedirectIfAuthenticated()
     {
         if (User.Identity?.IsAuthenticated != true) return null;
