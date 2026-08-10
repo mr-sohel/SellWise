@@ -73,7 +73,7 @@ Where `P` is the period (7 for weekly, 365.25 for yearly) and `n` is the number 
 - For yearly seasonality: `n = 10` (default) — 10 sin + 10 cos = 20 parameters
 - For weekly seasonality: `n = 3` (default) — 3 sin + 3 cos = 6 parameters
 
-In our code (`prophet_service.py:28`), we enable `yearly_seasonality=True` (holiday spikes, seasonal trends) and `weekly_seasonality=True` (weekend vs weekday patterns).
+In our code (`prophet_service.py:19`), we enable `yearly_seasonality=True` (holiday spikes, seasonal trends) and `weekly_seasonality=True` (weekend vs weekday patterns).
 
 **Why Fourier?** Because real-world seasonality isn't a perfect square wave. A few Fourier terms can approximate any smooth periodic function. The low number of terms acts as a **low-pass filter** — captures the broad seasonal shape without overfitting to random weekly noise.
 
@@ -128,7 +128,7 @@ This is why we can say: *"We expect to sell 15 units, but it could be as low as 
 
 ### Negative Value Clamping
 
-Prophet can predict negative values (the model doesn't know sales can't be negative). In `prophet_service.py:46`, we clamp all predictions with `max(0, value)` — a simple domain knowledge fix.
+Prophet can predict negative values (the model doesn't know sales can't be negative). In `prophet_service.py:42`, we clamp all predictions with `max(0, value)` — a simple domain knowledge fix.
 
 ---
 
@@ -250,7 +250,7 @@ The full journey from dashboard load to displayed chart:
 
 Running an ML model takes time (hundreds of milliseconds). We cannot run this every time the user refreshes the dashboard.
 
-**Implementation:** Look at `AnalyticsService.cs:124`. Before making an HTTP request to Python, it checks the database:
+**Implementation:** Look at `AnalyticsService.cs:138`. Before making an HTTP request to Python, it checks the database:
 
 ```csharp
 var allCached = await _db.Forecasts
