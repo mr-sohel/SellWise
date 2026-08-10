@@ -21,7 +21,7 @@ The system is divided into two main components:
 - **Database Engine:** SQL Server 2022 (Dockerized)
 - **Authentication:** ASP.NET Core Identity (Cookie-based session)
 - **Frontend UI:** Razor Views styled with Bootstrap 5.3.3 + Chart.js (loaded via CDN)
-- **Machine Learning:** Python, FastAPI, Facebook Prophet, Scikit-Learn
+- **Machine Learning:** Python, FastAPI, Facebook Prophet
 
 ---
 
@@ -42,7 +42,10 @@ Razor `.cshtml` files that render the HTML. We use ViewModels (e.g., `OrderFormV
 Business logic lives here:
 - `AnalyticsService.cs` — Dashboard KPIs, revenue trends, product analytics, calls ForecastService for real ML predictions
 - `ForecastService.cs` — Calls Python ML service via `HttpClient`, caches results in `Forecasts` table
-- `DemoSeederService.cs` — Seeds realistic demo data with trends and weekly seasonality (53 products, 200 customers, ~11K orders)
+- `OrderService.cs` — Manages POS order creation using ACID transactions; handles stock deduction and restoration
+- `AlertService.cs` — Scans stock levels and generates Warning/Critical inventory alerts
+- `RfmService.cs` — Computes Recency, Frequency, Monetary scores and classifies customers into 8 behavioural segments
+- `DemoSeederService.cs` — Seeds realistic demo data with trends and weekly seasonality (53 products, 300 customers, ~24K orders across 180 days)
 
 ---
 
@@ -79,7 +82,7 @@ The Python service runs independently on port 8000. It provides an endpoint `/ap
 2. For each product, it gathers 90 days of sales history from `OrderItems`.
 3. Missing days are padded with zeros to create continuous daily data.
 4. `ForecastService` sends the history to the Python ML service.
-5. The Python service processes the sales history through Meta's Prophet model (configured with weekly/yearly seasonality and Bangladesh holidays).
+5. The Python service processes the sales history through Meta's Prophet model (configured with weekly and yearly seasonality).
 6. The prediction (30-day demand forecast) is returned and stored in the `Forecasts` table for caching.
 7. The Dashboard strictly ranks these resulting cards by **highest predicted demand** (so #1 mathematically forecasts the most units), and renders the curves.
 
