@@ -13,7 +13,7 @@ dotnet ef database drop -f --no-build 2>/dev/null || dotnet ef database drop -f
 
 echo ""
 echo -e "\033[1;33m[2/3] Applying migrations...\033[0m"
-if ! dotnet ef database update --quiet; then
+if ! dotnet ef database update; then
     echo -e "\033[1;31m[ERROR] Migration failed. Is the SQL Server container running?\033[0m"
     exit 1
 fi

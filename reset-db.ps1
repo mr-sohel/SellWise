@@ -1,5 +1,5 @@
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  SellWise — Full Database Reset" -ForegroundColor Cyan
+Write-Host "  SellWise -- Full Database Reset" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 Set-Location -Path "$PSScriptRoot\SellWise.Web"
@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 Write-Host "[2/3] Applying migrations..." -ForegroundColor Yellow
-dotnet ef database update --quiet
+dotnet ef database update
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Migration failed. Is the SQL Server container running?" -ForegroundColor Red
     exit 1
@@ -22,8 +22,8 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 Write-Host "[3/3] Seeding demo data for both stores..." -ForegroundColor Yellow
-Write-Host "      Store 1: SellWise Tech BD  (Electronics — 53 products, 300 customers, 180 days)" -ForegroundColor DarkGray
-Write-Host "      Store 2: StyleHub BD       (Fashion     — 50 products, 250 customers, 180 days)" -ForegroundColor DarkGray
+Write-Host "      Store 1: SellWise Tech BD  (Electronics - 53 products, 300 customers, 180 days)" -ForegroundColor DarkGray
+Write-Host "      Store 2: StyleHub BD       (Fashion     - 50 products, 250 customers, 180 days)" -ForegroundColor DarkGray
 Write-Host ""
 dotnet run --seed
 if ($LASTEXITCODE -ne 0) {

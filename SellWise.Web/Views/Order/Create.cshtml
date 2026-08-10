@@ -367,7 +367,8 @@ function renderCart() {
     Array.from(cartItems.children).forEach(el => { if (el !== cartEmpty) el.remove(); });
 
     const hasItems = state.cart.length > 0;
-    cartEmpty.style.display            = hasItems ? 'none'         : 'flex';
+    cartEmpty.classList.toggle('d-none', hasItems);
+    cartEmpty.classList.toggle('d-flex', !hasItems);
     btnClearCart.style.display         = hasItems ? 'block'        : 'none';
     cartCountBadge.style.display       = hasItems ? 'inline-block' : 'none';
     cartCountBadge.textContent          = state.cart.reduce((s, i) => s + i.qty, 0);
