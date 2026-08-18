@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Roles &amp; Feature Split — SellWise Defense Guide</title>
+<style>
+  :root {
+    --ink: #16233c;
+    --ink-soft: #45506b;
+    --muted: #6b7690;
+    --line: #e3e8f2;
+    --bg: #f4f6fb;
+    --paper: #ffffff;
+    --navy: #1d3a8f;
+    --navy-dark: #14295f;
+    --m1: #2563eb;
+    --m2: #0f9d8f;
+    --m3: #7c3aed;
+    --m4: #d97706;
+    --m5: #db2777;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(22,35,60,.06), 0 8px 24px rgba(22,35,60,.08);
+    --shadow-hover: 0 2px 4px rgba(22,35,60,.08), 0 14px 40px rgba(22,35,60,.14);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.62;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 420px at 85% -120px, rgba(29,58,143,.10), transparent 60%),
+      radial-gradient(900px 380px at -10% -80px, rgba(123,58,237,.08), transparent 60%),
+      var(--bg);
+  }
+
+  /* ---------- Top nav ---------- */
+  .topnav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner {
+    max-width: 1180px; margin: 0 auto; padding: 10px 28px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 15px; color: var(--navy-dark);
+    letter-spacing: .2px;
+  }
+  .brand .dot { width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, var(--m1), var(--m3)); box-shadow: 0 0 0 4px rgba(37,99,235,.12); }
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 600;
+    padding: 6px 11px; border-radius: 999px; transition: .15s;
+  }
+  .nav-links a:hover { color: var(--navy); background: #eef2fb; }
+  .nav-links a[data-m1] { color: var(--m1); }
+  .nav-links a[data-m2] { color: var(--m2); }
+  .nav-links a[data-m3] { color: var(--m3); }
+  .nav-links a[data-m4] { color: var(--m4); }
+  .nav-links a[data-m5] { color: var(--m5); }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 34px 28px 80px; }
+  main { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 34px; align-items: start; }
+
+  .side { position: sticky; top: 90px; }
+  .toc {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px; box-shadow: var(--shadow);
+  }
+  .toc h4 { margin: 0 0 10px; font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+  .toc a {
+    display: flex; align-items: center; gap: 9px; color: var(--ink-soft); text-decoration: none;
+    font-size: 13.5px; font-weight: 600; padding: 7px 9px; border-radius: 8px; transition: .15s;
+  }
+  .toc a:hover { background: #f0f3fb; color: var(--navy); }
+  .toc .n {
+    flex: 0 0 22px; height: 22px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+  }
+  .toc a[href="#m1"] .n { background: var(--m1); } .toc a[href="#m2"] .n { background: var(--m2); }
+  .toc a[href="#m3"] .n { background: var(--m3); } .toc a[href="#m4"] .n { background: var(--m4); }
+  .toc a[href="#m5"] .n { background: var(--m5); }
+  .toc .sep { border-top: 1px solid var(--line); margin: 8px 4px; }
+
+  .content { min-width: 0; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 55%, #3b4fd8 100%);
+    color: #fff; border-radius: 18px; padding: 38px 40px; margin-bottom: 30px;
+    position: relative; overflow: hidden; box-shadow: var(--shadow-hover);
+  }
+  .hero::after {
+    content: ""; position: absolute; right: -70px; top: -90px; width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.14), transparent 70%);
+  }
+  .hero::before {
+    content: ""; position: absolute; right: 90px; bottom: -130px; width: 240px; height: 240px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(123,58,237,.35), transparent 70%);
+  }
+  .hero .kicker {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase;
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25);
+    padding: 5px 12px; border-radius: 999px; margin-bottom: 16px;
+  }
+  .hero h1 { margin: 0 0 10px; font-size: clamp(26px, 4vw, 38px); line-height: 1.15; letter-spacing: -.5px; }
+  .hero p { margin: 0; color: rgba(255,255,255,.85); font-size: 15.5px; max-width: 640px; }
+  .hero .meta { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .chip {
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22);
+    padding: 7px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip b { font-weight: 700; }
+
+  /* ---------- Section shells ---------- */
+  section.member { margin-bottom: 28px; }
+  .card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .card:hover { box-shadow: var(--shadow-hover); }
+
+  .member-head { display: flex; gap: 18px; align-items: center; padding: 22px 26px; border-bottom: 1px solid var(--line); }
+  .avatar {
+    flex: 0 0 52px; height: 52px; border-radius: 14px; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.25), 0 6px 14px rgba(22,35,60,.18);
+  }
+  .m1 .avatar { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .m2 .avatar { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+  .m3 .avatar { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+  .m4 .avatar { background: linear-gradient(135deg, #f59e0b, #b45309); }
+  .m5 .avatar { background: linear-gradient(135deg, #ec4899, #be185d); }
+  .member-head h2 { margin: 0; font-size: 21px; letter-spacing: -.3px; }
+  .member-head .focus { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; font-weight: 600; }
+
+  .body { padding: 24px 26px 28px; }
+  .body h3 {
+    display: flex; align-items: center; gap: 9px; margin: 26px 0 12px; font-size: 13.5px;
+    letter-spacing: .6px; text-transform: uppercase; color: var(--navy-dark);
+  }
+  .body h3:first-child { margin-top: 0; }
+  .body h3::before { content: ""; width: 5px; height: 17px; border-radius: 3px; background: var(--m1, var(--navy)); }
+
+  /* ---------- Feature list ---------- */
+  ul.features { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; grid-template-columns: 1fr; }
+  ul.features li {
+    display: flex; gap: 11px; padding: 10px 13px; background: #f8fafd; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 14.5px; line-height: 1.55;
+  }
+  ul.features li .ic { flex: 0 0 18px; margin-top: 2px; }
+  ul.features li strong { color: var(--navy-dark); }
+  ul.features li code { font-size: 12.5px; }
+
+  code {
+    background: #eef2f9; border: 1px solid #dfe6f3; color: #26386b;
+    padding: 1px 6px; border-radius: 6px; font-family: Consolas, "Cascadia Code", monospace; font-size: 12.5px;
+  }
+  code.file { background: #eef4ff; border-color: #cfddfb; color: #1d4ed8; font-weight: 600; }
+
+  /* ---------- Tables ---------- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 540px; }
+  thead th {
+    background: #eef2fb; color: var(--navy-dark); text-align: left; font-size: 12px;
+    letter-spacing: .5px; text-transform: uppercase; padding: 10px 14px; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0;
+  }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #f6f9ff; }
+  td code { white-space: nowrap; }
+
+  /* ---------- Q&A ---------- */
+  .qa { display: grid; gap: 12px; }
+  .qa-item { border: 1px solid var(--line); border-left: 4px solid var(--m1, var(--navy)); border-radius: 10px; padding: 13px 16px; background: #fff; }
+  .qa-item .q { font-weight: 700; color: var(--navy-dark); margin-bottom: 4px; font-size: 14.5px; }
+  .qa-item .q::before { content: "Q: "; color: var(--m1, var(--navy)); }
+  .qa-item .a { color: var(--ink-soft); font-size: 14px; }
+
+  /* ---------- Flow timeline ---------- */
+  .flow { display: grid; gap: 12px; counter-reset: step; }
+  .flow .step {
+    display: flex; gap: 15px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
+    background: #fff; align-items: flex-start;
+  }
+  .flow .badge {
+    counter-increment: step; flex: 0 0 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #fff;
+  }
+  .flow .step:nth-child(1) .badge { background: var(--m1); } .flow .step:nth-child(2) .badge { background: var(--m2); }
+  .flow .step:nth-child(3) .badge { background: var(--m3); } .flow .step:nth-child(4) .badge { background: var(--m4); }
+  .flow .step:nth-child(5) .badge { background: var(--m5); }
+  .flow .step .txt strong { color: var(--navy-dark); }
+  .flow .step .txt { color: var(--ink-soft); font-size: 14.5px; }
+  .flow .step .txt strong b { color: var(--ink); }
+
+  /* ---------- Callouts ---------- */
+  .callout {
+    border-radius: 14px; padding: 18px 22px; border: 1px solid var(--line);
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .callout.creds { background: linear-gradient(135deg, #eef4ff, #faf5ff); }
+  .callout .lbl {
+    flex: 0 0 auto; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--navy); padding-top: 3px;
+  }
+  .callout .big { font-size: 16.5px; font-weight: 700; color: var(--navy-dark); }
+  .callout .sub { color: var(--ink-soft); font-size: 14px; margin-top: 2px; }
+
+  .footnote { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 36px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 940px) {
+    main { grid-template-columns: 1fr; }
+    .side { position: static; }
+    .toc { display: flex; flex-wrap: wrap; gap: 4px; }
+    .toc h4, .toc .sep { display: none; }
+    .toc a { padding: 6px 9px; }
+    .nav-links { display: none; }
+  }
+
+  /* ---------- Print ---------- */
+  @media print {
+    @page { size: A4; margin: 14mm 13mm; }
+    body { background: #fff; font-size: 10.5pt; }
+    .topnav { display: none; }
+    .side { display: none; }
+    main { display: block; }
+    .wrap { max-width: none; padding: 0; }
+    .hero { box-shadow: none; border-radius: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card { box-shadow: none; break-inside: avoid; }
+    .card .body { padding: 14px 0; }
+    .member-head { padding: 12px 0; }
+    .body h3 { margin-top: 14px; }
+    .table-scroll { border: none; }
+    thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .avatar, .chip, .qa-item, .callout, .flow .step { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: inherit; text-decoration: none; }
+    ul.features li { background: #f7f9fc; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="brand"><span class="dot"></span> SellWise · Team Defense Guide</div>
+    <div class="nav-links">
+      <a href="#m1" data-m1>Member 1</a>
+      <a href="#m2" data-m2>Member 2</a>
+      <a href="#m3" data-m3>Member 3</a>
+      <a href="#m4" data-m4>Member 4</a>
+      <a href="#m5" data-m5>Member 5</a>
+      <a href="#collab" style="color:var(--navy)">Collaboration</a>
+      <a href="#flow" style="color:var(--navy)">Flow</a>
+      <a href="#creds" style="color:var(--navy)">Credentials</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <main>
+    <aside class="side">
+      <div class="toc">
+        <h4>Jump to</h4>
+        <a href="#m1"><span class="n">1</span> Full-Stack .NET</a>
+        <a href="#m2"><span class="n">2</span> Full-Stack .NET</a>
+        <a href="#m3"><span class="n">3</span> AI / ML</a>
+        <a href="#m4"><span class="n">4</span> Database</a>
+        <a href="#m5"><span class="n">5</span> Frontend</a>
+        <div class="sep"></div>
+        <a href="#collab">Collaboration</a>
+        <a href="#flow">Defense Flow</a>
+        <a href="#creds">Credentials</a>
+      </div>
+    </aside>
+
+    <div class="content">
+
+      <header class="hero">
+        <span class="kicker">Defense Guide · 5 Members</span>
+        <h1>Team Roles &amp; Feature Split</h1>
+        <p>Who owns what in the SellWise build — with the key files, responsibilities, and the Q&amp;A you're likely to face in the defense.</p>
+        <div class="meta">
+          <span class="chip"><b>Project:</b> SellWise — AI Sales Analytics &amp; Inventory SaaS</span>
+          <span class="chip"><b>Stack:</b> ASP.NET Core 10 MVC · EF Core · SQL Server (Docker) · Python FastAPI (Prophet ML)</span>
+        </div>
+      </header>
+
+      <!-- ============ MEMBER 1 ============ -->
+      <section class="member m1" id="m1">
+        <div class="card">
+          <div class="member-head">
+            <div class="avatar">1</div>
+            <div>
+              <h2>Member 1 — Full-Stack .NET Developer</h2>
+              <p class="focus">Authentication · Multi-Tenancy · Settings · Dashboard &amp; Analytics</p>
+            </div>
+          </div>
+          <div class="body">
+            <h3>Features &amp; Responsibilities</h3>
+            <ul class="features">
+              <li><span class="ic">🔐</span><span><strong>Login &amp; Signup</strong> — Cookie-based auth via ASP.NET Core Identity. Signup atomically creates <code>ApplicationUser</code> + <code>Store</code> + <code>StoreMember(role=owner)</code> inside a single EF Core transaction.</span></li>
+              <li><span class="ic">🔁</span><span><strong>Store Switching</strong> — <code>SwitchStore</code> action writes the chosen <code>StoreId</code> to session; all downstream queries resolve to that tenant.</span></li>
+              <li><span class="ic">🏢</span><span><strong>Multi-Tenancy Foundation</strong> — <code>BaseController.GetCurrentStoreId()</code> reads <code>ActiveStoreId</code> from session. Every controller inherits this, scoping all DB queries per store automatically.</span></li>
+              <li><span class="ic">⚙️</span><span><strong>Account Settings</strong> — Update store name (<code>UpdateProfile</code>), change password via <code>UserManager.ChangePasswordAsync</code>.</span></li>
+              <li><span class="ic">👥</span><span><strong>Staff Management</strong> — Owner-only: invite new or existing users as employee/manager (<code>InviteEmployee</code>), remove staff (<code>RemoveEmployee</code>), view staff list with roles and join dates.</span></li>
+              <li><span class="ic">📊</span><span><strong>Dashboard &amp; KPIs</strong> — <code>DashboardController</code> calls <code>AnalyticsService.GetOverview</code> which aggregates: total revenue, order count, average order value, gross profit, net profit (revenue − expenses), revenue growth %, Business Health Score (0–100).</span></li>
+              <li><span class="ic">📈</span><span><strong>Revenue Trend &amp; Category Charts</strong> — <code>AnalyticsService</code> groups orders by date (time-series) and <code>OrderItem</code> by <code>Product.Category</code> (doughnut chart); serialized into <code>DashboardViewModel</code> for Chart.js.</span></li>
+              <li><span class="ic">🏆</span><span><strong>Top Products &amp; Forecast Cards</strong> — Ranks products by revenue/units; pulls per-product 30-day Prophet forecast from <code>ForecastService</code> (or fallback) into <code>ProductForecastCard</code> objects.</span></li>
+              <li><span class="ic">🔍</span><span><strong>Global Quick Search</strong> — <code>SearchController.QuickSearch</code> queries Products, Orders, Customers (top 5 each) filtered by <code>StoreId</code>, returns JSON consumed by the navbar search box via <code>fetch</code>.</span></li>
+              <li><span class="ic">🌱</span><span><strong>Auto-Seeding on First Login</strong> — <code>DashboardController</code> detects empty store for <code>admin@sellwise.com</code> and fires <code>DemoSeederService</code> as a background <code>Task.Run</code>.</span></li>
+              <li><span class="ic">🧩</span><span><strong>Program.cs &amp; DI Setup</strong> — Registers Identity, session middleware, cookie policy, <code>HttpClient</code> for ML, all services in DI.</span></li>
+            </ul>
+
+            <h3>Key Files</h3>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th style="width:38%">File</th><th>Responsibility</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="file">Controllers/AuthController.cs</code></td><td>Login, Signup (transactional), Logout, SwitchStore</td></tr>
+                  <tr><td><code class="file">Controllers/BaseController.cs</code></td><td><code>GetCurrentStoreId()</code> — multi-tenancy enforcer inherited by all controllers</td></tr>
+                  <tr><td><code class="file">Controllers/SettingsController.cs</code></td><td>Profile update, password change, staff invite/remove</td></tr>
+                  <tr><td><code class="file">Controllers/DashboardController.cs</code></td><td>Calls <code>AnalyticsService.GetOverview</code>, triggers background seed</td></tr>
+                  <tr><td><code class="file">Controllers/SearchController.cs</code></td><td><code>QuickSearch</code> — JSON results across products, orders, customers</td></tr>
+                  <tr><td><code class="file">Services/AnalyticsService.cs</code></td><td>All KPI aggregation, revenue trend, category sales, health score, forecast integration, moving-average fallback</td></tr>
+                  <tr><td><code class="file">Services/ForecastService.cs</code></td><td>HTTP client: POSTs history to Python ML → deserializes forecast response</td></tr>
+                  <tr><td><code class="file">ViewModels/Auth/*</code></td><td>Login &amp; Signup form binding</td></tr>
+                  <tr><td><code class="file">ViewModels/Settings/*</code></td><td>Profile, ChangePassword, Employee, InviteEmployee form bindings</td></tr>
+                  <tr><td><code class="file">ViewModels/Dashboard/DashboardViewModel.cs</code></td><td>Typed VM: all KPIs + chart data lists passed to dashboard view</td></tr>
+                  <tr><td><code class="file">Models/ApplicationUser.cs</code></td><td>Identity user entity</td></tr>
+                  <tr><td><code class="file">Models/Store.cs</code></td><td>Store entity (Name, Currency)</td></tr>
+                  <tr><td><code class="file">Models/StoreMember.cs</code></td><td>Join table: UserId + StoreId + Role</td></tr>
+                  <tr><td><code class="file">Models/Forecast.cs</code></td><td>Cached forecast entity (StoreId, ProductId, GeneratedAt, PredictedDemand)</td></tr>
+                  <tr><td><code class="file">Models/ErrorViewModel.cs</code></td><td>Generic error page model (shared, scaffolded by framework)</td></tr>
+                  <tr><td><code class="file">appsettings.json</code></td><td>DB connection string, <code>MlServiceUrl</code>, logging config</td></tr>
+                  <tr><td><code class="file">Properties/launchSettings.json</code></td><td>Dev server ports and launch profiles</td></tr>
+                  <tr><td><code class="file">Program.cs</code></td><td>Identity config, session, cookie policy, DI registrations</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Defense Q&amp;A</h3>
+            <div class="qa">
+              <div class="qa-item"><div class="q">How is multi-tenancy enforced?</div><div class="a"><code>BaseController</code> reads <code>ActiveStoreId</code> from the HTTP session. Every EF Core query is wrapped with <code>.Where(x =&gt; x.StoreId == storeId)</code> — users physically cannot access another store's data.</div></div>
+              <div class="qa-item"><div class="q">How is signup safe?</div><div class="a"><code>AuthController.Signup</code> wraps <code>CreateAsync(user)</code> + <code>Stores.Add()</code> + <code>StoreMembers.Add()</code> in one <code>BeginTransactionAsync()</code>. Any failure triggers <code>RollbackAsync()</code> — no orphan users or stores.</div></div>
+              <div class="qa-item"><div class="q">How does the health score work?</div><div class="a"><code>AnalyticsService.CalculateHealthScore</code> starts at 50, adds points for high order count, subtracts points per low-stock alert. Clamped 0–100.</div></div>
+              <div class="qa-item"><div class="q">What happens when the ML service is down?</div><div class="a"><code>ForecastService.GetForecastAsync</code> catches any HTTP exception and returns <code>null</code>. <code>AnalyticsService</code> detects <code>null</code> and falls back to a 7-day moving average computed locally in C#.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MEMBER 2 ============ -->
+      <section class="member m2" id="m2">
+        <div class="card">
+          <div class="member-head">
+            <div class="avatar">2</div>
+            <div>
+              <h2>Member 2 — Full-Stack .NET Developer</h2>
+              <p class="focus">Inventory · POS Orders · CRM · Expenses · Alerts &amp; Reports</p>
+            </div>
+          </div>
+          <div class="body">
+            <h3>Features &amp; Responsibilities</h3>
+            <ul class="features">
+              <li><span class="ic">📦</span><span><strong>Product Catalog (CRUD)</strong> — Create, edit, soft-delete products. Soft delete sets <code>IsActive = false</code> to preserve historical <code>OrderItem</code> FK references.</span></li>
+              <li><span class="ic">📥</span><span><strong>CSV Bulk Import (Products)</strong> — Upload CSV to batch-create products; custom <code>ParseCsvLine</code> handles quoted fields. Aborts on malformed numeric data.</span></li>
+              <li><span class="ic">🛒</span><span><strong>POS Order Creation</strong> — Dynamic cart: products and customers are embedded as JSON in the view; vanilla JS calculates live subtotal/discount/delivery/total. Submits to <code>OrderService.CreateOrderAsync</code>.</span></li>
+              <li><span class="ic">💾</span><span><strong>ACID Order Transaction</strong> — <code>OrderService</code> uses <code>BeginTransactionAsync</code>: validates stock per line item, deducts <code>StockQuantity</code>, saves <code>Order</code> + <code>OrderItem</code> rows, updates <code>Customer.TotalSpent</code> and <code>TotalOrders</code>, all atomically.</span></li>
+              <li><span class="ic">📋</span><span><strong>Order List &amp; Status Management</strong> — Paginated list with search, status filter (pending/processing/completed/cancelled/returned), date-range filter. <code>ChangeStatus</code> and <code>Cancel</code> actions.</span></li>
+              <li><span class="ic">🧾</span><span><strong>Order Details &amp; Invoice</strong> — Full breakdown: line items, customer info, store name, currency. Separate print-ready Invoice view.</span></li>
+              <li><span class="ic">📥</span><span><strong>CSV Bulk Import (Orders)</strong> — Historical order import; auto-creates customers from phone numbers if not already present.</span></li>
+              <li><span class="ic">👤</span><span><strong>Customer Management</strong> — Paginated list with search (name, phone, email), sort by spend/orders/RFM/date. Edit customer profile (name, phone, email, address).</span></li>
+              <li><span class="ic">🎯</span><span><strong>RFM Segmentation</strong> — <code>RfmService.RecalculateAllAsync</code> groups last-365-days orders by customer, uses 25th/75th percentile breakpoints to assign R/F/M scores (1–5), maps combinations to segments: Champion, Loyal, Potential Loyalist, At Risk, Can't Lose Them, Lost, etc.</span></li>
+              <li><span class="ic">💰</span><span><strong>Expense Tracking</strong> — Log expenses by category (Rent, Utilities, Salaries) with date and notes. Paginated list with date-range filter. Inline Bootstrap modal for fast entry.</span></li>
+              <li><span class="ic">📄</span><span><strong>PDF Sales Report</strong> — <code>ReportController</code> uses <strong>QuestPDF</strong> to generate an A4 PDF: date-range header, total orders/revenue summary, table of up to 50 recent orders, paginated footer. Returned as a file download.</span></li>
+              <li><span class="ic">⚠️</span><span><strong>Low-Stock Alerts</strong> — <code>AlertService.ScanAndGenerateAlertsAsync</code>: finds products where <code>StockQuantity &lt;= LowStockThreshold</code>, creates <code>InventoryAlert</code> records (Critical/Warning). Deduplicates by checking existing <code>Type == "Low Stock"</code> alerts. Resolves stale alerts when stock is replenished.</span></li>
+            </ul>
+
+            <h3>Key Files</h3>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th style="width:38%">File</th><th>Responsibility</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="file">Controllers/ProductController.cs</code></td><td>Product CRUD + CSV bulk import</td></tr>
+                  <tr><td><code class="file">Controllers/OrderController.cs</code></td><td>Order list, create (POS), details, invoice, status change, CSV import</td></tr>
+                  <tr><td><code class="file">Controllers/CustomerController.cs</code></td><td>Customer list (search/filter/sort/paginate), edit, trigger RFM recalc</td></tr>
+                  <tr><td><code class="file">Controllers/ExpenseController.cs</code></td><td>Expense list + create</td></tr>
+                  <tr><td><code class="file">Controllers/ReportController.cs</code></td><td>Report summary page + <code>ExportPdf</code> (QuestPDF)</td></tr>
+                  <tr><td><code class="file">Controllers/AlertController.cs</code></td><td>Alert list, scan inventory, mark all read, dismiss</td></tr>
+                  <tr><td><code class="file">Services/OrderService.cs</code></td><td>ACID transaction: stock deduction + order save + customer totals update</td></tr>
+                  <tr><td><code class="file">Services/IOrderService.cs</code></td><td><code>CreateOrderAsync</code> + <code>GetDashboardKpisAsync</code> interface</td></tr>
+                  <tr><td><code class="file">Services/RfmService.cs</code></td><td>Percentile-based R/F/M scoring + segment label assignment</td></tr>
+                  <tr><td><code class="file">Services/IRfmService.cs</code></td><td><code>RecalculateAllAsync(storeId)</code> interface</td></tr>
+                  <tr><td><code class="file">Services/AlertService.cs</code></td><td><code>ScanAndGenerateAlertsAsync</code> — low-stock detection + dedup + resolve</td></tr>
+                  <tr><td><code class="file">Services/IAlertService.cs</code></td><td>Alert service interface</td></tr>
+                  <tr><td><code class="file">Models/Product.cs</code></td><td>Name, SKU, Category, CostPrice, SellingPrice, StockQuantity, LowStockThreshold, IsActive</td></tr>
+                  <tr><td><code class="file">Models/Order.cs</code></td><td>OrderNumber, Total, DeliveryCharge, Discount, Status, CustomerId, StoreId</td></tr>
+                  <tr><td><code class="file">Models/OrderItem.cs</code></td><td>ProductName (snapshot), Quantity, UnitPrice, CostPrice</td></tr>
+                  <tr><td><code class="file">Models/Customer.cs</code></td><td>Name, Phone, Email, TotalOrders, TotalSpent, RFM scores &amp; segment</td></tr>
+                  <tr><td><code class="file">Models/Expense.cs</code></td><td>Category, Amount, ExpenseDate, Notes</td></tr>
+                  <tr><td><code class="file">Models/InventoryAlert.cs</code></td><td>ProductId, Type, Message, Severity, IsRead</td></tr>
+                  <tr><td><code class="file">ViewModels/Order/*</code></td><td>POS form (items, ProductsJson, CustomersJson) + order list row</td></tr>
+                  <tr><td><code class="file">ViewModels/Product/*</code></td><td>Product create/edit form + list row</td></tr>
+                  <tr><td><code class="file">ViewModels/Customer/*</code></td><td>Customer list row (incl. RFM scores) + edit form</td></tr>
+                  <tr><td><code class="file">ViewModels/Expense/*</code></td><td>Expense list row + create form</td></tr>
+                  <tr><td><code class="file">ViewModels/Alert/AlertViewModel.cs</code></td><td>Alert list row (severity, type, isRead)</td></tr>
+                  <tr><td><code class="file">ViewModels/Report/ReportViewModel.cs</code></td><td>Report summary page (total orders, total revenue)</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Defense Q&amp;A</h3>
+            <div class="qa">
+              <div class="qa-item"><div class="q">How does POS prevent overselling?</div><div class="a">Inside <code>BeginTransactionAsync</code>, <code>OrderService</code> loads each product, checks <code>StockQuantity &gt;= requested quantity</code>, and returns an error string that triggers <code>RollbackAsync</code> if stock is insufficient — the UI never touches stock.</div></div>
+              <div class="qa-item"><div class="q">Why soft-delete products?</div><div class="a"><code>OrderItem</code> keeps a <code>ProductId</code> FK. Hard-deleting would orphan historical line items. Setting <code>IsActive = false</code> preserves the row and all past invoice data.</div></div>
+              <div class="qa-item"><div class="q">How are alerts deduplicated?</div><div class="a">Before inserting, <code>AlertService</code> queries existing <code>ProductId</code>s with <code>Type == "Low Stock"</code>. If one exists, it is skipped. Resolved products get their alert updated to <code>"Low Stock (Resolved)"</code> rather than deleted.</div></div>
+              <div class="qa-item"><div class="q">What is RFM?</div><div class="a">Recency (days since last order), Frequency (order count), Monetary (total spend). <code>RfmService</code> uses percentile thresholds over 365 days to give each dimension a 1–5 score, then maps the combination to a named segment used for targeted marketing.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MEMBER 3 ============ -->
+      <section class="member m3" id="m3">
+        <div class="card">
+          <div class="member-head">
+            <div class="avatar">3</div>
+            <div>
+              <h2>Member 3 — AI / ML Developer</h2>
+              <p class="focus">Prophet Demand Forecasting · C# ↔ Python Integration · Caching &amp; Fallback</p>
+            </div>
+          </div>
+          <div class="body">
+            <h3>Features &amp; Responsibilities</h3>
+            <ul class="features">
+              <li><span class="ic">🧠</span><span><strong>Python FastAPI ML Service</strong> — Standalone microservice (<code>SellWise.ML/</code>) exposes <code>POST /api/v1/ml/forecast</code>. Accepts JSON with historical daily sales (<code>ds</code>, <code>y</code>), runs Facebook Prophet, returns 30-day predictions with confidence intervals (<code>yhat</code>, <code>yhat_lower</code>, <code>yhat_upper</code>).</span></li>
+              <li><span class="ic">📐</span><span><strong>Prophet Model</strong> — <code>prophet_service.py</code>: configures <code>yearly_seasonality=True</code>, <code>weekly_seasonality=True</code>. Fits Prophet on the incoming history DataFrame, generates <code>make_future_dataframe(periods=30)</code>, clamps negative predictions to 0.</span></li>
+              <li><span class="ic">❄️</span><span><strong>Cold-Start Handling</strong> — Returns an empty list if fewer than 2 data points are provided; Prophet fitting errors are caught and return empty rather than crashing.</span></li>
+              <li><span class="ic">🌐</span><span><strong>CORS &amp; Middleware</strong> — <code>main.py</code> configures <code>CORSMiddleware</code> with allowed origins read from <code>CORS_ORIGINS</code> env var, supporting the .NET app's ports.</span></li>
+              <li><span class="ic">❤️</span><span><strong>Health Endpoint</strong> — <code>GET /api/v1/ml/health</code> (and <code>GET /</code>) return service status; used by <code>ForecastService.IsAvailableAsync()</code> for the C# fallback check.</span></li>
+              <li><span class="ic">📜</span><span><strong>Pydantic Schemas</strong> — <code>schemas.py</code> defines <code>ForecastRequest</code>, <code>ForecastResponse</code>, <code>SalesHistoryPoint</code>, <code>ForecastResultPoint</code> — the contract between C# and Python.</span></li>
+              <li><span class="ic">🔗</span><span><strong>C# Integration Layer</strong> — <code>ForecastService.cs</code>: serializes <code>ForecastRequest</code> DTO → POSTs to <code>http://localhost:8000/api/v1/ml/forecast</code> via typed <code>HttpClient</code> → deserializes <code>ForecastResponse</code>. URL configured via <code>appsettings.json</code> (<code>MlServiceUrl</code>).</span></li>
+              <li><span class="ic">🗄️</span><span><strong>Forecast Caching</strong> — <code>AnalyticsService</code> queries <code>Db.Forecasts</code> for records within 24 hours before calling Python. Cache hit skips the ML call entirely; new forecasts are batch-inserted after generation.</span></li>
+              <li><span class="ic">🛡️</span><span><strong>Moving Average Fallback</strong> — On any HTTP exception or <code>null</code> response from <code>ForecastService</code>, <code>AnalyticsService.GetFallbackForecast</code> computes a 30-day flat projection from the 30-day historical average — dashboard never breaks.</span></li>
+              <li><span class="ic">🐳</span><span><strong>Docker Container</strong> — <code>Dockerfile</code> packages the Python service; <code>start.ps1</code>/<code>start.sh</code> boot the ML container alongside SQL Server and the .NET app.</span></li>
+            </ul>
+
+            <h3>Key Files</h3>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th style="width:38%">File</th><th>Responsibility</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="file">SellWise.ML/app/main.py</code></td><td>FastAPI app factory, CORS middleware, router registration</td></tr>
+                  <tr><td><code class="file">SellWise.ML/app/routers/forecast.py</code></td><td><code>POST /api/v1/ml/forecast</code> — validates input, calls <code>generate_forecast</code>, returns JSON</td></tr>
+                  <tr><td><code class="file">SellWise.ML/app/routers/health.py</code></td><td><code>GET /api/v1/ml/health</code> health check endpoint</td></tr>
+                  <tr><td><code class="file">SellWise.ML/app/services/prophet_service.py</code></td><td><code>generate_forecast()</code> — Prophet fit, future dataframe, prediction, clamp to 0</td></tr>
+                  <tr><td><code class="file">SellWise.ML/app/models/schemas.py</code></td><td>Pydantic schemas: <code>ForecastRequest</code>, <code>ForecastResponse</code>, <code>SalesHistoryPoint</code>, <code>ForecastResultPoint</code></td></tr>
+                  <tr><td><code class="file">SellWise.ML/Dockerfile</code></td><td>Python service container definition</td></tr>
+                  <tr><td><code class="file">SellWise.ML/requirements.txt</code></td><td>Python dependencies (prophet, fastapi, uvicorn, pandas)</td></tr>
+                  <tr><td><code class="file">Services/ForecastService.cs</code></td><td>C# HTTP client wrapper: serialize → POST → deserialize; <code>IsAvailableAsync()</code> health check</td></tr>
+                  <tr><td><code class="file">Models/Forecast.cs</code></td><td>Cached forecast entity: StoreId, ProductId, ForecastDate, PredictedDemand, GeneratedAt</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Defense Q&amp;A</h3>
+            <div class="qa">
+              <div class="qa-item"><div class="q">How does Prophet work here?</div><div class="a"><code>prophet_service.py</code> converts the incoming history list into a pandas DataFrame with <code>ds</code> (date) and <code>y</code> (quantity sold) columns. Prophet fits a decomposable time-series model with weekly and yearly seasonality. <code>make_future_dataframe(periods=30)</code> generates the next 30 dates; <code>model.predict()</code> returns trend + seasonality components summed into <code>yhat</code>.</div></div>
+              <div class="qa-item"><div class="q">How does C# call Python?</div><div class="a"><code>ForecastService</code> sends a <code>POST</code> with a JSON body (<code>store_id</code>, <code>product_id</code>, <code>history[]</code>, <code>periods</code>) to the FastAPI endpoint. The response is a JSON array of <code>{ds, yhat, yhat_lower, yhat_upper}</code> per day, deserialized into <code>List&lt;ForecastResultPoint&gt;</code>.</div></div>
+              <div class="qa-item"><div class="q">What if the Python service is down?</div><div class="a"><code>ForecastService.GetForecastAsync</code> wraps the HTTP call in try/catch and returns <code>null</code>. <code>AnalyticsService</code> detects <code>null</code> and calls <code>GetFallbackForecast</code>, which uses a simple 30-day moving average from historical order data — the dashboard always renders a forecast line.</div></div>
+              <div class="qa-item"><div class="q">How is caching implemented?</div><div class="a"><code>AnalyticsService</code> queries <code>Db.Forecasts.Where(f =&gt; f.StoreId == storeId &amp;&amp; f.GeneratedAt &gt;= now.AddHours(-24))</code>. If records exist, they are returned directly. New forecast rows are batch-inserted with <code>_db.Forecasts.AddRange(newForecasts)</code> after a successful ML call.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MEMBER 4 ============ -->
+      <section class="member m4" id="m4">
+        <div class="card">
+          <div class="member-head">
+            <div class="avatar">4</div>
+            <div>
+              <h2>Member 4 — Database Developer</h2>
+              <p class="focus">DB Schema · EF Core Migrations · Docker SQL Server · Seed Data · Startup Scripts</p>
+            </div>
+          </div>
+          <div class="body">
+            <h3>Features &amp; Responsibilities</h3>
+            <ul class="features">
+              <li><span class="ic">🗃️</span><span><strong>Database Schema Design</strong> — Designed all EF Core Code-First models in collaboration with Members 1 &amp; 2. Owns <code>AppDbContext.OnModelCreating</code>: composite PK on <code>StoreMember {StoreId, UserId}</code>, decimal precision <code>(18,2)</code> on all monetary columns, <code>DeleteBehavior.Restrict</code> on <code>InventoryAlert</code> and <code>Forecast</code> to prevent multi-path cascade errors.</span></li>
+              <li><span class="ic">⚡</span><span><strong>Performance Indexes</strong> — Composite indexes for the most common multi-tenant queries: <code>(StoreId, IsActive)</code> on Products, <code>(StoreId, OrderDate)</code> on Orders, <code>(StoreId, ExpenseDate)</code> on Expenses, <code>(StoreId, IsRead)</code> on Alerts, <code>StoreId</code> on Customers and Forecasts.</span></li>
+              <li><span class="ic">🔄</span><span><strong>EF Core Migrations</strong> — Sole owner of <code>Migrations/</code>. Runs <code>dotnet ef migrations add</code> and <code>dotnet ef database update</code> whenever Members 1 or 2 add new model fields. Current migrations: <code>InitialCreate</code>, <code>AddRfmFieldsToCustomer</code>, <code>RemoveOrderSource</code>.</span></li>
+              <li><span class="ic">🐳</span><span><strong>Docker SQL Server</strong> — Configured and runs the <code>sellwise-sql</code> Docker container (SQL Server image, password <code>YourPass123!</code>). Defined in startup scripts.</span></li>
+              <li><span class="ic">🚀</span><span><strong>Startup Scripts</strong> — <code>start.ps1</code> / <code>start.sh</code>: check Docker is running, start the SQL container, run <code>dotnet ef database update</code>, start the .NET app, and start the Python ML service.</span></li>
+              <li><span class="ic">♻️</span><span><strong>Reset Scripts</strong> — <code>reset-db.ps1</code> / <code>reset-db.sh</code>: stop containers, drop and recreate the database, re-run migrations, re-seed demo data — gives the team a clean slate for demos.</span></li>
+              <li><span class="ic">🌾</span><span><strong>Demo Data Seeder</strong> — <code>DemoSeederService</code> procedurally generates months of realistic <code>Order</code> + <code>OrderItem</code> history per store (two stores: SellWise Tech BD and StyleHub BD), applying trend slope + weekly seasonality noise so the Prophet model has meaningful patterns to learn from.</span></li>
+            </ul>
+
+            <h3>Key Files</h3>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th style="width:38%">File</th><th>Responsibility</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="file">Data/AppDbContext.cs</code></td><td><code>DbSet&lt;&gt;</code> registrations; <code>OnModelCreating</code> — relationships, precision config, indexes</td></tr>
+                  <tr><td><code class="file">Migrations/20260721102853_InitialCreate.cs</code></td><td>Full initial schema: all tables, FKs, Identity tables</td></tr>
+                  <tr><td><code class="file">Migrations/20260723104421_AddRfmFieldsToCustomer.cs</code></td><td>Added RecencyScore, FrequencyScore, MonetaryScore, RfmSegment, LastOrderDate</td></tr>
+                  <tr><td><code class="file">Migrations/20260723133404_RemoveOrderSource.cs</code></td><td>Dropped OrderSource column after requirements changed</td></tr>
+                  <tr><td><code class="file">Migrations/AppDbContextModelSnapshot.cs</code></td><td>EF Core model snapshot (auto-generated, tracks current schema state)</td></tr>
+                  <tr><td><code class="file">Services/DemoSeederService.cs</code></td><td>Procedural realistic order history with trend + weekly seasonality per store</td></tr>
+                  <tr><td><code class="file">SellWise.slnx</code></td><td>Solution file linking the <code>SellWise.Web</code> project</td></tr>
+                  <tr><td><code class="file">SellWise.Web/SellWise.Web.csproj</code></td><td>NuGet package references (EF Core, Identity, QuestPDF, etc.)</td></tr>
+                  <tr><td><code class="file">start.ps1 / start.sh</code></td><td>Full-stack boot: Docker SQL → EF migrations → .NET run → Python ML run</td></tr>
+                  <tr><td><code class="file">reset-db.ps1 / reset-db.sh</code></td><td>Drop DB → re-migrate → re-seed</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Defense Q&amp;A</h3>
+            <div class="qa">
+              <div class="qa-item"><div class="q">How is the schema designed?</div><div class="a">Code-First: C# model classes define the schema. <code>OnModelCreating</code> adds composite keys (e.g., <code>StoreMember</code> has no surrogate PK — the pair <code>{StoreId, UserId}</code> is the PK), sets decimal precision to prevent SQL rounding, restricts cascades to avoid multi-path FK errors, and adds composite indexes on <code>(StoreId, X)</code> for every major table to make tenant-scoped queries fast.</div></div>
+              <div class="qa-item"><div class="q">What are the migrations?</div><div class="a">Three: <code>InitialCreate</code> (full schema), <code>AddRfmFieldsToCustomer</code> (added R/F/M scoring columns needed by Member 2's <code>RfmService</code>), <code>RemoveOrderSource</code> (removed a column after scope change). EF Core auto-generates the SQL diff from model changes.</div></div>
+              <div class="qa-item"><div class="q">How does Docker SQL work?</div><div class="a"><code>start.ps1</code> runs <code>docker run -e SA_PASSWORD=YourPass123! -p 1433:1433 mcr.microsoft.com/mssql/server</code>. The connection string in <code>appsettings.json</code> points to <code>localhost,1433</code>. <code>reset-db.ps1</code> stops the container, removes it, and starts fresh.</div></div>
+              <div class="qa-item"><div class="q">How is seed data realistic?</div><div class="a"><code>DemoSeederService</code> generates daily orders over several months with a configurable upward trend and random weekly seasonality multipliers, so the time-series has the shape Prophet needs to detect patterns and produce a meaningful 30-day forecast.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MEMBER 5 ============ -->
+      <section class="member m5" id="m5">
+        <div class="card">
+          <div class="member-head">
+            <div class="avatar">5</div>
+            <div>
+              <h2>Member 5 — Frontend Developer</h2>
+              <p class="focus">All Razor Views · Layout · Bootstrap Styling · Chart.js · Inline JS</p>
+            </div>
+          </div>
+          <div class="body">
+            <h3>Features &amp; Responsibilities</h3>
+            <ul class="features">
+              <li><span class="ic">🖥️</span><span><strong>Shared App Shell (<code>_Layout.cshtml</code>)</strong> — Sidebar navigation with active-link detection, store-switcher dropdown in the header, unread alert notification bell (badge count), responsive Bootstrap 5.3.3 grid, global search <code>&lt;input&gt;</code> with debounced <code>fetch</code> dropdown.</span></li>
+              <li><span class="ic">🔑</span><span><strong>Auth Layout (<code>_AuthLayout.cshtml</code>)</strong> — Minimal centered card layout for Login and Signup pages.</span></li>
+              <li><span class="ic">📊</span><span><strong>Dashboard View</strong> — KPI stat cards (revenue, orders, avg order value, profit, health score), Chart.js revenue trend line chart, category sales doughnut chart, top-performing products table, AI demand forecast line chart with confidence band. Time-range selector buttons (7d / 30d / 90d / 1y) that reload the page with <code>?range=</code>.</span></li>
+              <li><span class="ic">🛒</span><span><strong>POS Order Create View</strong> — Most complex view: products and customers are embedded as inline JSON from the ViewModel; vanilla JS powers the cart — add/remove rows, live unit price population, quantity change recalculates line totals, delivery charge and discount update the grand total in real time. No page reload.</span></li>
+              <li><span class="ic">📋</span><span><strong>Order Views</strong> — Index (filterable by status and date range, KPI bar at top showing today's revenue and pending count), Details (full line-item breakdown), Invoice (print-ready layout with store branding).</span></li>
+              <li><span class="ic">📦</span><span><strong>Product Views</strong> — Index (paginated table, search bar, CSV import button), Create and Edit forms, <code>_ProductForm.cshtml</code> shared partial reused by both Create and Edit.</span></li>
+              <li><span class="ic">👤</span><span><strong>Customer Views</strong> — Index (colour-coded RFM segment badges, sortable columns, segment filter dropdown), Edit form.</span></li>
+              <li><span class="ic">💰</span><span><strong>Expense View</strong> — Paginated list; new expense created via an inline Bootstrap modal without leaving the page.</span></li>
+              <li><span class="ic">⚠️</span><span><strong>Alert View</strong> — Severity badges (Critical = red, Warning = yellow), scan-inventory button, mark-all-read, per-row dismiss.</span></li>
+              <li><span class="ic">📄</span><span><strong>Report View</strong> — Summary KPIs (total orders, total revenue) with PDF export button that POSTs to <code>ReportController.ExportPdf</code>.</span></li>
+              <li><span class="ic">⚙️</span><span><strong>Settings Views</strong> — <code>Index.cshtml</code>: profile update + password change form. <code>Staff.cshtml</code>: staff table with role display, invite form, remove button (owner-only).</span></li>
+              <li><span class="ic">🔐</span><span><strong>Auth Views</strong> — <code>Login.cshtml</code> and <code>Signup.cshtml</code> using <code>_AuthLayout</code>.</span></li>
+              <li><span class="ic">✅</span><span><strong>Client-Side Validation</strong> — <code>_ValidationScriptsPartial.cshtml</code> wires jQuery Unobtrusive Validation on all forms with data annotations.</span></li>
+              <li><span class="ic">🎨</span><span><strong>Custom CSS</strong> — <code>wwwroot/css/site.css</code>: sidebar width and collapse, card hover effects, RFM badge colour classes, chart container sizing, responsive tweaks on top of Bootstrap CDN.</span></li>
+            </ul>
+
+            <h3>Key Files</h3>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th style="width:38%">File</th><th>Responsibility</th></tr></thead>
+                <tbody>
+                  <tr><td><code class="file">Views/Shared/_Layout.cshtml</code></td><td>App shell: sidebar, store-switcher, alert bell, search bar</td></tr>
+                  <tr><td><code class="file">Views/Shared/_Layout.cshtml.css</code></td><td>Scoped CSS for the layout (sidebar, nav, header styles)</td></tr>
+                  <tr><td><code class="file">Views/Shared/_AuthLayout.cshtml</code></td><td>Minimal layout for Login/Signup</td></tr>
+                  <tr><td><code class="file">Views/Shared/_ValidationScriptsPartial.cshtml</code></td><td>jQuery unobtrusive validation partial</td></tr>
+                  <tr><td><code class="file">Views/Shared/Error.cshtml</code></td><td>Generic error page</td></tr>
+                  <tr><td><code class="file">Views/Dashboard/Index.cshtml</code></td><td>KPI cards, Chart.js charts (trend line, category doughnut, forecast line), time-range selector</td></tr>
+                  <tr><td><code class="file">Views/Order/Create.cshtml</code></td><td>POS cart: inline JSON + vanilla JS live calculations</td></tr>
+                  <tr><td><code class="file">Views/Order/Index.cshtml</code></td><td>Order list: KPI bar, status/date filters, paginated table</td></tr>
+                  <tr><td><code class="file">Views/Order/Details.cshtml</code></td><td>Full order breakdown with line items</td></tr>
+                  <tr><td><code class="file">Views/Order/Invoice.cshtml</code></td><td>Print-ready invoice layout</td></tr>
+                  <tr><td><code class="file">Views/Product/Index.cshtml</code></td><td>Product list with search, pagination, CSV import</td></tr>
+                  <tr><td><code class="file">Views/Product/Create.cshtml</code></td><td>Product create form</td></tr>
+                  <tr><td><code class="file">Views/Product/Edit.cshtml</code></td><td>Product edit form</td></tr>
+                  <tr><td><code class="file">Views/Product/_ProductForm.cshtml</code></td><td>Shared form fields partial (Create + Edit)</td></tr>
+                  <tr><td><code class="file">Views/Customer/Index.cshtml</code></td><td>Customer list with RFM badges and segment filter</td></tr>
+                  <tr><td><code class="file">Views/Customer/Edit.cshtml</code></td><td>Customer edit form</td></tr>
+                  <tr><td><code class="file">Views/Expense/Index.cshtml</code></td><td>Expense list + inline Bootstrap modal</td></tr>
+                  <tr><td><code class="file">Views/Alert/Index.cshtml</code></td><td>Alert list with severity badges and controls</td></tr>
+                  <tr><td><code class="file">Views/Report/Index.cshtml</code></td><td>Report summary + PDF export button</td></tr>
+                  <tr><td><code class="file">Views/Settings/Index.cshtml</code></td><td>Profile + password change form</td></tr>
+                  <tr><td><code class="file">Views/Settings/Staff.cshtml</code></td><td>Staff list + invite form</td></tr>
+                  <tr><td><code class="file">Views/Auth/Login.cshtml</code></td><td>Login page</td></tr>
+                  <tr><td><code class="file">Views/Auth/Signup.cshtml</code></td><td>Registration/signup page</td></tr>
+                  <tr><td><code class="file">wwwroot/css/site.css</code></td><td>Custom CSS on top of Bootstrap 5.3.3 CDN</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Defense Q&amp;A</h3>
+            <div class="qa">
+              <div class="qa-item"><div class="q">How does the POS cart work without React or Vue?</div><div class="a"><code>Views/Order/Create.cshtml</code> embeds <code>ProductsJson</code> and <code>CustomersJson</code> from the ViewModel as inline JavaScript variables. Vanilla JS reads these arrays on load, populates the product select, and attaches <code>change</code>/<code>input</code> event listeners. Each change recalculates line totals and the grand total in real time — submitted as a standard HTML form.</div></div>
+              <div class="qa-item"><div class="q">How do Chart.js charts get their data?</div><div class="a">The Razor view uses <code>@Json.Serialize(Model.RevenueTrend)</code> to emit typed C# lists as inline JavaScript arrays. Chart.js reads them on <code>DOMContentLoaded</code>. No AJAX, no separate API endpoint — data is baked into the page on the server render.</div></div>
+              <div class="qa-item"><div class="q">Why CDN instead of bundled assets?</div><div class="a">Bootstrap 5.3.3 and Chart.js are loaded from CDN to eliminate a Node/npm frontend build pipeline. This keeps the project simple and focuses complexity on the backend and ML, appropriate for the team size and academic context.</div></div>
+              <div class="qa-item"><div class="q">How is the global search dropdown rendered?</div><div class="a">The <code>&lt;input&gt;</code> in <code>_Layout.cshtml</code> fires a debounced <code>fetch</code> to <code>/Search/QuickSearch?q=...</code>. The returned JSON <code>{products[], orders[], customers[]}</code> is injected into a <code>&lt;div&gt;</code> dropdown via <code>innerHTML</code> — no template engine needed.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COLLABORATION ============ -->
+      <section class="member" id="collab">
+        <div class="card">
+          <div class="member-head" style="border-left: 6px solid var(--navy);">
+            <div class="avatar" style="background: linear-gradient(135deg, #475569, #1e293b);">🤝</div>
+            <div>
+              <h2>Collaboration Notes</h2>
+              <p class="focus">Who touches what — shared files and ownership boundaries</p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th style="width:34%">Area</th><th>Who touches it</th></tr></thead>
+                <tbody>
+                  <tr><td><code>Models/*.cs</code></td><td>Member 4 defines schema · Members 1 &amp; 2 add properties as needed</td></tr>
+                  <tr><td><code>Data/AppDbContext.cs</code></td><td>Member 4 exclusively runs migrations</td></tr>
+                  <tr><td><code>Program.cs</code></td><td>Member 1 owns · Member 4 adds connection string config</td></tr>
+                  <tr><td><code>Views/Shared/_Layout.cshtml</code></td><td>Member 5 owns · Members 1 &amp; 2 add sidebar nav links for their features</td></tr>
+                  <tr><td><code>Views/_ViewImports.cshtml</code>, <code>Views/_ViewStart.cshtml</code></td><td>Shared — do not modify unilaterally</td></tr>
+                  <tr><td><code>Services/AnalyticsService.cs</code></td><td>Member 1 owns · Member 3 owns <code>ForecastService.cs</code> which it calls</td></tr>
+                  <tr><td><code>start.ps1</code> / <code>start.sh</code></td><td>Member 4 owns</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DEFENSE FLOW ============ -->
+      <section class="member" id="flow">
+        <div class="card">
+          <div class="member-head" style="border-left: 6px solid var(--navy);">
+            <div class="avatar" style="background: linear-gradient(135deg, #0d9488, #115e59);">🎤</div>
+            <div>
+              <h2>Defense Presentation Flow</h2>
+              <p class="focus">The 5-step walkthrough order for the demo</p>
+            </div>
+          </div>
+          <div class="body">
+            <div class="flow">
+              <div class="step"><div class="badge"></div><div class="txt"><strong>Member 1</strong> — Opens the app, explains the multi-tenant SaaS concept, logs in, switches between the two stores, shows Settings (profile update, staff invite), then walks through the Dashboard — KPI cards, charts, and how <code>AnalyticsService</code> aggregates data.</div></div>
+              <div class="step"><div class="badge"></div><div class="txt"><strong>Member 2</strong> — Navigates to Products (adds a product), then opens Order → Create (POS), builds a cart, submits the order, shows the stock was decremented. Goes to Customers, triggers RFM recalculation, explains the segments. Adds an expense. Shows the Alert scan. Downloads a PDF report.</div></div>
+              <div class="step"><div class="badge"></div><div class="txt"><strong>Member 3</strong> — Scrolls to the Demand Forecast section on the Dashboard. Explains the Python FastAPI service, how Prophet was trained on the seeded history, what <code>yhat</code>/confidence intervals mean, and what happens when the service is offline (fallback moving average).</div></div>
+              <div class="step"><div class="badge"></div><div class="txt"><strong>Member 4</strong> — Opens the codebase, shows <code>AppDbContext.OnModelCreating</code> (schema relationships, indexes), walks through the three migrations, shows <code>DemoSeederService</code> generating realistic data, and demonstrates <code>reset-db.ps1</code> for a clean demo.</div></div>
+              <div class="step"><div class="badge"></div><div class="txt"><strong>Member 5</strong> — Takes control of the browser, walks through every page's UI — sidebar, responsive layout, POS cart JS, Chart.js wiring, RFM badge colours, Bootstrap modal for expenses, and the global search dropdown.</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CREDENTIALS ============ -->
+      <section class="member" id="creds">
+        <div class="card">
+          <div class="body" style="padding: 22px 26px;">
+            <div class="callout creds">
+              <div class="lbl">Demo Credentials</div>
+              <div>
+                <div class="big">admin@sellwise.com &nbsp;·&nbsp; Admin123!</div>
+                <div class="sub">Stores: <strong>SellWise Tech BD</strong> (electronics) &nbsp;·&nbsp; <strong>StyleHub BD</strong> (fashion)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <p class="footnote">SellWise — AI Sales Analytics &amp; Inventory SaaS · Defense Guide · ASP.NET Core 10 MVC · EF Core · SQL Server · Python FastAPI (Prophet)</p>
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
