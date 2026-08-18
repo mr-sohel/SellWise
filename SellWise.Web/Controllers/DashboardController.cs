@@ -21,7 +21,7 @@ public class DashboardController : BaseController
         _scopeFactory = scopeFactory;
     }
 
-    public async Task<IActionResult> Index(string range = "30d")
+    public async Task<IActionResult> Index(string range = "30d", int page = 1)
     {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty)
@@ -41,8 +41,25 @@ public class DashboardController : BaseController
             ViewData["SeedingInProgress"] = true;
         }
 
-        var vm = await _analytics.GetOverview(storeId, range);
+        const int pageSize = 8;
+        page = Math.Max(1, page);
+        var vm = await _analytics.GetOverview(storeId, range, page, pageSize);
+        int totalPages = Math.Max(1, (int)Math.Ceiling(vm.TotalForecastProducts / (double)pageSize));
+        ViewData["ForecastPage"] = page > totalPages ? totalPages : page;
+        ViewData["ForecastTotalPages"] = totalPages;
         return View(vm);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ForecastGrid(string range = "30d", int page = 1)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty)
+            return Unauthorized();
+
+        const int pageSize = 8;
+        page = Math.Max(1, page);
+        var vm = await _analytics.GetForecastsPageAsync(storeId, range, page, pageSize);
+        return PartialView("_ForecastGrid", vm);
+    }
 }

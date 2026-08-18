@@ -100,116 +100,20 @@
 <div class="row g-4 mb-4">
     <!-- Demand Forecast Product List -->
     <div class="col-12 col-xl-8">
-        <div class="card shadow-sm border-1 p-4 h-100">
-            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-3">
-                <div>
-                    <h5 class="fw-bold mb-0">Demand Forecast</h5>
-                    <p class="text-muted small mb-0">Predicted demand for top selling products</p>
-                </div>
-                <div class="btn-group-timeframe">
-                    <a href="?range=7d" class="btn-timeframe @(Context.Request.Query["range"] == "7d" ? "active" : "")">7D</a>
-                    <a href="?range=15d" class="btn-timeframe @(Context.Request.Query["range"] == "15d" ? "active" : "")">15D</a>
-                    <a href="?range=30d" class="btn-timeframe @(Context.Request.Query["range"] == "30d" || string.IsNullOrEmpty(Context.Request.Query["range"]) ? "active" : "")">30D</a>
-                </div>
-            </div>
-            
-            <div class="forecast-grid mt-3">
-                @for (int i = 0; i < Model.ProductForecasts.Count; i++)
-                {
-                    var f = Model.ProductForecasts[i];
-                    var sparkColor = (i % 3) switch {
-                        0 => "#4338ca",
-                        1 => "#8b5cf6",
-                        _ => "#0ea5e9"
-                    };
-
-                    <div class="forecast-item-card">
-                        <div class="forecast-badge-number">@(i + 1)</div>
-                        <span class="ai-badge">AI Forecast</span>
-                        <div class="product-name text-truncate mb-1" title="@f.ProductName">
-                            @f.ProductName
-                        </div>
-                        <div class="product-category mb-2">@f.Category</div>
-                        
-                        <!-- Sparkline SVG -->
-                        @{
-                            var sparkMin = f.SparklineData.Any() ? f.SparklineData.Min() : 0.0;
-                            var sparkMax = f.SparklineData.Any() ? f.SparklineData.Max() : 1.0;
-                        }
-                        <div class="forecast-sparkline" data-values="@string.Join(",", f.SparklineData)" data-color="@sparkColor" data-min="@sparkMin" data-max="@sparkMax">
-                            <svg aria-hidden="true" viewBox="0 0 100 30" class="w-100 h-100">
-                                <defs>
-                                    <linearGradient id="sparkFill@(i)" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stop-color="@sparkColor" stop-opacity="0.2"/>
-                                        <stop offset="100%" stop-color="@sparkColor" stop-opacity="0.0"/>
-                                    </linearGradient>
-                                </defs>
-                                @{
-                                    var sPadX = 2.0;
-                                    var sPadY = 2.0;
-                                    var sW = 100.0 - 2 * sPadX;
-                                    var sH = 30.0 - 2 * sPadY;
-                                    var sRange = sparkMax - sparkMin;
-                                    if (sRange < 1e-9) sRange = 1.0;
-
-                                    var pts = new List<(double x, double y)>();
-                                    for(int k=0; k<f.SparklineData.Count; k++) {
-                                        var px = sPadX + (f.SparklineData.Count > 1 ? k * sW / (f.SparklineData.Count - 1) : sW / 2);
-                                        var normalized = (f.SparklineData[k] - sparkMin) / sRange;
-                                        var py = sPadY + sH * (1.0 - normalized);
-                                        pts.Add((px, py));
-                                    }
-
-                                    string smoothPath = "";
-                                    string fillPath = "";
-                                    if (pts.Count > 1) {
-                                        smoothPath = "M " + pts[0].x.ToString("F2") + " " + pts[0].y.ToString("F2");
-                                        for (int s = 0; s < pts.Count - 1; s++) {
-                                            var p0 = pts[Math.Max(0, s - 1)];
-                                            var p1 = pts[s];
-                                            var p2 = pts[s + 1];
-                                            var p3 = pts[Math.Min(pts.Count - 1, s + 2)];
-
-                                            var cp1x = p1.x + (p2.x - p0.x) / 6.0;
-                                            var cp1y = p1.y + (p2.y - p0.y) / 6.0;
-                                            var cp2x = p2.x - (p3.x - p1.x) / 6.0;
-                                            var cp2y = p2.y - (p3.y - p1.y) / 6.0;
-
-                                            smoothPath += $" C {cp1x.ToString("F2")} {cp1y.ToString("F2")}, {cp2x.ToString("F2")} {cp2y.ToString("F2")}, {p2.x.ToString("F2")} {p2.y.ToString("F2")}";
-                                        }
-
-                                        var lastX = pts[pts.Count - 1].x.ToString("F2");
-                                        var firstX = pts[0].x.ToString("F2");
-                                        fillPath = smoothPath + $" L {lastX} 30 L {firstX} 30 Z";
-                                    }
-                                }
-                                <path d="@fillPath" fill="url(#sparkFill@(i))" />
-                                <path d="@smoothPath" fill="none" stroke="@sparkColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle class="spark-dot" cx="0" cy="0" r="2.5" fill="@sparkColor" stroke="#fff" stroke-width="1.5" opacity="0"/>
-                            </svg>
-                            <div class="spark-hover-tooltip"></div>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="font-size: 0.75rem;">
-                            <div>
-                                <span class="stat-value">@f.PredictedUnits.ToString("N0")</span>
-                                <span class="stat-label">units / 30d</span>
-                            </div>
-                            <div class="text-end">
-                                <span class="stat-value">@f.Stock</span>
-                                <span class="stat-label">in stock</span>
-                            </div>
-                        </div>
-                        <div class="text-muted mt-1" style="font-size: 0.65rem;">
-                            ~@f.DailyAverage units/day
-                        </div>
-                    </div>
-                }
-            </div>
+        <div class="card shadow-sm border-1 p-4 h-100" id="forecastGridContainer" style="position: relative;">
+            @{
+                var currentRange = Context.Request.Query["range"].ToString();
+                if (string.IsNullOrEmpty(currentRange)) currentRange = "30d";
+                var forecastVm = new SellWise.Web.ViewModels.Dashboard.ForecastPagedViewModel {
+                    ProductForecasts = Model.ProductForecasts,
+                    CurrentPage = (int)(ViewData["ForecastPage"] ?? 1),
+                    TotalPages = (int)(ViewData["ForecastTotalPages"] ?? 1),
+                    Range = currentRange
+                };
+            }
+            <partial name="_ForecastGrid" model="forecastVm" />
         </div>
     </div>
-
-    <!-- Sales By Category Doughnut -->
     <div class="col-12 col-xl-4">
         <div class="card shadow-sm border-1 p-4 h-100">
             <h5 class="fw-bold mb-3">Sales by Category</h5>
@@ -302,6 +206,80 @@
 
 @section Scripts {
 <script>
+    function loadForecastPage(range, page) {
+        const container = document.getElementById('forecastGridContainer');
+        container.style.opacity = '0.5';
+        container.style.pointerEvents = 'none';
+
+        fetch(`/Dashboard/ForecastGrid?range=${range}&page=${page}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                initSparklineInteractions();
+            })
+            .catch(error => {
+                console.error('Error loading forecast page:', error);
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            });
+    }
+
+    function initSparklineInteractions() {
+        document.querySelectorAll('.forecast-sparkline').forEach(function(el) {
+            // Unbind existing to avoid duplicates if re-inited
+            const newEl = el.cloneNode(true);
+            el.parentNode.replaceChild(newEl, el);
+
+            var svg = newEl.querySelector('svg');
+            var dot = newEl.querySelector('.spark-dot');
+            var tooltip = newEl.querySelector('.spark-hover-tooltip');
+            var values = (newEl.getAttribute('data-values') || '').split(',').map(Number);
+            var sMin = parseFloat(newEl.getAttribute('data-min')) || 0;
+            var sMax = parseFloat(newEl.getAttribute('data-max')) || 1;
+            if (!values.length || !svg || !dot) return;
+
+            var sPadX = 2, sPadY = 2, sW = 96, sH = 26;
+            var sRange = sMax - sMin;
+            if (sRange < 1e-9) sRange = 1;
+
+            newEl.addEventListener('mousemove', function(e) {
+                var rect = svg.getBoundingClientRect();
+                var mouseX = e.clientX - rect.left;
+                var ratio = mouseX / rect.width;
+                var idx = Math.round(ratio * (values.length - 1));
+                idx = Math.max(0, Math.min(values.length - 1, idx));
+
+                var ptX = sPadX + (values.length > 1 ? idx * sW / (values.length - 1) : sW / 2);
+                var normalized = (values[idx] - sMin) / sRange;
+                var ptY = sPadY + sH * (1.0 - normalized);
+
+                dot.setAttribute('cx', ptX);
+                dot.setAttribute('cy', ptY);
+                dot.setAttribute('opacity', '1');
+
+                var ctm = svg.getScreenCTM();
+                if (!ctm) return;
+                var screenX = ptX * ctm.a + ctm.e;
+                var screenY = ptY * ctm.d + ctm.f;
+
+                tooltip.textContent = Math.round(values[idx]) + ' units';
+                tooltip.style.left = (screenX - rect.left) + 'px';
+                tooltip.style.top = (screenY - rect.top) + 'px';
+                tooltip.style.opacity = '1';
+            });
+
+            newEl.addEventListener('mouseleave', function() {
+                dot.setAttribute('opacity', '0');
+                tooltip.style.opacity = '0';
+            });
+        });
+    }
+
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 
     // Revenue Trend Chart (Line Chart)
@@ -452,49 +430,6 @@
     }
 
     // Sparkline hover interaction
-    document.querySelectorAll('.forecast-sparkline').forEach(function(el) {
-        var svg = el.querySelector('svg');
-        var dot = el.querySelector('.spark-dot');
-        var tooltip = el.querySelector('.spark-hover-tooltip');
-        var values = (el.getAttribute('data-values') || '').split(',').map(Number);
-        var sMin = parseFloat(el.getAttribute('data-min')) || 0;
-        var sMax = parseFloat(el.getAttribute('data-max')) || 1;
-        if (!values.length || !svg || !dot) return;
-
-        var sPadX = 2, sPadY = 2, sW = 96, sH = 26;
-        var sRange = sMax - sMin;
-        if (sRange < 1e-9) sRange = 1;
-
-        el.addEventListener('mousemove', function(e) {
-            var rect = svg.getBoundingClientRect();
-            var mouseX = e.clientX - rect.left;
-            var ratio = mouseX / rect.width;
-            var idx = Math.round(ratio * (values.length - 1));
-            idx = Math.max(0, Math.min(values.length - 1, idx));
-
-            var ptX = sPadX + (values.length > 1 ? idx * sW / (values.length - 1) : sW / 2);
-            var normalized = (values[idx] - sMin) / sRange;
-            var ptY = sPadY + sH * (1.0 - normalized);
-
-            dot.setAttribute('cx', ptX);
-            dot.setAttribute('cy', ptY);
-            dot.setAttribute('opacity', '1');
-
-            var ctm = svg.getScreenCTM();
-            if (!ctm) return;
-            var screenX = ptX * ctm.a + ctm.e;
-            var screenY = ptY * ctm.d + ctm.f;
-
-            tooltip.textContent = Math.round(values[idx]) + ' units';
-            tooltip.style.left = (screenX - rect.left) + 'px';
-            tooltip.style.top = (screenY - rect.top) + 'px';
-            tooltip.style.opacity = '1';
-        });
-
-        el.addEventListener('mouseleave', function() {
-            dot.setAttribute('opacity', '0');
-            tooltip.style.opacity = '0';
-        });
-    });
+    initSparklineInteractions();
 </script>
 }

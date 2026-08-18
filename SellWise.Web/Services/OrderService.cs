@@ -138,6 +138,21 @@ public class OrderService : IOrderService
 
             order.Total = subtotal + model.DeliveryCharge - model.Discount;
 
+            // Fix Data Consistency: Update Customer Metrics
+            if (model.CustomerId.HasValue)
+            {
+                // We checked existence earlier, but now we actually need the entity to update it
+                var existingCustomer = await _db.Customers.FirstAsync(c => c.Id == model.CustomerId.Value && c.StoreId == storeId);
+                existingCustomer.TotalOrders++;
+                existingCustomer.TotalSpent += order.Total;
+                existingCustomer.UpdatedAt = DateTime.UtcNow;
+            }
+            else if (newCustomerEntity != null)
+            {
+                newCustomerEntity.TotalOrders = 1;
+                newCustomerEntity.TotalSpent = order.Total;
+            }
+
             _db.Orders.Add(order);
             
             // Save changes to the database and commit the transaction permanently

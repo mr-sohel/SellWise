@@ -15,17 +15,19 @@ namespace SellWise.Web.Controllers;
 public class CustomerController : BaseController
 {
     private readonly IRfmService _rfmService;
+    private readonly ICustomerService _customerService;
 
-    public CustomerController(AppDbContext db, IRfmService rfmService) : base(db)
+    public CustomerController(AppDbContext db, IRfmService rfmService, ICustomerService customerService) : base(db)
     {
         _rfmService = rfmService;
+        _customerService = customerService;
     }
 
     public async Task<IActionResult> Index(string search, string segment, string sort, int page = 1)
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
-        
+
 
         var query = Db.Customers.Where(c => c.StoreId == storeId);
 
@@ -101,10 +103,11 @@ public class CustomerController : BaseController
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> RecalculateRfm()
     {
         var storeId = GetCurrentStoreId();
-        
+
 
         await _rfmService.RecalculateAllAsync(storeId);
 
@@ -116,7 +119,7 @@ public class CustomerController : BaseController
     public async Task<IActionResult> Edit(Guid id)
     {
         var storeId = GetCurrentStoreId();
-        
+
 
         var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
         if (customer == null) return NotFound();
@@ -134,6 +137,7 @@ public class CustomerController : BaseController
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, CustomerEditViewModel model)
     {
         if (id != model.Id) return BadRequest();
@@ -141,20 +145,17 @@ public class CustomerController : BaseController
         if (!ModelState.IsValid) return View(model);
 
         var storeId = GetCurrentStoreId();
-        
 
-        var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
-        if (customer == null) return NotFound();
+        try
+        {
+            await _customerService.UpdateCustomerAsync(storeId, id, model);
+            TempData["SuccessMessage"] = $"Customer \"{model.Name}\" updated successfully.";
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
 
-        customer.Name = model.Name;
-        customer.Phone = model.Phone;
-        customer.Email = model.Email;
-        customer.Address = model.Address;
-        customer.UpdatedAt = DateTime.UtcNow;
-
-        await Db.SaveChangesAsync();
-
-        TempData["SuccessMessage"] = $"Customer \"{customer.Name}\" updated successfully.";
         return RedirectToAction(nameof(Index));
     }
 }

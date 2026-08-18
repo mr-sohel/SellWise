@@ -153,6 +153,13 @@
                                     </form>
                                 </li>
                             }
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createStoreModal">
+                                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    Add Store
+                                </button>
+                            </li>
                         </ul>
                     </div>
                     <div class="dropdown">
@@ -326,5 +333,28 @@
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Create Store Modal -->
+    <div class="modal fade" id="createStoreModal" tabindex="-1" aria-labelledby="createStoreModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: var(--radius-lg);">
+                <form asp-controller="Auth" asp-action="CreateStore" method="post">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold text-dark" id="createStoreModalLabel">Create New Store</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;" for="newStoreName">Store Name</label>
+                        <input type="text" id="newStoreName" name="StoreName" class="form-control px-3 py-2" placeholder="e.g. My New Store" required maxlength="100" autocomplete="off" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                        <small class="text-muted">A new empty store will be created and you'll be switched into it as owner.</small>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4" style="background-color: #4338ca; border: none; border-radius: 20px;">Create Store</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

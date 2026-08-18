@@ -138,6 +138,53 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    public async Task<IActionResult> CreateStore(CreateStoreViewModel model, string returnUrl = "/")
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null) return RedirectToAction(nameof(Login));
+
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Store name is required.";
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        using var transaction = await _db.Database.BeginTransactionAsync();
+        try
+        {
+            var store = new Store { Name = model.StoreName! };
+            _db.Stores.Add(store);
+
+            var storeMember = new StoreMember
+            {
+                StoreId = store.Id,
+                UserId = userId,
+                Role = "owner"
+            };
+            _db.StoreMembers.Add(storeMember);
+
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            HttpContext.Session.SetString("ActiveStoreId", store.Id.ToString());
+            TempData["Success"] = $"Store \"{store.Name}\" created successfully.";
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "An error occurred while creating a store.");
+            TempData["Error"] = "An error occurred while creating the store. Please try again.";
+        }
+
+        if (Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        return RedirectToAction("Index", "Dashboard");
+    }
+
+    [HttpPost]
     public async Task<IActionResult> SwitchStore(Guid storeId, string returnUrl = "/")
     {
         var userId = _userManager.GetUserId(User);

@@ -4,24 +4,25 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using SellWise.Web.Data;
 using SellWise.Web.ViewModels.Product;
 using SellWise.Web.Models;
+using SellWise.Web.Services;
 
 namespace SellWise.Web.Controllers;
 
-// [Authorize] ensures security by forcing users to be logged in. 
-// BaseController provides GetCurrentStoreId() for tenant isolation (so sellers only see their own products).
 [Authorize]
 public class ProductController : BaseController
 {
-    // Inject the Entity Framework Core database context
-    public ProductController(AppDbContext db) : base(db) { }
+    private readonly IProductService _productService;
 
-    // READ: Displays a paginated and searchable list of products.
+    public ProductController(AppDbContext db, IProductService productService) : base(db)
+    {
+        _productService = productService;
+    }
+
     public async Task<IActionResult> Index(string search, int page = 1)
     {
         if (page < 1) page = 1;
@@ -69,8 +70,8 @@ public class ProductController : BaseController
         return View(new ProductFormViewModel());
     }
 
-    // CREATE: Handles the form submission to add a new product.
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ProductFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -78,25 +79,8 @@ public class ProductController : BaseController
 
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        
-        var product = new Product
-        {
-            StoreId = storeId,
-            Name = model.Name!,
-            Sku = model.Sku,
-            Category = model.Category!,
-            CostPrice = model.CostPrice,
-            SellingPrice = model.SellingPrice,
-            StockQuantity = model.StockQuantity,
-            LowStockThreshold = model.LowStockThreshold,
-            Unit = model.Unit!,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
 
-        Db.Products.Add(product);
-        await Db.SaveChangesAsync();
+        await _productService.CreateProductAsync(storeId, model);
 
         return RedirectToAction(nameof(Index));
     }
@@ -107,7 +91,7 @@ public class ProductController : BaseController
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
         var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
-        
+
         if (product == null)
             return NotFound();
 
@@ -128,6 +112,7 @@ public class ProductController : BaseController
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, ProductFormViewModel model)
     {
         if (id != model.Id)
@@ -139,45 +124,32 @@ public class ProductController : BaseController
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
-        
-        if (product == null)
-            return NotFound();
-
-        product.Name = model.Name!;
-        product.Sku = model.Sku;
-        product.Category = model.Category!;
-        product.CostPrice = model.CostPrice;
-        product.SellingPrice = model.SellingPrice;
-        product.StockQuantity = model.StockQuantity;
-        product.LowStockThreshold = model.LowStockThreshold;
-        product.Unit = model.Unit!;
-        product.UpdatedAt = DateTime.UtcNow;
-
-        await Db.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    // DELETE: Removes a product.
-    [HttpPost]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
-
-        if (product != null)
+        try
         {
-            // SOFT DELETE: We set IsActive = false instead of deleting the row from the database.
-            // This preserves historical order data that references this product.
-            product.IsActive = false; 
-            await Db.SaveChangesAsync();
+            await _productService.UpdateProductAsync(storeId, id, model);
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
         }
 
         return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        await _productService.DeleteProductAsync(storeId, id);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<IActionResult> BulkImport(IFormFile file)
     {
@@ -190,96 +162,16 @@ public class ProductController : BaseController
             return RedirectToAction(nameof(Index));
         }
 
-        try
+        var result = await _productService.BulkImportAsync(storeId, file);
+        if (result.Error != null)
         {
-            using var reader = new StreamReader(file.OpenReadStream());
-            var isFirstRow = true;
-            var productsToAdd = new List<Product>();
-
-            string? line;
-            while ((line = await reader.ReadLineAsync()) != null)
-            {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                if (isFirstRow)
-                {
-                    isFirstRow = false; // Skip header row
-                    continue;
-                }
-
-                var values = ParseCsvLine(line);
-
-                // Basic validation: ensure we have enough columns
-                if (values.Length >= 8)
-                {
-                    bool validCost = decimal.TryParse(values[3].Trim(), out var cp);
-                    bool validSelling = decimal.TryParse(values[4].Trim(), out var sp);
-                    bool validStock = int.TryParse(values[5].Trim(), out var sq);
-                    bool validThreshold = int.TryParse(values[6].Trim(), out var lst);
-
-                    if (!validCost || !validSelling || !validStock || !validThreshold)
-                    {
-                        TempData["ErrorMessage"] = "CSV contains malformed numerical data. Import aborted.";
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    productsToAdd.Add(new Product
-                    {
-                        StoreId = storeId,
-                        Name = values[0].Trim(),
-                        Sku = values[1].Trim(),
-                        Category = values[2].Trim(),
-                        CostPrice = cp,
-                        SellingPrice = sp,
-                        StockQuantity = sq,
-                        LowStockThreshold = lst,
-                        Unit = values[7].Trim(),
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-
-            if (productsToAdd.Any())
-            {
-                Db.Products.AddRange(productsToAdd);
-                await Db.SaveChangesAsync();
-                TempData["SuccessMessage"] = $"Successfully imported {productsToAdd.Count} products.";
-            }
+            TempData["ErrorMessage"] = result.Error;
         }
-        catch (Exception)
+        else if (result.Count > 0)
         {
-            // Avoid exposing exception details to the end-user (Information Disclosure)
-            TempData["ErrorMessage"] = "An error occurred while processing the CSV file. Please ensure it is correctly formatted.";
+            TempData["SuccessMessage"] = $"Successfully imported {result.Count} products.";
         }
 
         return RedirectToAction(nameof(Index));
-    }
-
-    private string[] ParseCsvLine(string line)
-    {
-        var result = new List<string>();
-        bool inQuotes = false;
-        var currentField = new System.Text.StringBuilder();
-
-        foreach (char c in line)
-        {
-            if (c == '"')
-            {
-                inQuotes = !inQuotes;
-            }
-            else if (c == ',' && !inQuotes)
-            {
-                result.Add(currentField.ToString());
-                currentField.Clear();
-            }
-            else
-            {
-                currentField.Append(c);
-            }
-        }
-        result.Add(currentField.ToString());
-        return result.ToArray();
     }
 }

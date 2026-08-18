@@ -7,19 +7,25 @@ using System;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Expense;
+using SellWise.Web.Services;
 
 namespace SellWise.Web.Controllers;
 
 [Authorize]
 public class ExpenseController : BaseController
 {
-    public ExpenseController(AppDbContext db) : base(db) { }
+    private readonly IExpenseService _expenseService;
+
+    public ExpenseController(AppDbContext db, IExpenseService expenseService) : base(db)
+    {
+        _expenseService = expenseService;
+    }
 
     public async Task<IActionResult> Index(int days = 0, int page = 1)
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
-        
+
 
         var query = Db.Expenses.Where(e => e.StoreId == storeId);
 
@@ -56,6 +62,7 @@ public class ExpenseController : BaseController
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ExpenseCreateViewModel model)
     {
         if (!ModelState.IsValid)
@@ -64,21 +71,9 @@ public class ExpenseController : BaseController
             ViewData["NewExpense"] = model;
             return await Index(0, 1);
         }
+
         var storeId = GetCurrentStoreId();
-
-
-        var expense = new Expense
-        {
-            StoreId = storeId,
-            Category = model.Category!,
-            Amount = model.Amount,
-            ExpenseDate = model.ExpenseDate,
-            Notes = model.Notes,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        Db.Expenses.Add(expense);
-        await Db.SaveChangesAsync();
+        await _expenseService.CreateExpenseAsync(storeId, model);
 
         return RedirectToAction(nameof(Index));
     }

@@ -23,7 +23,7 @@ public class AnalyticsService
         _logger = logger;
     }
 
-    public async Task<DashboardViewModel> GetOverview(Guid storeId, string range)
+    public async Task<DashboardViewModel> GetOverview(Guid storeId, string range, int page = 1, int pageSize = 8)
     {
         var now = DateTime.UtcNow;
         var startDate = range switch
@@ -114,26 +114,34 @@ public class AnalyticsService
             })
             .ToList();
 
-        var topProductsData = await orderItemsQuery
+        var soldProductsData = await orderItemsQuery
             .Where(oi => oi.Product != null)
             .GroupBy(oi => oi.ProductId)
             .Select(g => new { ProductId = g.Key, Quantity = g.Sum(oi => oi.Quantity) })
             .OrderByDescending(g => g.Quantity)
-            .Take(6)
             .ToListAsync();
 
-        var topProductIdsRaw = topProductsData.Select(p => p.ProductId).ToList();
+        var soldProductIdsRaw = soldProductsData.Select(p => p.ProductId).ToList();
 
-        var topProducts = await _db.Products
-            .Where(p => topProductIdsRaw.Contains(p.Id))
+        // All store products, sold ones first (by quantity), then unsold ones
+        var soldProducts = await _db.Products
+            .Where(p => soldProductIdsRaw.Contains(p.Id))
             .ToListAsync();
 
-        // Ensure order is maintained
-        topProducts = topProductsData
-            .Join(topProducts, td => td.ProductId, p => p.Id, (td, p) => p)
+        var unsoldProducts = await _db.Products
+            .Where(p => p.StoreId == storeId && !soldProductIdsRaw.Contains(p.Id))
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+
+        var topProducts = soldProductsData
+            .Join(soldProducts, td => td.ProductId, p => p.Id, (td, p) => p)
+            .Concat(unsoldProducts)
             .ToList();
 
-        var topProductIds = topProducts.Select(p => p.Id).ToList();
+        int totalForecastProducts = topProducts.Count;
+        var pagedProducts = topProducts.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        var topProductIds = pagedProducts.Select(p => p.Id).ToList();
 
         var allCached = await _db.Forecasts
             .Where(f => f.StoreId == storeId && topProductIds.Contains(f.ProductId) && f.CreatedAt > now.AddHours(-24))
@@ -148,9 +156,7 @@ public class AnalyticsService
             .Select(oi => new { ProductId = oi.ProductId ?? Guid.Empty, oi.Order.OrderDate, oi.Quantity })
             .ToListAsync();
 
-        var results = new List<(ProductForecastCard Card, List<Forecast> NewForecasts)>();
-
-        foreach (var product in topProducts)
+        var forecastTasks = pagedProducts.Select(async product =>
         {
             var productCached = allCached.Where(f => f.ProductId == product.Id).OrderBy(f => f.TargetDate).ToList();
 
@@ -165,21 +171,22 @@ public class AnalyticsService
                 .OrderBy(h => h.ds)
                 .ToList();
 
-            var forecastResult = await GetProductForecastAsync(storeId, product, now, productCached, productHistory);
-            results.Add(forecastResult);
-        }
-        var productForecasts = results.Select(r => r.Card)
+            return await GetProductForecastAsync(storeId, product, now, productCached, productHistory);
+        });
+
+        var results = (await Task.WhenAll(forecastTasks)).ToList();
+        var productForecasts = results.Select(r => r.Item1)
                                       .OrderByDescending(c => c.PredictedUnits)
                                       .ToList();
 
-        var newForecasts = results.SelectMany(r => r.NewForecasts).ToList();
+        var newForecasts = results.SelectMany(r => r.Item2).ToList();
         if (newForecasts.Any())
         {
             _db.Forecasts.AddRange(newForecasts);
             await _db.SaveChangesAsync();
         }
 
-        var demandForecast = await GetDemandForecast(storeId, topProducts, now);
+        var demandForecast = await GetDemandForecast(storeId, pagedProducts, now);
 
         return new DashboardViewModel
         {
@@ -193,7 +200,105 @@ public class AnalyticsService
             CategorySales = categorySales,
             TopPerformers = topPerformers,
             NeedsAttention = needsAttention,
-            ProductForecasts = productForecasts
+            ProductForecasts = productForecasts,
+            TotalForecastProducts = totalForecastProducts
+        };
+    }
+
+    public async Task<ForecastPagedViewModel> GetForecastsPageAsync(Guid storeId, string range, int page = 1, int pageSize = 8)
+    {
+        var now = DateTime.UtcNow;
+        var startDate = range switch
+        {
+            "7d" => now.AddDays(-7),
+            "30d" => now.AddDays(-30),
+            "90d" => now.AddDays(-90),
+            "1y" => now.AddYears(-1),
+            _ => now.AddDays(-30)
+        };
+
+        var orderItemsQuery = _db.OrderItems
+            .Where(oi => oi.Order.StoreId == storeId && oi.Order.Status != "cancelled" && oi.Order.Status != "returned" && oi.Order.OrderDate >= startDate);
+
+        var soldProductsData = await orderItemsQuery
+            .Where(oi => oi.Product != null)
+            .GroupBy(oi => oi.ProductId)
+            .Select(g => new { ProductId = g.Key, Quantity = g.Sum(oi => oi.Quantity) })
+            .OrderByDescending(g => g.Quantity)
+            .ToListAsync();
+
+        var soldProductIdsRaw = soldProductsData.Select(p => p.ProductId).ToList();
+
+        var soldProducts = await _db.Products
+            .Where(p => soldProductIdsRaw.Contains(p.Id))
+            .ToListAsync();
+
+        var unsoldProducts = await _db.Products
+            .Where(p => p.StoreId == storeId && !soldProductIdsRaw.Contains(p.Id))
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+
+        var topProducts = soldProductsData
+            .Join(soldProducts, td => td.ProductId, p => p.Id, (td, p) => p)
+            .Concat(unsoldProducts)
+            .ToList();
+
+        int totalForecastProducts = topProducts.Count;
+        var pagedProducts = topProducts.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        var topProductIds = pagedProducts.Select(p => p.Id).ToList();
+
+        var allCached = await _db.Forecasts
+            .Where(f => f.StoreId == storeId && topProductIds.Contains(f.ProductId) && f.CreatedAt > now.AddHours(-24))
+            .ToListAsync();
+
+        var allHistoryData = await _db.OrderItems
+            .Where(oi => oi.ProductId.HasValue && topProductIds.Contains(oi.ProductId.Value)
+                && oi.Order.StoreId == storeId
+                && oi.Order.Status != "cancelled"
+                && oi.Order.Status != "returned"
+                && oi.Order.OrderDate >= now.AddDays(-90))
+            .Select(oi => new { ProductId = oi.ProductId ?? Guid.Empty, oi.Order.OrderDate, oi.Quantity })
+            .ToListAsync();
+
+        var forecastTasks = pagedProducts.Select(async product =>
+        {
+            var productCached = allCached.Where(f => f.ProductId == product.Id).OrderBy(f => f.TargetDate).ToList();
+
+            var productHistory = allHistoryData
+                .Where(oi => oi.ProductId == product.Id)
+                .GroupBy(oi => oi.OrderDate.Date)
+                .Select(g => new SalesHistoryPoint
+                {
+                    ds = g.Key,
+                    y = g.Sum(oi => (double)oi.Quantity)
+                })
+                .OrderBy(h => h.ds)
+                .ToList();
+
+            return await GetProductForecastAsync(storeId, product, now, productCached, productHistory);
+        });
+
+        var results = (await Task.WhenAll(forecastTasks)).ToList();
+        var productForecasts = results.Select(r => r.Item1)
+                                      .OrderByDescending(c => c.PredictedUnits)
+                                      .ToList();
+
+        var newForecasts = results.SelectMany(r => r.Item2).ToList();
+        if (newForecasts.Any())
+        {
+            _db.Forecasts.AddRange(newForecasts);
+            await _db.SaveChangesAsync();
+        }
+
+        int totalPages = Math.Max(1, (int)Math.Ceiling(totalForecastProducts / (double)pageSize));
+
+        return new ForecastPagedViewModel
+        {
+            ProductForecasts = productForecasts,
+            CurrentPage = page,
+            TotalPages = totalPages,
+            Range = range
         };
     }
 

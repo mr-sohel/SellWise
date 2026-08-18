@@ -18,6 +18,16 @@ public class DashboardViewModel
     public List<ProductPerformancePoint> TopPerformers { get; set; } = new List<ProductPerformancePoint>();
     public List<ProductAttentionPoint> NeedsAttention { get; set; } = new List<ProductAttentionPoint>();
     public List<ProductForecastCard> ProductForecasts { get; set; } = new List<ProductForecastCard>();
+
+    public int TotalForecastProducts { get; set; }
+}
+
+public class ForecastPagedViewModel
+{
+    public List<ProductForecastCard> ProductForecasts { get; set; } = new List<ProductForecastCard>();
+    public int CurrentPage { get; set; }
+    public int TotalPages { get; set; }
+    public string Range { get; set; } = "30d";
 }
 
 public class RevenuePoint

@@ -24,6 +24,9 @@ builder.Services.AddScoped<SellWise.Web.Services.DemoSeederService>();
 builder.Services.AddScoped<SellWise.Web.Services.IOrderService, SellWise.Web.Services.OrderService>();
 builder.Services.AddScoped<SellWise.Web.Services.IAlertService, SellWise.Web.Services.AlertService>();
 builder.Services.AddScoped<SellWise.Web.Services.IRfmService, SellWise.Web.Services.RfmService>();
+builder.Services.AddScoped<SellWise.Web.Services.IProductService, SellWise.Web.Services.ProductService>();
+builder.Services.AddScoped<SellWise.Web.Services.ICustomerService, SellWise.Web.Services.CustomerService>();
+builder.Services.AddScoped<SellWise.Web.Services.IExpenseService, SellWise.Web.Services.ExpenseService>();
 builder.Services.AddHttpClient<SellWise.Web.Services.ForecastService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(5);
