@@ -29,7 +29,9 @@ public class DashboardController : BaseController
 
         // Fast check to avoid spinning up background tasks unnecessarily
         bool isSeeded = Db.Products.Any(p => p.StoreId == storeId);
-        if (!isSeeded && User.Identity?.Name == "admin@sellwise.com")
+        var storeName = Db.Stores.Where(s => s.Id == storeId).Select(s => s.Name).FirstOrDefault() ?? "";
+        bool isDemoStore = storeName == "SellWise Tech BD" || storeName == "StyleHub BD";
+        if (!isSeeded && isDemoStore && User.Identity?.Name == "admin@sellwise.com")
         {
             // Auto-seed demo data in the background so dashboard doesn't block for 15s
             _ = Task.Run(async () =>

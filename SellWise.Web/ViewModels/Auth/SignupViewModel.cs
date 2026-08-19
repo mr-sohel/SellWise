@@ -22,4 +22,8 @@ public class SignupViewModel
     [Display(Name = "Store Name")]
     public string? StoreName { get; set; } = string.Empty;
 
+    [Required]
+    [Display(Name = "Owner Name")]
+    public string? OwnerName { get; set; } = string.Empty;
+
 }

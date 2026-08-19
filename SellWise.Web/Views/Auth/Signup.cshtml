@@ -30,6 +30,12 @@
             </div>
 
             <div class="mb-3">
+                <label asp-for="OwnerName" class="form-label text-bold mb-2">Owner Name</label>
+                <input asp-for="OwnerName" class="form-control py-2" placeholder="e.g. John Doe" autocomplete="name" aria-required="true" required style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <span asp-validation-for="OwnerName" class="text-danger" style="font-size: 0.8rem;"></span>
+            </div>
+
+            <div class="mb-3">
                 <label asp-for="Email" class="form-label text-bold mb-2">Email</label>
                 <input asp-for="Email" class="form-control py-2" placeholder="you@example.com" autocomplete="username" aria-required="true" style="background-color: #ffffff; border-color: #e5e7eb;" />
                 <span asp-validation-for="Email" class="text-danger" style="font-size: 0.8rem;"></span>

@@ -87,7 +87,8 @@ public class AuthController : Controller
             var user = new ApplicationUser 
             { 
                 UserName = model.Email, 
-                Email = model.Email
+                Email = model.Email,
+                OwnerName = model.OwnerName
             };
             
             var result = await _userManager.CreateAsync(user, model.Password!);

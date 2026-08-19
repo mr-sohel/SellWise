@@ -9,6 +9,9 @@ public class ProfileViewModel
     [Required(ErrorMessage = "Store Name is required.")]
     public string? StoreName { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Owner Name is required.")]
+    public string? OwnerName { get; set; } = string.Empty;
+
     public string? Role { get; set; } = string.Empty;
 
 }

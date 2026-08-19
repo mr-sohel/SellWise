@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System;
@@ -17,14 +18,17 @@ public class SettingsController : BaseController
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly ILogger<SettingsController> _logger;
 
     public SettingsController(
         AppDbContext db,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager) : base(db)
+        SignInManager<ApplicationUser> signInManager,
+        ILogger<SettingsController> logger) : base(db)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index()
@@ -43,6 +47,7 @@ public class SettingsController : BaseController
         {
             Email = user.Email ?? "",
             StoreName = member?.Store?.Name ?? "",
+            OwnerName = user.OwnerName ?? "",
             Role = member?.Role ?? ""
         };
 
@@ -64,8 +69,11 @@ public class SettingsController : BaseController
         if (member?.Store != null)
         {
             member.Store.Name = model.StoreName!;
-            await Db.SaveChangesAsync();
         }
+
+        user.OwnerName = model.OwnerName;
+        await _userManager.UpdateAsync(user);
+        await Db.SaveChangesAsync();
 
         TempData["Success"] = "Profile updated successfully.";
         return RedirectToAction(nameof(Index));
@@ -187,7 +195,8 @@ public class SettingsController : BaseController
         var newUser = new ApplicationUser
         {
             UserName = model.Email,
-            Email = model.Email
+            Email = model.Email,
+            OwnerName = model.FullName
         };
 
         using var transaction = await Db.Database.BeginTransactionAsync();
@@ -226,6 +235,66 @@ public class SettingsController : BaseController
         }
 
         return RedirectToAction(nameof(Staff));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteStore()
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        var userId = _userManager.GetUserId(User);
+        if (userId == null) return RedirectToAction("Login", "Auth");
+
+        var member = await Db.StoreMembers
+            .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == userId);
+        if (member?.Role != "owner")
+        {
+            TempData["Error"] = "Only the store owner can remove a store.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        using var transaction = await Db.Database.BeginTransactionAsync();
+        try
+        {
+            var storeIdParam = new SqlParameter("storeId", storeId);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM Forecasts WHERE StoreId = @storeId", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM Alerts WHERE StoreId = @storeId", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM OrderItems WHERE OrderId IN (SELECT Id FROM Orders WHERE StoreId = @storeId)", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM Orders WHERE StoreId = @storeId", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM Products WHERE StoreId = @storeId", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM Customers WHERE StoreId = @storeId", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM Expenses WHERE StoreId = @storeId", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM StoreMembers WHERE StoreId = @storeId", storeIdParam);
+            await Db.Database.ExecuteSqlRawAsync("DELETE FROM Stores WHERE Id = @storeId", storeIdParam);
+
+            await transaction.CommitAsync();
+
+            var nextStore = await Db.StoreMembers
+                .Where(m => m.UserId == userId && m.StoreId != storeId)
+                .Select(m => m.StoreId)
+                .FirstOrDefaultAsync();
+
+            if (nextStore != Guid.Empty)
+            {
+                HttpContext.Session.SetString("ActiveStoreId", nextStore.ToString());
+            }
+            else
+            {
+                HttpContext.Session.Remove("ActiveStoreId");
+            }
+
+            TempData["Success"] = "Store removed successfully.";
+            return RedirectToAction("Index", "Dashboard");
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "An error occurred while deleting the store.");
+            TempData["Error"] = "An error occurred while deleting the store. Please try again.";
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]

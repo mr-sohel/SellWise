@@ -82,6 +82,11 @@
                 <input asp-for="StoreName" type="text" class="form-control px-3 py-2" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
                 <span asp-validation-for="StoreName" class="text-danger"></span>
             </div>
+            <div class="col-md-6">
+                <label asp-for="OwnerName" class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Owner Name</label>
+                <input asp-for="OwnerName" type="text" class="form-control px-3 py-2" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                <span asp-validation-for="OwnerName" class="text-danger"></span>
+            </div>
         </div>
 
         <div class="d-flex justify-content-end mt-4">
@@ -91,6 +96,18 @@
             </button>
         </div>
     </form>
+
+    @if (string.Equals(Model.Role, "owner", StringComparison.OrdinalIgnoreCase))
+    {
+        <hr class="my-4" style="border-color: #e2e8f0;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h6 class="fw-bold text-danger mb-1">Danger Zone</h6>
+                <p class="text-muted small mb-0">Remove this store permanently. All products, orders, customers, and expenses will be deleted. This action cannot be undone.</p>
+            </div>
+            <button type="button" class="btn btn-outline-danger px-4 py-2" data-bs-toggle="modal" data-bs-target="#deleteStoreModal" style="border-radius: 20px;">Remove Store</button>
+        </div>
+    }
 </div>
 
 <!-- Account Security Card -->
@@ -129,6 +146,27 @@
         </div>
     </form>
 </div>
+</div>
+
+<!-- Remove Store Modal -->
+<div class="modal fade" id="deleteStoreModal" tabindex="-1" aria-labelledby="deleteStoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-lg);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger" id="deleteStoreModalLabel">Remove Store</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to remove <strong>@Model.StoreName</strong>? All products, orders, customers, and expenses associated with this store will be permanently deleted. This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
+                <form asp-controller="Settings" asp-action="DeleteStore" method="post" class="m-0">
+                    <button type="submit" class="btn btn-danger px-4" style="border-radius: 20px;">Yes, Remove Store</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

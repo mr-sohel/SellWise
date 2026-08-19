@@ -55,7 +55,7 @@ if (args.Contains("--seed"))
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
-        adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail };
+        adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, OwnerName = "Admin" };
         var result = await userManager.CreateAsync(adminUser, "Admin123!");
         if (result.Succeeded)
             Console.WriteLine($"[INFO] Created admin user: {adminEmail} / Admin123!");
