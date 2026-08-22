@@ -119,8 +119,8 @@
             @foreach (var (val, label) in tabs)
             {
                 var isActive = currentStatus == val;
-                <a href="javascript:void(0)" onclick="setStatus('@val')"
-                   class="btn btn-sm @(isActive ? "btn-primary" : "btn-outline-primary")">@label</a>
+                <button type="button" onclick="setStatus('@val')" aria-pressed="@isActive.ToString().ToLower()"
+                   class="btn btn-sm @(isActive ? "btn-primary" : "btn-outline-primary")">@label</button>
             }
         </div>
         <div class="d-flex gap-2 ms-auto flex-wrap">
@@ -209,7 +209,7 @@
                         <td class="align-middle text-end">
                             <div class="d-flex align-items-center justify-content-end">
                                 <div class="dropdown">
-                                    <button class="order-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                                    <button class="order-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions" aria-label="Actions for order @o.OrderNumber">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow">

@@ -6,9 +6,9 @@
         <p class="text-muted small mb-0">Predicted demand for all products</p>
     </div>
     <div class="btn-group-timeframe">
-        <button type="button" onclick="loadForecastPage('@Model.Range', 1)" class="btn-timeframe @(Model.Range == "7d" ? "active" : "")">7D</button>
-        <button type="button" onclick="loadForecastPage('@Model.Range', 1)" class="btn-timeframe @(Model.Range == "15d" ? "active" : "")">15D</button>
-        <button type="button" onclick="loadForecastPage('@Model.Range', 1)" class="btn-timeframe @(Model.Range == "30d" || string.IsNullOrEmpty(Model.Range) ? "active" : "")">30D</button>
+        <button type="button" onclick="loadForecastPage('7d', 1)" class="btn-timeframe @(Model.Range == "7d" ? "active" : "")">7D</button>
+        <button type="button" onclick="loadForecastPage('15d', 1)" class="btn-timeframe @(Model.Range == "15d" ? "active" : "")">15D</button>
+        <button type="button" onclick="loadForecastPage('30d', 1)" class="btn-timeframe @(Model.Range == "30d" || string.IsNullOrEmpty(Model.Range) ? "active" : "")">30D</button>
     </div>
 </div>
 
@@ -93,12 +93,46 @@
             <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="font-size: 0.75rem;">
                 <div>
                     <span class="stat-value">@f.PredictedUnits.ToString("N0")</span>
-                    <span class="stat-label">units / 30d</span>
+                    <span class="stat-label">units / @(f.ForecastHorizonDays)d</span>
                 </div>
                 <div class="text-end">
                     <span class="stat-value">@f.Stock</span>
                     <span class="stat-label">in stock</span>
                 </div>
+            </div>
+
+            <!-- Business action strip -->
+            <div class="d-flex justify-content-between align-items-center mt-2 gap-2">
+                @if (f.HasStockOutRisk)
+                {
+                    <span title="Predicted demand exceeds current stock — order more" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;">
+                        ⚠ Restock @f.RestockQty.ToString("N0") units
+                    </span>
+                }
+                else if (f.DaysOfCover > 90)
+                {
+                    <span title="Current stock covers the predicted demand" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">
+                        ✓ Stock covers forecast
+                    </span>
+                }
+                else
+                {
+                    <span title="Days until predicted demand exhausts current stock" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">
+                        ✓ @f.DaysOfCover days of stock
+                    </span>
+                }
+                @if (f.Trend == "rising")
+                {
+                    <span title="Forecast trend vs last week" style="font-size:0.62rem;font-weight:700;color:#ea580c;">↗ +@f.TrendPct.ToString("0.#")%</span>
+                }
+                else if (f.Trend == "falling")
+                {
+                    <span title="Forecast trend vs last week" style="font-size:0.62rem;font-weight:700;color:#2563eb;">↘ @f.TrendPct.ToString("0.#")%</span>
+                }
+                else
+                {
+                    <span title="Forecast trend vs last week" style="font-size:0.62rem;font-weight:600;color:#a8a29e;">→ steady</span>
+                }
             </div>
             <div class="text-muted mt-1" style="font-size: 0.65rem;">
                 ~@f.DailyAverage units/day

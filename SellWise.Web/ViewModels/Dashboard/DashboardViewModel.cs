@@ -73,4 +73,12 @@ public class ProductForecastCard
     public double PredictedUnits { get; set; }
     public int Stock { get; set; }
     public double DailyAverage { get; set; }
+
+    // Business-decision fields
+    public int ForecastHorizonDays { get; set; } = 30;
+    public double RestockQty { get; set; }
+    public int DaysOfCover { get; set; }
+    public bool HasStockOutRisk { get; set; }
+    public string Trend { get; set; } = "stable";
+    public double TrendPct { get; set; }
 }

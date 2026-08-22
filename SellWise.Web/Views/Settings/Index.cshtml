@@ -26,17 +26,17 @@
 }
 
 <!-- Navigation Tabs -->
-<ul class="nav nav-tabs mb-4 mt-4 flex-nowrap overflow-auto scroll-shadow" style="border-bottom: 1px solid #e2e8f0; white-space: nowrap;" id="settingsTabs">
-    <li class="nav-item">
-        <button class="nav-link active fw-bold px-4 py-2" data-target="#profile" type="button" style="color: #0f172a; background-color: #ffffff; border: 1px solid #e2e8f0; border-bottom: 1px solid #ffffff; border-radius: var(--radius-md) var(--radius-md) 0 0;">
+<ul class="nav nav-tabs mb-4 mt-4 flex-nowrap overflow-auto scroll-shadow" style="border-bottom: 1px solid #e2e8f0; white-space: nowrap;" id="settingsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold px-4 py-2" data-target="#profile" type="button" role="tab" aria-selected="true" aria-controls="profile" id="tab-profile" style="color: #0f172a; background-color: #ffffff; border: 1px solid #e2e8f0; border-bottom: 1px solid #ffffff; border-radius: var(--radius-md) var(--radius-md) 0 0;">
             <span class="d-flex align-items-center gap-2">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Profile
             </span>
         </button>
     </li>
-    <li class="nav-item">
-        <button class="nav-link text-muted px-4 py-2 border-0 bg-transparent" data-target="#security" type="button">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link text-muted px-4 py-2 border-0 bg-transparent" data-target="#security" type="button" role="tab" aria-selected="false" aria-controls="security" id="tab-security">
             <span class="d-flex align-items-center gap-2">
                 <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 Account Security
@@ -55,7 +55,7 @@
 
 <div id="tabContents">
 <!-- Profile Card -->
-<div class="card p-4 border-1 shadow-sm mb-4 tab-pane" style="max-width: 800px; display: block;" id="profile">
+<div class="card p-4 border-1 shadow-sm mb-4 tab-pane" style="max-width: 800px; display: block;" id="profile" role="tabpanel" aria-labelledby="tab-profile">
     <h5 class="fw-bold text-dark mb-1">Profile Information</h5>
     <p class="text-muted small mb-4">Your account details and store information.</p>
     
@@ -64,8 +64,8 @@
     <form asp-controller="Settings" asp-action="UpdateProfile" method="post">
         <div class="row g-4">
             <div class="col-md-6">
-                <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Email Address</label>
-                <input type="email" class="form-control px-3 py-2 text-muted" value="@Model.Email" style="border-radius: var(--radius-md); border-color: #e2e8f0; background-color: #f1f5f9; cursor: not-allowed;" readonly>
+                <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;" for="settingsEmail">Email Address</label>
+                <input type="email" id="settingsEmail" class="form-control px-3 py-2 text-muted" value="@Model.Email" style="border-radius: var(--radius-md); border-color: #e2e8f0; background-color: #f1f5f9; cursor: not-allowed;" readonly>
                 <small class="text-muted">Email cannot be changed here.</small>
             </div>
             <div class="col-md-6">
@@ -111,7 +111,7 @@
 </div>
 
 <!-- Account Security Card -->
-<div class="card p-4 border-1 shadow-sm mb-4 tab-pane" style="max-width: 800px; display: none;" id="security">
+<div class="card p-4 border-1 shadow-sm mb-4 tab-pane" style="max-width: 800px; display: none;" id="security" role="tabpanel" aria-labelledby="tab-security">
     <h5 class="fw-bold text-dark mb-1">Account Security</h5>
     <p class="text-muted small mb-4">Update your password.</p>
     
@@ -121,20 +121,20 @@
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
         <div class="mb-3">
-            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">Current Password</label>
-            <input type="password" name="CurrentPassword" class="form-control px-3 py-2" placeholder="Enter current password" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;" for="currentPassword">Current Password</label>
+            <input type="password" name="CurrentPassword" id="currentPassword" class="form-control px-3 py-2" placeholder="Enter current password" required autocomplete="current-password" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
             <span class="text-danger field-validation-valid" data-valmsg-for="CurrentPassword" data-valmsg-replace="true"></span>
         </div>
 
         <div class="mb-3">
-            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">New Password</label>
-            <input type="password" name="NewPassword" class="form-control px-3 py-2" placeholder="Enter new password (min 8 characters)" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;" for="newPassword">New Password</label>
+            <input type="password" name="NewPassword" id="newPassword" class="form-control px-3 py-2" placeholder="Enter new password (min 8 characters)" required minlength="8" autocomplete="new-password" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
             <span class="text-danger field-validation-valid" data-valmsg-for="NewPassword" data-valmsg-replace="true"></span>
         </div>
 
         <div class="mb-4">
-            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;">Confirm New Password</label>
-            <input type="password" name="ConfirmNewPassword" class="form-control px-3 py-2" placeholder="Confirm new password" required style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+            <label class="form-label text-dark mb-2" style="font-size: 0.85rem;" for="confirmNewPassword">Confirm New Password</label>
+            <input type="password" name="ConfirmNewPassword" id="confirmNewPassword" class="form-control px-3 py-2" placeholder="Confirm new password" required autocomplete="new-password" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
             <span class="text-danger field-validation-valid" data-valmsg-for="ConfirmNewPassword" data-valmsg-replace="true"></span>
         </div>
 
@@ -189,6 +189,7 @@
                     t.style.border = 'none';
                     t.style.borderBottom = 'none';
                     t.style.color = '';
+                    t.setAttribute('aria-selected', 'false');
                 });
 
                 panes.forEach(p => p.style.display = 'none');
@@ -201,6 +202,7 @@
                 targetBtn.style.border = '1px solid #e2e8f0';
                 targetBtn.style.borderBottom = '1px solid #ffffff';
                 targetBtn.style.borderRadius = 'var(--radius-md) var(--radius-md) 0 0';
+                targetBtn.setAttribute('aria-selected', 'true');
 
                 const targetPane = document.querySelector(hash);
                 if (targetPane) targetPane.style.display = 'block';

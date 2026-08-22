@@ -23,12 +23,20 @@ public class AnalyticsService
         _logger = logger;
     }
 
+    private static int GetHorizonDays(string range) => range switch
+    {
+        "7d" => 7,
+        "15d" => 15,
+        _ => 30
+    };
+
     public async Task<DashboardViewModel> GetOverview(Guid storeId, string range, int page = 1, int pageSize = 8)
     {
         var now = DateTime.UtcNow;
         var startDate = range switch
         {
             "7d" => now.AddDays(-7),
+            "15d" => now.AddDays(-15),
             "30d" => now.AddDays(-30),
             "90d" => now.AddDays(-90),
             "1y" => now.AddYears(-1),
@@ -171,7 +179,7 @@ public class AnalyticsService
                 .OrderBy(h => h.ds)
                 .ToList();
 
-            return await GetProductForecastAsync(storeId, product, now, productCached, productHistory);
+            return await GetProductForecastAsync(storeId, product, now, productCached, productHistory, GetHorizonDays(range));
         });
 
         var results = (await Task.WhenAll(forecastTasks)).ToList();
@@ -183,7 +191,17 @@ public class AnalyticsService
         if (newForecasts.Any())
         {
             _db.Forecasts.AddRange(newForecasts);
-            await _db.SaveChangesAsync();
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // A concurrent request may have cached the same product/date rows
+                // first; the unique index rejects them and the cache is already
+                // populated, so this is safe to swallow.
+                _logger.LogDebug(ex, "Forecast cache insert raced with another request; keeping existing rows");
+            }
         }
 
         var demandForecast = await GetDemandForecast(storeId, pagedProducts, now);
@@ -211,6 +229,7 @@ public class AnalyticsService
         var startDate = range switch
         {
             "7d" => now.AddDays(-7),
+            "15d" => now.AddDays(-15),
             "30d" => now.AddDays(-30),
             "90d" => now.AddDays(-90),
             "1y" => now.AddYears(-1),
@@ -276,7 +295,7 @@ public class AnalyticsService
                 .OrderBy(h => h.ds)
                 .ToList();
 
-            return await GetProductForecastAsync(storeId, product, now, productCached, productHistory);
+            return await GetProductForecastAsync(storeId, product, now, productCached, productHistory, GetHorizonDays(range));
         });
 
         var results = (await Task.WhenAll(forecastTasks)).ToList();
@@ -288,7 +307,17 @@ public class AnalyticsService
         if (newForecasts.Any())
         {
             _db.Forecasts.AddRange(newForecasts);
-            await _db.SaveChangesAsync();
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // A concurrent request may have cached the same product/date rows
+                // first; the unique index rejects them and the cache is already
+                // populated, so this is safe to swallow.
+                _logger.LogDebug(ex, "Forecast cache insert raced with another request; keeping existing rows");
+            }
         }
 
         int totalPages = Math.Max(1, (int)Math.Ceiling(totalForecastProducts / (double)pageSize));
@@ -302,19 +331,12 @@ public class AnalyticsService
         };
     }
 
-    private async Task<(ProductForecastCard, List<Forecast>)> GetProductForecastAsync(Guid storeId, Product product, DateTime now, List<Forecast> cached, List<SalesHistoryPoint> history)
+    private async Task<(ProductForecastCard, List<Forecast>)> GetProductForecastAsync(Guid storeId, Product product, DateTime now, List<Forecast> cached, List<SalesHistoryPoint> history, int horizonDays)
     {
         if (cached.Any())
         {
-            return (new ProductForecastCard
-            {
-                ProductName = product.Name,
-                Category = product.Category ?? "Other",
-                SparklineData = cached.Select(f => f.PredictedDemand).ToList(),
-                PredictedUnits = cached.Sum(f => f.PredictedDemand),
-                Stock = product.StockQuantity,
-                DailyAverage = Math.Round(cached.Average(f => f.PredictedDemand), 1)
-            }, new List<Forecast>());
+            var values = cached.Select(f => f.PredictedDemand).ToList();
+            return (BuildCard(product, values, horizonDays), new List<Forecast>());
         }
 
         var paddedHistory = PadHistoryWithZeros(history, now.AddDays(-90), now);
@@ -327,6 +349,7 @@ public class AnalyticsService
 
                 if (result?.forecast != null && result.forecast.Any())
                 {
+                    // Always cache the full 30-day horizon so other ranges can reuse it.
                     var forecasts = result.forecast.Select(f => new Forecast
                     {
                         StoreId = storeId,
@@ -335,21 +358,12 @@ public class AnalyticsService
                         PredictedDemand = Math.Max(0, f.yhat),
                         LowerBound = Math.Max(0, f.yhat_lower),
                         UpperBound = Math.Max(0, f.yhat_upper),
-                        ModelUsed = paddedHistory.Count >= 30 ? "prophet" : "ewma",
+                        ModelUsed = "prophet",
                         CreatedAt = now
                     }).ToList();
 
-                    var card = new ProductForecastCard
-                    {
-                        ProductName = product.Name,
-                        Category = product.Category ?? "Other",
-                        SparklineData = result.forecast.Select(f => Math.Max(0, f.yhat)).ToList(),
-                        PredictedUnits = result.forecast.Sum(f => Math.Max(0, f.yhat)),
-                        Stock = product.StockQuantity,
-                        DailyAverage = Math.Round(result.forecast.Average(f => Math.Max(0, f.yhat)), 1)
-                    };
-
-                    return (card, forecasts);
+                    var values = result.forecast.Select(f => Math.Max(0, f.yhat)).ToList();
+                    return (BuildCard(product, values, horizonDays), forecasts);
                 }
             }
             catch (Exception ex)
@@ -358,7 +372,54 @@ public class AnalyticsService
             }
         }
 
-        return (GetFallbackForecast(product, paddedHistory), new List<Forecast>());
+        return (GetFallbackForecast(product, paddedHistory, horizonDays), new List<Forecast>());
+    }
+
+    private ProductForecastCard BuildCard(Product product, List<double> dailyValues, int horizonDays)
+    {
+        var values = dailyValues.Take(horizonDays).ToList();
+        var predictedUnits = values.Sum();
+
+        var firstWeek = values.Take(7).DefaultIfEmpty(0).Average();
+        var lastWeek = values.Skip(Math.Max(0, values.Count - 7)).DefaultIfEmpty(0).Average();
+
+        string trend;
+        double trendPct;
+        if (firstWeek < 0.05 && lastWeek < 0.05)
+        {
+            trend = "stable";
+            trendPct = 0;
+        }
+        else if (firstWeek < 0.05)
+        {
+            trend = "rising";
+            trendPct = 100;
+        }
+        else
+        {
+            trendPct = Math.Round((lastWeek - firstWeek) / firstWeek * 100, 1);
+            trend = trendPct >= 5 ? "rising" : trendPct <= -5 ? "falling" : "stable";
+        }
+
+        var dailyAvg = values.Count > 0 ? values.Average() : 0;
+        var restockQty = Math.Max(0, Math.Ceiling(predictedUnits - product.StockQuantity));
+        var daysOfCover = dailyAvg > 0 ? (int)Math.Floor(product.StockQuantity / dailyAvg) : 999;
+
+        return new ProductForecastCard
+        {
+            ProductName = product.Name,
+            Category = product.Category ?? "Other",
+            SparklineData = values,
+            PredictedUnits = Math.Round(predictedUnits, 1),
+            Stock = product.StockQuantity,
+            DailyAverage = Math.Round(dailyAvg, 1),
+            ForecastHorizonDays = horizonDays,
+            RestockQty = restockQty,
+            DaysOfCover = daysOfCover,
+            HasStockOutRisk = restockQty > 0,
+            Trend = trend,
+            TrendPct = trendPct
+        };
     }
 
     private async Task<List<ForecastPoint>> GetDemandForecast(Guid storeId, List<Product> products, DateTime now)
@@ -445,14 +506,12 @@ public class AnalyticsService
         return Math.Clamp(score, 0, 100);
     }
 
-    private ProductForecastCard GetFallbackForecast(Product product, List<SalesHistoryPoint> history)
+    private ProductForecastCard GetFallbackForecast(Product product, List<SalesHistoryPoint> history, int horizonDays)
     {
+        // Honest fallback: flat moving average of recent daily sales (no
+        // synthetic seasonality — that would fake an "AI" signal).
         var avgDaily = history.Any() ? history.Average(h => h.y) : 0;
-        var sparkline = new List<double>();
-        for (int i = 0; i < 30; i++)
-        {
-            sparkline.Add(Math.Max(0, Math.Round(avgDaily + (Math.Sin(i * 0.5) * avgDaily * 0.2))));
-        }
+        var sparkline = Enumerable.Repeat(Math.Max(0, Math.Round(avgDaily)), horizonDays).ToList();
 
         return new ProductForecastCard
         {
@@ -461,7 +520,13 @@ public class AnalyticsService
             SparklineData = sparkline,
             PredictedUnits = sparkline.Sum(),
             Stock = product.StockQuantity,
-            DailyAverage = Math.Round(avgDaily, 1)
+            DailyAverage = Math.Round(avgDaily, 1),
+            ForecastHorizonDays = horizonDays,
+            RestockQty = Math.Max(0, Math.Ceiling(sparkline.Sum() - product.StockQuantity)),
+            DaysOfCover = avgDaily > 0 ? (int)Math.Floor(product.StockQuantity / avgDaily) : 999,
+            HasStockOutRisk = sparkline.Sum() > product.StockQuantity,
+            Trend = "stable",
+            TrendPct = 0
         };
     }
 

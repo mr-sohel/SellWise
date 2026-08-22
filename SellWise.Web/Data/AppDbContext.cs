@@ -70,5 +70,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Expense>().HasIndex(e => new { e.StoreId, e.ExpenseDate });
         builder.Entity<InventoryAlert>().HasIndex(a => new { a.StoreId, a.IsRead });
         builder.Entity<Forecast>().HasIndex(f => f.StoreId);
+
+        // Prevents duplicate cache rows (concurrent dashboard requests) from
+        // double-counting PredictedUnits when the cache is summed.
+        builder.Entity<Forecast>()
+            .HasIndex(f => new { f.StoreId, f.ProductId, f.TargetDate })
+            .IsUnique();
     }
 }

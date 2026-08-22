@@ -39,7 +39,7 @@
     <form method="get" class="d-flex flex-column flex-sm-row gap-3">
         <div class="search-widget" style="width: 100%; max-width: 400px;">
             <svg aria-hidden="true" class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" name="search" value="@searchVal" aria-label="Search" placeholder="Search by name, phone or email...">
+            <input type="text" name="search" value="@searchVal" aria-label="Search customers" placeholder="Search by name, phone or email…">
         </div>
         <select class="form-select" name="segment" style="width: 100%; max-width: 200px;" onchange="this.form.submit();">
             <option value="">All Segments</option>
@@ -72,24 +72,24 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow sort-dropdown-menu">
                 <li><span class="dropdown-header">Name</span></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "name_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('name_asc')">Name A-Z</a></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "name_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('name_desc')">Name Z-A</a></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "name_asc" ? "active" : "")" onclick="setSort('name_asc')">Name A-Z</button></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "name_desc" ? "active" : "")" onclick="setSort('name_desc')">Name Z-A</button></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><span class="dropdown-header">Total Spent</span></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "spent_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('spent_desc')">Highest Spent</a></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "spent_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('spent_asc')">Lowest Spent</a></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "spent_desc" ? "active" : "")" onclick="setSort('spent_desc')">Highest Spent</button></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "spent_asc" ? "active" : "")" onclick="setSort('spent_asc')">Lowest Spent</button></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><span class="dropdown-header">Orders</span></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "orders_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('orders_desc')">Most Orders</a></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "orders_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('orders_asc')">Fewest Orders</a></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "orders_desc" ? "active" : "")" onclick="setSort('orders_desc')">Most Orders</button></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "orders_asc" ? "active" : "")" onclick="setSort('orders_asc')">Fewest Orders</button></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><span class="dropdown-header">RFM Score</span></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "rfm_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('rfm_desc')">Best RFM Score</a></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "rfm_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('rfm_asc')">Worst RFM Score</a></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "rfm_desc" ? "active" : "")" onclick="setSort('rfm_desc')">Best RFM Score</button></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "rfm_asc" ? "active" : "")" onclick="setSort('rfm_asc')">Worst RFM Score</button></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><span class="dropdown-header">Last Order</span></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "recent_desc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('recent_desc')">Most Recent</a></li>
-                <li><a class="dropdown-item sort-item @(sortVal == "recent_asc" ? "active" : "")" href="javascript:void(0)" onclick="setSort('recent_asc')">Least Recent</a></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "recent_desc" ? "active" : "")" onclick="setSort('recent_desc')">Most Recent</button></li>
+                <li><button type="button" class="dropdown-item sort-item @(sortVal == "recent_asc" ? "active" : "")" onclick="setSort('recent_asc')">Least Recent</button></li>
             </ul>
         </div>
         <input type="hidden" name="sort" id="sortInput" value="@sortVal" />
@@ -128,7 +128,7 @@
                         <td class="align-middle text-end">
                             <div class="d-flex align-items-center justify-content-end">
                                 <div class="dropdown">
-                                    <button class="order-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                                    <button class="order-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions" aria-label="Actions for customer @c.Name">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow">

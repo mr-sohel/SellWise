@@ -16,6 +16,11 @@
             .ToList();
     }
     var currentStore = userStores.FirstOrDefault(s => s.Id.ToString() == activeStoreId);
+
+    // Local initials for the profile avatar (no third-party request)
+    var emailName = (User.Identity?.Name ?? "User").Split('@')[0];
+    var avatarInitials = new string(emailName.Where(char.IsLetterOrDigit).Take(2).ToArray()).ToUpperInvariant();
+    if (string.IsNullOrEmpty(avatarInitials)) { avatarInitials = "U"; }
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -24,10 +29,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SellWise</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%234338ca'/%3E%3Cpath d='M12 5L5 9L12 13L19 9L12 5Z' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 9V15L12 19L19 15V9' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 13V19' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://code.jquery.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    <a href="#mainContent" class="visually-hidden-focusable">Skip to main content</a>
     <div class="app-container d-flex">
         <!-- Sidebar -->
         <nav class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="sidebarMenu">
@@ -112,7 +123,7 @@
         </nav>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content" id="mainContent">
             <div class="top-nav d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-light d-lg-none p-1 border-0 bg-transparent text-muted" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-label="Toggle navigation">
@@ -124,9 +135,9 @@
                 <div class="d-flex align-items-center gap-2 gap-md-3">
                     <div class="search-widget dropdown" id="omnisearch-widget">
                         <svg aria-hidden="true" class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="omnisearch-input" aria-label="Search" placeholder="Search..." autocomplete="off" data-bs-toggle="dropdown" aria-expanded="false">
+                        <input type="text" id="omnisearch-input" aria-label="Search" placeholder="Search…" autocomplete="off" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="search-shortcut d-none d-md-inline-block">&#8984; K</span>
-                        <ul class="dropdown-menu shadow-lg border-0 mt-1" id="omnisearch-results" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <ul class="dropdown-menu shadow-lg border-0 mt-1" id="omnisearch-results" style="width: min(320px, calc(100vw - 2rem)); max-height: 400px; overflow-y: auto;">
                             <!-- Results will be injected here via JS -->
                         </ul>
                     </div>
@@ -163,8 +174,8 @@
                         </ul>
                     </div>
                     <div class="dropdown">
-                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle topbar-profile" id="dropdownUser" aria-label="Options" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://ui-avatars.com/api/?name=@(User.Identity?.Name?.Split('@')[0] ?? "User")&background=eef2ff&color=4338ca&bold=true" alt="User Avatar">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle topbar-profile" id="dropdownUser" aria-label="Account menu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="topbar-avatar" aria-hidden="true">@avatarInitials</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="dropdownUser">
                             <li><h6 class="dropdown-header">Account Management</h6></li>
@@ -207,7 +218,6 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
     <script>
         // Global Double-Submit Protection
         document.addEventListener('submit', function (e) {
@@ -222,7 +232,7 @@
                 submitBtn.disabled = true;
                 const originalText = submitBtn.innerHTML;
                 submitBtn.setAttribute('data-original-text', originalText);
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing…';
             }
         });
 
@@ -231,6 +241,10 @@
             const searchInput = document.getElementById('omnisearch-input');
             const searchResults = document.getElementById('omnisearch-results');
             if (!searchInput) return;
+
+            // Escape user-controlled values before injecting into HTML
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
             // Keyboard shortcut Cmd/Ctrl + K
             document.addEventListener('keydown', function(e) {
@@ -271,13 +285,13 @@
                                                         if (data.products && data.products.length) {
                                 html += '<li><h6 class="dropdown-header px-3 mt-1 mb-1 text-primary"><small class="fw-bold">PRODUCTS</small></h6></li>';
                                 data.products.forEach(p => {
-                                    html += `<li><a class="dropdown-item py-2 px-3" href="${p.url}">
+                                    html += `<li><a class="dropdown-item py-2 px-3" href="${esc(p.url)}">
                                         <div class="d-flex justify-content-between align-items-center w-100">
                                             <div class="d-flex align-items-center">
                                                 <svg class="me-2 text-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                                                <span class="fw-semibold text-dark">${p.name}</span>
+                                                <span class="fw-semibold text-dark">${esc(p.name)}</span>
                                             </div>
-                                            <span class="badge bg-light text-muted border">${p.detail}</span>
+                                            <span class="badge bg-light text-muted border">${esc(p.detail)}</span>
                                         </div></a></li>`;
                                 });
                             }
@@ -286,13 +300,13 @@
                                 if (html) html += '<li><hr class="dropdown-divider my-1"></li>';
                                 html += '<li><h6 class="dropdown-header px-3 mt-1 mb-1 text-primary"><small class="fw-bold">ORDERS</small></h6></li>';
                                 data.orders.forEach(o => {
-                                    html += `<li><a class="dropdown-item py-2 px-3" href="${o.url}">
+                                    html += `<li><a class="dropdown-item py-2 px-3" href="${esc(o.url)}">
                                         <div class="d-flex justify-content-between align-items-center w-100">
                                             <div class="d-flex align-items-center">
                                                 <svg class="me-2 text-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                                                <span class="fw-semibold text-dark">${o.name}</span>
+                                                <span class="fw-semibold text-dark">${esc(o.name)}</span>
                                             </div>
-                                            <span class="badge bg-light text-muted border">${o.detail}</span>
+                                            <span class="badge bg-light text-muted border">${esc(o.detail)}</span>
                                         </div></a></li>`;
                                 });
                             }
@@ -301,19 +315,19 @@
                                 if (html) html += '<li><hr class="dropdown-divider my-1"></li>';
                                 html += '<li><h6 class="dropdown-header px-3 mt-1 mb-1 text-primary"><small class="fw-bold">CUSTOMERS</small></h6></li>';
                                 data.customers.forEach(c => {
-                                    html += `<li><a class="dropdown-item py-2 px-3" href="${c.url}">
+                                    html += `<li><a class="dropdown-item py-2 px-3" href="${esc(c.url)}">
                                         <div class="d-flex justify-content-between align-items-center w-100">
                                             <div class="d-flex align-items-center">
                                                 <svg class="me-2 text-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                                <span class="fw-semibold text-dark">${c.name}</span>
+                                                <span class="fw-semibold text-dark">${esc(c.name)}</span>
                                             </div>
-                                            <span class="badge bg-light text-muted border">${c.detail}</span>
+                                            <span class="badge bg-light text-muted border">${esc(c.detail)}</span>
                                         </div></a></li>`;
                                 });
                             }
 
                             if (!html) {
-                                html = '<li><span class="dropdown-item text-muted">No results found...</span></li>';
+                                html = '<li><span class="dropdown-item text-muted">No results found…</span></li>';
                             }
 
                             searchResults.innerHTML = html;

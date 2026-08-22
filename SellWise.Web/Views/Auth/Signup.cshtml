@@ -25,7 +25,7 @@
             
             <div class="mb-3">
                 <label asp-for="StoreName" class="form-label text-bold mb-2">Store Name</label>
-                <input asp-for="StoreName" class="form-control py-2" placeholder="e.g. My Demo Store" required style="background-color: #ffffff; border-color: #e5e7eb;" />
+                <input asp-for="StoreName" class="form-control py-2" placeholder="e.g. My Demo Store" required autocomplete="organization" style="background-color: #ffffff; border-color: #e5e7eb;" />
                 <span asp-validation-for="StoreName" class="text-danger" style="font-size: 0.8rem;"></span>
             </div>
 
@@ -83,22 +83,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        function togglePassword(btn) {
-            var input = btn.closest('.position-relative').querySelector('input');
-            var eyeOpen = btn.querySelector('.eye-open');
-            var eyeClosed = btn.querySelector('.eye-closed');
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.classList.add('d-none');
-                eyeClosed.classList.remove('d-none');
-                btn.setAttribute('aria-label', 'Hide password');
-            } else {
-                input.type = 'password';
-                eyeOpen.classList.remove('d-none');
-                eyeClosed.classList.add('d-none');
-                btn.setAttribute('aria-label', 'Show password');
-            }
-        }
-    </script>
 }

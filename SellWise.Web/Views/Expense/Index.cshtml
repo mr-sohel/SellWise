@@ -132,8 +132,8 @@
                     }
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select name="Category" class="form-select" required>
+                        <label class="form-label" for="expenseCategory">Category</label>
+                        <select name="Category" id="expenseCategory" class="form-select" required>
                             <option value="Rent" selected="@(newExpense?.Category == "Rent")">Rent</option>
                             <option value="Salary" selected="@(newExpense?.Category == "Salary")">Salary</option>
                             <option value="Utilities" selected="@(newExpense?.Category == "Utilities")">Utilities</option>
@@ -145,18 +145,18 @@
                         <span class="text-danger field-validation-valid" data-valmsg-for="Category" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Amount (৳)</label>
-                        <input type="number" name="Amount" class="form-control" placeholder="e.g. 5000" min="1" value="@(newExpense?.Amount)" required />
+                        <label class="form-label" for="expenseAmount">Amount (৳)</label>
+                        <input type="number" name="Amount" id="expenseAmount" class="form-control" placeholder="e.g. 5000" min="1" value="@(newExpense?.Amount)" required />
                         <span class="text-danger field-validation-valid" data-valmsg-for="Amount" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Expense Date</label>
-                        <input type="date" name="ExpenseDate" class="form-control" value="@(newExpense?.ExpenseDate.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" required />
+                        <label class="form-label" for="expenseDate">Expense Date</label>
+                        <input type="date" name="ExpenseDate" id="expenseDate" class="form-control" value="@(newExpense?.ExpenseDate.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" required />
                         <span class="text-danger field-validation-valid" data-valmsg-for="ExpenseDate" data-valmsg-replace="true"></span>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea name="Notes" class="form-control" rows="3" placeholder="Describe the expense details...">@(newExpense?.Notes)</textarea>
+                        <label class="form-label" for="expenseNotes">Notes</label>
+                        <textarea name="Notes" id="expenseNotes" class="form-control" rows="3" placeholder="Describe the expense details…">@(newExpense?.Notes)</textarea>
                         <span class="text-danger field-validation-valid" data-valmsg-for="Notes" data-valmsg-replace="true"></span>
                     </div>
                 </div>

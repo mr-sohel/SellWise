@@ -13,12 +13,19 @@ def generate_forecast(
     if len(history) < 2:
         return []
 
-    # Convert input to DataFrame
+    # Convert input to DataFrame (sorted, deduplicated by date)
     df = pd.DataFrame([{"ds": point.ds, "y": point.y} for point in history])
+    df = df.groupby("ds", as_index=False)["y"].sum().sort_values("ds").reset_index(drop=True)
 
-    # Initialize basic Prophet model
+    # Yearly seasonality needs at least a full year of signal; fitting it on
+    # shorter histories produces unidentifiable Fourier terms that ramp the
+    # forecast wildly (e.g. 5 units/day input -> 45 units/day on day 30).
+    # Only enable it once we actually have >= 1 year of data.
+    span_days = (df["ds"].max() - df["ds"].min()).days
+    has_yearly_signal = span_days >= 365
+
     model = Prophet(
-        yearly_seasonality=True,
+        yearly_seasonality=has_yearly_signal,
         weekly_seasonality=True,
         daily_seasonality=False
     )

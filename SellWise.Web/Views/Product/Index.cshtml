@@ -37,7 +37,7 @@
 <div class="card border-1 shadow-sm p-3 mb-4">
     <form method="get" class="search-widget" style="width: 100%; max-width: 400px;">
         <svg aria-hidden="true" class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" name="search" value="@ViewData["Search"]" aria-label="Search" placeholder="Search products...">
+        <input type="text" name="search" value="@ViewData["Search"]" aria-label="Search products" placeholder="Search products…">
         <button type="submit" class="btn btn-primary d-none">Search</button>
     </form>
 </div>
@@ -76,7 +76,7 @@
                         <td class="align-middle text-end">
                             <div class="d-flex align-items-center justify-content-end">
                                 <div class="dropdown">
-                                    <button class="order-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                                    <button class="order-action-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions" aria-label="Actions for product @p.Name">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow">

@@ -74,9 +74,13 @@
             {
                 @foreach (var emp in Model)
                 {
+                    var nameParts = (emp.FullName ?? "?").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var empInitials = (nameParts.Length > 1
+                        ? nameParts[0].Substring(0, 1) + nameParts[1].Substring(0, 1)
+                        : nameParts[0].Length > 1 ? nameParts[0].Substring(0, 2) : nameParts[0]).ToUpperInvariant();
                     <div class="d-flex align-items-center justify-content-between py-3 @(emp != Model.Last() ? "border-bottom" : "")" style="border-color: #f1f5f9 !important;">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(emp.FullName!)&background=e2e8f0&color=0f172a&bold=true" alt="@emp.FullName" style="width: 40px; height: 40px; border-radius: 50%;">
+                            <span class="topbar-avatar" style="width: 40px; height: 40px; background-color: #e2e8f0; color: #0f172a;" aria-hidden="true">@empInitials</span>
                             <div>
                                 <div class="fw-bold text-dark" style="font-size: 0.95rem;">@emp.FullName</div>
                                 <div class="text-muted small text-truncate d-none d-sm-block" style="max-width: 200px;">@emp.Email</div>

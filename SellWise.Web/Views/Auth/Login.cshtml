@@ -52,22 +52,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        function togglePassword(btn) {
-            var input = btn.closest('.position-relative').querySelector('input');
-            var eyeOpen = btn.querySelector('.eye-open');
-            var eyeClosed = btn.querySelector('.eye-closed');
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeOpen.classList.add('d-none');
-                eyeClosed.classList.remove('d-none');
-                btn.setAttribute('aria-label', 'Hide password');
-            } else {
-                input.type = 'password';
-                eyeOpen.classList.remove('d-none');
-                eyeClosed.classList.add('d-none');
-                btn.setAttribute('aria-label', 'Show password');
-            }
-        }
-    </script>
 }

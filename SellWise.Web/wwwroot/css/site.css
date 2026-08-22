@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+/* Fonts are loaded via <link> tags in _Layout.cshtml / _AuthLayout.cshtml (faster than @import) */
 
 :root {
   --brand: #4338ca;
@@ -268,11 +268,17 @@ h1, h2, h3, h4, h5, h6,
 
 .topbar-profile:hover { opacity: 0.8; }
 
-.topbar-profile img {
+.topbar-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  object-fit: cover;
+  background-color: var(--brand-light);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
 }
 
 .profile-name { display: none; }
@@ -1158,6 +1164,33 @@ h1, h2, h3, h4, h5, h6,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ==================== MOBILE & TOUCH ==================== */
+/* Remove tap flash + double-tap zoom delay on interactive elements */
+button, a, input, select, textarea, label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Safari auto-zooms the page when focusing inputs smaller than 16px */
+@media (max-width: 767.98px) {
+  .form-control, .form-select { font-size: 1rem; }
+}
+
+/* Bigger hit targets on touch devices (44px is ideal, 40px is a good compromise) */
+@media (pointer: coarse) {
+  .order-action-btn { width: 40px; height: 40px; }
+}
+
+/* Keep content clear of notches / home indicator on phones */
+.top-nav {
+  padding-left: max(2rem, env(safe-area-inset-left));
+  padding-right: max(2rem, env(safe-area-inset-right));
+}
+
+.app-footer {
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
 }
 
 /* ==================== PRINT ==================== */
