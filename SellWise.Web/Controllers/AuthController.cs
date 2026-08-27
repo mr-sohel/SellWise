@@ -41,7 +41,7 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, true, true);
+        var result = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, true, false);
 
         if (result.Succeeded)
         {
@@ -55,12 +55,6 @@ public class AuthController : Controller
                 }
             }
             return RedirectToAction("Index", "Dashboard");
-        }
-
-        if (result.IsLockedOut)
-        {
-            ModelState.AddModelError(string.Empty, "Account locked. Try again in 15 minutes.");
-            return View(model);
         }
 
         ModelState.AddModelError(string.Empty, "Invalid email or password.");
