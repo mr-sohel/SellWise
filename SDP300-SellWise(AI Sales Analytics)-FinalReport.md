@@ -27,7 +27,7 @@
 | **5** | **TESTING** | **75** |
 | 5.1 | Testing | 75 |
 | 5.2 | Validation Criteria | 76 |
-| 5.3 | Important Of Testing | 76 |
+| 5.3 | Importance of Testing | 76 |
 | 5.4 | Structural Testing | 77 |
 | 5.5 | Functional Testing | 77 |
 | 5.6 | Acceptance Test Generation | 78 |
@@ -36,7 +36,7 @@
 | 5.9 | Test Data Used | 80 |
 | 5.10 | Test Cases | 80 |
 | 5.11 | Testing result | 83 |
-| 5.12 | Testing Summery | 92 |
+| 5.12 | Testing Summary | 92 |
 | **6** | **USER MANUAL** | **93** |
 | 6.1 | Introduction | 93 |
 | 6.2 | System Requirements | 94 |
@@ -54,9 +54,10 @@
 # **INTRODUCTION**
 
 ## **1.1 Introduction**
-SellWise is a web-based application designed to make managing a retail business easier. It combines daily sales operations, stock management, and customer tracking into one simple platform. Most small shops rely on paper notebooks or basic spreadsheets to track their sales and inventory. This manual process takes a lot of time and is prone to errors. "SellWise" acts as a digital assistant that helps shop owners keep everything organized. 
+SellWise is a web-based application built to simplify the daily demands of running a retail business. It brings sales operations, stock management, and customer tracking together into one unified platform. Most small shops today still rely on paper notebooks or basic spreadsheets to record their sales and inventory — a manual process that is slow, error-prone, and hard to scale. SellWise acts as a digital backbone that keeps everything organized and within reach.
 
-Moreover, this system uses a bit of machine learning to guess what products might sell well in the coming days. The project is split into two parts: a main website built with ASP.NET Core for handling daily tasks, and a separate Python service for running the sales predictions. This ensures the main website stays fast.
+Beyond day-to-day operations, the system uses machine learning to forecast product demand for the coming weeks. The project is split into two components: a main web application built with ASP.NET Core that handles all transactions and user interactions, and a separate Python service responsible for running the sales predictions. Separating these two concerns keeps the web application lean and responsive, regardless of forecast computation time.
+
 
 ## **1.2 Project overview**
 This project provides an affordable and easy-to-use software solution for small and medium-sized shops. Users don't need any formal technical knowledge to use this system. The website is designed to be error-free, secure, and reliable. 
@@ -88,7 +89,7 @@ Facing the problems described above, we wanted to build a custom system called S
 * Reduce paperwork and manual calculations.
 
 ## **1.6 Development Tools**
-SellWise is a web application integrated with a database and a machine learning service. To build this website, we basically used C#, Python, HTML, CSS, and JavaScript. 
+SellWise is a web application integrated with a relational database and a standalone machine learning service. The core languages used across both components are C#, Python, HTML, CSS, and JavaScript.
 * **Technology:**
   * SQL Server for database management.
   * ASP.NET Core MVC for the main web framework.
@@ -185,7 +186,7 @@ A use case diagram is a way to summarize details of a system and the users withi
 * **Actors:** The users that interact with a system.
 
 ### **2.3.2 Technology Used**
-To build this website, we basically used ASP.NET Core, HTML, CSS, and JavaScript. We used SQL Server for the database.
+To build this system, we used ASP.NET Core, HTML, CSS, and JavaScript for the web layer, with SQL Server as the underlying database.
 * **ASP.NET Core MVC:** Used for the web application framework. It keeps data (Model), user interface (View), and request handling (Controller) separate.
 * **Entity Framework Core:** Used to talk to the SQL Server database. Instead of writing raw SQL, we write queries in C#.
 * **Python FastAPI:** Used to build the machine learning service for sales prediction.
@@ -201,7 +202,7 @@ Software systems are becoming increasingly prominent in retail management. Howev
 # **SYSTEM EVALUATION**
 
 ## **3.1 Introduction**
-Research works in the arena of retail management are characterized by a broad diapason of operations, ranging from POS systems to remote reporting. Because of the limitations in existing basic software, we proposed a model using modern web frameworks and machine learning where sales tracking, inventory alerts, and future predictions are all included. We hope that it will give great feedback to store owners.
+Research in retail management covers a wide range of operations, from point-of-sale systems to remote reporting and analytics. Given the clear gaps in existing basic software, we designed SellWise using modern web frameworks and machine learning — combining sales tracking, real-time inventory alerts, and demand forecasting into a single, coherent system. The goal is to give store owners tools that are both practical to use and genuinely helpful for making better business decisions.
 
 ## **3.2 Requirement Analysis**
 Requirement Analysis is the process of defining user expectations for a new software being built. It encompasses those tasks that go into determining the needs or conditions to meet for a new product.
@@ -227,13 +228,14 @@ A Functional Requirement describes the service that the software must offer.
 
 ## **3.3 Methodology**
 
-### **3.3.1 Agile Development model:**
-We choose the Agile Development model for our project. It is a faster way to develop any software. It is a people and result-focused methodology. It’s flexible and easy to improve the quality of software.
-**Reasons for choosing Agile Development model:**
-* Clients are happier with the end product due to continuous improvements.
-* Faster releases of features.
-* More open communication between the team members.
-* Spotting defects early during development rather than at the end.
+### **3.3.1 Agile Development Model:**
+We adopted the Agile Development Model for this project. Agile is an iterative, people-focused methodology that emphasizes delivering working software in short cycles and continuously improving based on feedback.
+
+**Reasons for choosing Agile Development Model:**
+* Features are delivered incrementally, which allows for early feedback and course correction.
+* The development process remains flexible enough to accommodate changing requirements.
+* Team communication is more frequent and transparent.
+* Defects are identified and resolved early in the development cycle, rather than at the end.
 
 ### **3.3.2 Gantt Chart**
 | Task | Week 1-2 | Week 3-4 | Week 5-6 | Week 7-8 | Week 9-10 |
@@ -246,9 +248,9 @@ We choose the Agile Development model for our project. It is a faster way to dev
 
 ### **3.3.3 Data Flow Diagram**
 **Context Level DFD (Level 0):**
-``text
+```text
 [Owner/Manager/Employee] <---> [SellWise System] <---> [SQL Database & ML Service]
-``
+```
 
 ### **3.3.4 ER Diagram**
 **Key Entities:**
@@ -296,9 +298,8 @@ We have three kinds of users:
 We will show the background implementation of various features in this part.
 
 ### **4.1.1 Database Connection**
-The SQL Server connection is configured in the application settings and connects via Entity Framework Core.
-``json
-``json
+The SQL Server connection is configured in `appsettings.json` and used by Entity Framework Core to connect to the containerized SQL Server instance.
+```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost,1433;Database=SellWise;User Id=sa;Password=YourPass123!;TrustServerCertificate=True;"
@@ -308,9 +309,8 @@ The SQL Server connection is configured in the application settings and connects
 
 
 ### **4.1.2 Authentication**
-The signup function handles the creation of a user, their store, and their role, all within a database transaction.
-``csharp
-``csharp
+The login action authenticates the user via ASP.NET Core Identity, then sets the active store ID in the session to scope all subsequent queries to that store.
+```csharp
 [HttpPost]
 public async Task<IActionResult> Login(LoginViewModel model)
 {
@@ -338,9 +338,8 @@ public async Task<IActionResult> Login(LoginViewModel model)
 
 
 ### **4.1.3 POS Order Processing**
-When a user creates an order, the system uses ACID transactions to ensure that stock is checked and deducted safely.
-``csharp
-``csharp
+When a user creates an order, the system opens a database transaction to ensure that stock validation and deduction either both succeed or both roll back atomically. This prevents any scenario where payment is recorded but stock is not deducted, or vice versa. The lockout policy also protects the system from brute-force login attempts:
+```csharp
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
@@ -351,9 +350,8 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 
 ### **4.1.4 Inventory Alerts**
-The system automatically scans for low stock and generates alerts to notify the shop owner.
-``csharp
-``csharp
+The system automatically scans all active products and generates low-stock alerts when a product's quantity falls at or below its configured threshold. Products that recover above the threshold are automatically resolved. The soft-delete pattern below ensures that deleting a product preserves all historical order records:
+```csharp
 public async Task<IActionResult> Delete(Guid id)
 {
     var storeId = GetCurrentStoreId();
@@ -369,10 +367,9 @@ public async Task<IActionResult> Delete(Guid id)
 ```
 
 
-### **4.1.5 Customer Segmentation**
-Customers are grouped into segments based on Recency, Frequency, and Monetary scores.
-``csharp
-``csharp
+### **4.1.5 Customer Segmentation (RFM)**
+Customers are automatically scored and segmented using the RFM model — Recency (how recently they bought), Frequency (how often), and Monetary value (how much they spent). The `ScanAndGenerateAlertsAsync` method below demonstrates how the system also automatically generates and resolves inventory alerts in the same background scan:
+```csharp
 public async Task ScanAndGenerateAlertsAsync(Guid storeId)
 {
     var lowStockProducts = await _db.Products
@@ -424,9 +421,8 @@ public async Task ScanAndGenerateAlertsAsync(Guid storeId)
 
 
 ### **4.1.6 Machine Learning Forecasting**
-The Python service uses the Meta Prophet library to predict product demand based on historical data.
-``python
-``python
+The Python microservice uses Meta's Prophet library to generate a 30-day demand forecast per product. The model enables weekly seasonality by default, and only enables yearly seasonality when the historical data spans at least one full year — avoiding overfitting on short datasets.
+```python
 # app/services/prophet_service.py
 from prophet import Prophet
 import pandas as pd
@@ -470,11 +466,11 @@ def generate_forecast(history, periods=30):
 
 
 ## **4.3 Conclusions**
-A few design decisions that worked out well:
-1. Keeping business logic in service classes kept our code clean.
-2. Using database transactions for orders prevented any inventory mismatch.
-3. Filtering queries manually by Store ID ensured that data from different shops never mixed.
-4. Setting up a fallback mechanism ensures the dashboard still loads even if the machine learning service is down.
+Several design decisions made during implementation proved particularly effective:
+1. Encapsulating business logic within service classes kept controllers thin and the codebase easy to maintain.
+2. Using database transactions for order processing eliminated any risk of inventory mismatches during concurrent operations.
+3. Filtering all queries by Store ID at the service layer ensured strict data isolation between different tenants.
+4. Implementing a fallback to moving average ensures the dashboard remains fully functional even when the ML service is temporarily unreachable.
 
 ---
 
@@ -490,7 +486,7 @@ The validation criteria in this project are as follows:
 * All the screens have a similar look and feel, providing a better user interface.
 * Transactions cannot corrupt data if an error occurs mid-process.
 
-## **5.3 Important Of Testing**
+## **5.3 Importance of Testing**
 The importance of system testing is that the system is expected to run according to requirement before delivering it to the user. The System is tested on the basis of specification so that it does not fail on the user site.
 
 ## **5.4 Structural Testing**
@@ -525,7 +521,7 @@ This is a systematic technique for constructing the program structure while unco
 ## **5.11 Testing result**
 Sign in system works perfectly. If the given password doesn't match with the database, then it shows a warning. Order creation works smoothly and safely deducts inventory.
 
-## **5.12 Testing Summery**
+## **5.12 Testing Summary**
 We tested all the panels assigned for users. The project was tested in the localhost with all possible options. The testing process involved successful login, form validation, order creation, and record generation. The project was successfully tested and a few bugs were fixed.
 
 ---
@@ -566,24 +562,25 @@ In this chapter, we described the requirement specifications of the system and t
 # **CONCLUSION AND FUTURE WORKS**
 
 ## **7.1 Conclusion**
-Our project is a humble venture to satisfy the needs of retail business management. This package shall prove to be a powerful tool in satisfying all the requirements of shop owners. We successfully built an application that combines POS, inventory, and machine learning sales predictions. 
-At the end, it is concluded that we have made an effort to solve real-world problems by reducing manual paperwork and providing accurate, data-driven insights to users.
+SellWise was built to address a genuine gap that many small retail businesses face — the lack of affordable, integrated tools for managing sales, inventory, and customers. Over the course of this project, we successfully developed a full-stack application that combines a point-of-sale system, real-time inventory management, machine learning-based demand forecasting, and automatic customer segmentation into a single, cohesive platform.
+
+The experience reinforced how important it is to design with real users in mind. By keeping the interface simple and the logic well-separated, we were able to deliver a system that is both technically sound and straightforward to use in practice.
 
 ## **7.2 Outcomes**
-* Added flexibility and better time management for shop owners.
-* Improved decision-making using smart sales forecasting.
-* Automated tracking of customer loyalty.
-* Safe and error-free processing of daily sales.
-* Easy monitoring of low-stock items.
+* Shop owners can now manage their entire business from a single dashboard, saving significant time compared to manual methods.
+* Data-driven demand forecasting helps avoid both overstocking and stockouts.
+* Automatic RFM-based customer segmentation helps identify loyal customers and those at risk of leaving.
+* Atomic order processing ensures daily sales are recorded accurately without data corruption.
+* Low-stock alerts notify the owner before a product runs out, reducing lost sales.
 
 ## **7.3 Current Limitations**
-We have some limitations to overcome in the future. Some of them are shared below:
-* Improve the machine learning system to test different prediction models automatically.
-* The system currently requires a continuous internet connection; there is no offline mode.
-* It only supports one currency per store.
+The system works well in its current state, but there are a few constraints worth noting:
+* The ML forecasting model is limited to Prophet; it does not automatically compare or switch between alternative models.
+* The system requires an active internet or local network connection — there is currently no offline mode.
+* Each store supports only a single currency, which limits use in multi-currency markets.
 
 ## **7.4 Future Works**
-Our website may be improved in diverse vital areas to be carried out without problems:
-* **Add Email Marketing:** Push customer segments to email platforms for automated marketing campaigns.
-* **Mobile App:** Develop a native mobile app so that users can manage their shop more easily on the go, with offline capabilities.
-* **Cloud Server:** Host the system on a cloud infrastructure like AWS or Azure for better performance and scalability globally.
+Several improvements are planned to extend the platform's capabilities:
+* **Email Marketing Integration:** Connect customer segments directly to email marketing platforms to enable automated, targeted campaigns.
+* **Mobile Application:** Develop a native mobile app to allow store owners and managers to run operations on the go, with offline support for low-connectivity environments.
+* **Cloud Deployment:** Migrate the infrastructure to a cloud provider such as AWS or Azure to improve availability, scalability, and ease of deployment for end users.
