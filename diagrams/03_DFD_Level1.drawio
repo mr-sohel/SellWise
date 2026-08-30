@@ -1,310 +1,341 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
-  <root>
-    <mxCell id="0"/>
-    <mxCell id="1" parent="0"/>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  HEADING & CAPTION                                         -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <mxCell id="heading" value="3.3.4   Data Flow Diagram – Level 1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="40" y="20" width="400" height="30" as="geometry"/>
-    </mxCell>
-    <mxCell id="caption" value="Figure: Level 1 DFD of SellWise" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=2;" vertex="1" parent="1">
-      <mxGeometry x="400" y="960" width="600" height="30" as="geometry"/>
-    </mxCell>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  EXTERNAL ENTITIES  (double-border square, Gane & Sarson) -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-
-    <!-- EE: User (left side) -->
-    <mxCell id="ee_user_sh" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
-      <mxGeometry x="48" y="468" width="144" height="64" as="geometry"/>
-    </mxCell>
-    <mxCell id="ee_user" value="Owner / Manager / Employee" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=11;fontStyle=1;align=center;" vertex="1" parent="1">
-      <mxGeometry x="40" y="460" width="144" height="64" as="geometry"/>
-    </mxCell>
-
-    <!-- EE: Python ML Service (right side) -->
-    <mxCell id="ee_ml_sh" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
-      <mxGeometry x="1218" y="648" width="154" height="64" as="geometry"/>
-    </mxCell>
-    <mxCell id="ee_ml" value="Python ML Service&#xa;(Prophet / EWMA)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=11;fontStyle=1;align=center;" vertex="1" parent="1">
-      <mxGeometry x="1210" y="640" width="154" height="64" as="geometry"/>
-    </mxCell>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  PROCESSES  (split-box: top=number, bottom=name)          -->
-    <!--  Layout: 7 processes in two columns                        -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-
-    <!-- ── P1: Authenticate User ── -->
-    <mxCell id="p1_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-      <mxGeometry x="380" y="60" width="200" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="p1_num" value="1.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="60" width="200" height="28" as="geometry"/>
-    </mxCell>
-    <mxCell id="p1_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="88" width="200" height="8" as="geometry"/>
-    </mxCell>
-    <mxCell id="p1_name" value="Authenticate User" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" vertex="1" parent="1">
-      <mxGeometry x="380" y="88" width="200" height="62" as="geometry"/>
-    </mxCell>
-
-    <!-- ── P2: Manage Products & Inventory ── -->
-    <mxCell id="p2_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-      <mxGeometry x="380" y="200" width="200" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="p2_num" value="2.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="200" width="200" height="28" as="geometry"/>
-    </mxCell>
-    <mxCell id="p2_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="228" width="200" height="8" as="geometry"/>
-    </mxCell>
-    <mxCell id="p2_name" value="Manage Products&#xa;&amp; Inventory" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" vertex="1" parent="1">
-      <mxGeometry x="380" y="228" width="200" height="62" as="geometry"/>
-    </mxCell>
-
-    <!-- ── P3: Process POS Orders ── -->
-    <mxCell id="p3_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-      <mxGeometry x="380" y="340" width="200" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="p3_num" value="3.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="340" width="200" height="28" as="geometry"/>
-    </mxCell>
-    <mxCell id="p3_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="368" width="200" height="8" as="geometry"/>
-    </mxCell>
-    <mxCell id="p3_name" value="Process POS Orders" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" vertex="1" parent="1">
-      <mxGeometry x="380" y="368" width="200" height="62" as="geometry"/>
-    </mxCell>
-
-    <!-- ── P4: Manage Customers & RFM ── -->
-    <mxCell id="p4_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-      <mxGeometry x="380" y="480" width="200" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="p4_num" value="4.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="480" width="200" height="28" as="geometry"/>
-    </mxCell>
-    <mxCell id="p4_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="508" width="200" height="8" as="geometry"/>
-    </mxCell>
-    <mxCell id="p4_name" value="Manage Customers&#xa;&amp; RFM Segmentation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" vertex="1" parent="1">
-      <mxGeometry x="380" y="508" width="200" height="62" as="geometry"/>
-    </mxCell>
-
-    <!-- ── P5: Track Expenses ── -->
-    <mxCell id="p5_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-      <mxGeometry x="380" y="620" width="200" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="p5_num" value="5.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="620" width="200" height="28" as="geometry"/>
-    </mxCell>
-    <mxCell id="p5_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="648" width="200" height="8" as="geometry"/>
-    </mxCell>
-    <mxCell id="p5_name" value="Track Expenses" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" vertex="1" parent="1">
-      <mxGeometry x="380" y="648" width="200" height="62" as="geometry"/>
-    </mxCell>
-
-    <!-- ── P6: Analytics & Forecasting ── -->
-    <mxCell id="p6_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-      <mxGeometry x="380" y="760" width="200" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="p6_num" value="6.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="760" width="200" height="28" as="geometry"/>
-    </mxCell>
-    <mxCell id="p6_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="788" width="200" height="8" as="geometry"/>
-    </mxCell>
-    <mxCell id="p6_name" value="Analytics &amp; Forecasting" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" vertex="1" parent="1">
-      <mxGeometry x="380" y="788" width="200" height="62" as="geometry"/>
-    </mxCell>
-
-    <!-- ── P7: Generate Reports ── -->
-    <mxCell id="p7_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-      <mxGeometry x="380" y="900" width="200" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="p7_num" value="7.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="900" width="200" height="28" as="geometry"/>
-    </mxCell>
-    <mxCell id="p7_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="380" y="928" width="200" height="8" as="geometry"/>
-    </mxCell>
-    <mxCell id="p7_name" value="Generate PDF Reports" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" vertex="1" parent="1">
-      <mxGeometry x="380" y="928" width="200" height="62" as="geometry"/>
-    </mxCell>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  DATA STORES  (open-ended parallel lines, Gane & Sarson)  -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-
-    <!-- DS1: AspNetUsers -->
-    <mxCell id="ds1" value="D1   AspNetUsers" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="750" y="75" width="230" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- DS2: StoreMembers -->
-    <mxCell id="ds2" value="D2   StoreMembers" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="750" y="160" width="230" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- DS3: Products -->
-    <mxCell id="ds3" value="D3   Products" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="750" y="280" width="230" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- DS4: Orders / OrderItems -->
-    <mxCell id="ds4" value="D4   Orders / OrderItems" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="750" y="370" width="230" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- DS5: Customers -->
-    <mxCell id="ds5" value="D5   Customers" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="750" y="500" width="230" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- DS6: Expenses -->
-    <mxCell id="ds6" value="D6   Expenses" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="750" y="635" width="230" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- DS7: Forecasts Cache -->
-    <mxCell id="ds7" value="D7   Forecasts Cache" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
-      <mxGeometry x="750" y="790" width="230" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  DATA FLOWS  – User → Processes                           -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <mxCell id="f_u_p1" value="Credentials" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ee_user" target="p1_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_u_p2" value="Product Data" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ee_user" target="p2_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_u_p3" value="Cart / Order" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ee_user" target="p3_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_u_p4" value="Customer Info" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ee_user" target="p4_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_u_p5" value="Expense Entry" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ee_user" target="p5_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_u_p6" value="Dashboard Request" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ee_user" target="p6_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_u_p7" value="Report Request" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ee_user" target="p7_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  DATA FLOWS  – Processes → User (outputs)                 -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <mxCell id="f_p1_u" value="Session Cookie" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.15;entryDx=0;entryDy=0;" edge="1" source="p1_box" target="ee_user" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <Array as="points">
-          <mxPoint x="330" y="130"/>
-          <mxPoint x="330" y="473"/>
-        </Array>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="f_p6_u" value="KPIs, Charts, Alerts" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" source="p6_box" target="ee_user" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <Array as="points">
-          <mxPoint x="310" y="805"/>
-          <mxPoint x="310" y="517"/>
-        </Array>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="f_p7_u" value="PDF Report" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" source="p7_box" target="ee_user" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <Array as="points">
-          <mxPoint x="290" y="945"/>
-          <mxPoint x="290" y="524"/>
-        </Array>
-      </mxGeometry>
-    </mxCell>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  DATA FLOWS  – Processes ↔ Data Stores                   -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-
-    <!-- P1 ↔ D1 -->
-    <mxCell id="f_p1_ds1" value="Verify / Write Session" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="p1_box" target="ds1" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <!-- P1 → D2 -->
-    <mxCell id="f_p1_ds2" value="Check Store Membership" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" edge="1" source="p1_box" target="ds2" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- P2 ↔ D3 -->
-    <mxCell id="f_p2_ds3a" value="CRUD Products / Stock" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="p2_box" target="ds3" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_ds3_p2" value="Product Records" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds3" target="p2_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- P3 → D4 (write order) -->
-    <mxCell id="f_p3_ds4" value="Write Order (Transaction)" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="p3_box" target="ds4" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <!-- P3 → D3 (deduct stock) -->
-    <mxCell id="f_p3_ds3" value="Deduct Stock" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="p3_box" target="ds3" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- P4 ↔ D5 -->
-    <mxCell id="f_p4_ds5" value="Update RFM Scores" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="p4_box" target="ds5" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_ds5_p4" value="Customer Records" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds5" target="p4_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- P5 ↔ D6 -->
-    <mxCell id="f_p5_ds6" value="CRUD Expenses" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="p5_box" target="ds6" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_ds6_p5" value="Expense Records" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds6" target="p5_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- P6 ← D4 (read 90d order history) -->
-    <mxCell id="f_ds4_p6" value="90-day Order History" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" edge="1" source="ds4" target="p6_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <!-- P6 ← D6 (read expenses for P&L) -->
-    <mxCell id="f_ds6_p6" value="Expense Data (P&amp;L)" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.4;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds6" target="p6_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <!-- P6 ↔ D7 -->
-    <mxCell id="f_p6_ds7" value="Store Forecast (24h TTL)" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="p6_box" target="ds7" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_ds7_p6" value="Cached Forecast" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" edge="1" source="ds7" target="p6_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- P7 ← D4 (read orders for PDF) -->
-    <mxCell id="f_ds4_p7" value="Order Data for Report" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="ds4" target="p7_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!--  DATA FLOWS  – P6 ↔ ML Service                           -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <mxCell id="f_p6_ml" value="90-day Sales History" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" edge="1" source="p6_box" target="ee_ml" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-    <mxCell id="f_ml_p6" value="30-day Demand Forecast" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.65;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ee_ml" target="p6_box" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-  </root>
-</mxGraphModel>
+<mxfile host="drawio-plugin" modified="2026-08-30T11:27:00.010Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" version="22.1.22" etag="yOK4gUuvdrcSfifXpfqW" type="embed">
+  <diagram id="DkK9ma_Uc4_DPrHDbt2E" name="Page-1">
+    <mxGraphModel dx="2731" dy="1503" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="caption" value="Figure: Level 1 DFD of SellWise" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=2;" parent="1" vertex="1">
+          <mxGeometry x="280" y="1010" width="600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ee_user_sh" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="48" y="468" width="144" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="ee_user" value="Owner / Manager / Employee" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=11;fontStyle=1;align=center;" parent="1" vertex="1">
+          <mxGeometry x="40" y="460" width="144" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="ee_ml_sh" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="1088" y="484" width="154" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="ee_ml" value="Python ML Service&#xa;(Prophet / EWMA)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;fontSize=11;fontStyle=1;align=center;" parent="1" vertex="1">
+          <mxGeometry x="1080" y="476" width="154" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="p1_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="380" y="60" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p1_num" value="1.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="60" width="200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p1_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="88" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="p1_name" value="Authenticate User" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="380" y="88" width="200" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="380" y="200" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_num" value="2.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="200" width="200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="228" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_name" value="Manage Products&#xa;&amp; Inventory" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="380" y="228" width="200" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="p3_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="380" y="340" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p3_num" value="3.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="340" width="200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p3_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="368" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="p3_name" value="Process POS Orders" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="380" y="368" width="200" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="380" y="480" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_num" value="4.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="480" width="200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="508" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="p4_name" value="Manage Customers&#xa;&amp; RFM Segmentation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="380" y="508" width="200" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="380" y="620" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_num" value="5.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="620" width="200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="648" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="p5_name" value="Track Expenses" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="380" y="648" width="200" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="p6_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="380" y="760" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p6_num" value="6.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="760" width="200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p6_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="788" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="p6_name" value="Analytics &amp; Forecasting" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="380" y="788" width="200" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="p7_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="380" y="900" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p7_num" value="7.0" style="text;html=1;strokeColor=#000000;fillColor=#ffffff;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="900" width="200" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="p7_div" value="" style="line;strokeColor=#000000;fillColor=none;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="928" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="p7_name" value="Generate PDF Reports" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="380" y="928" width="200" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="ds1" value="D1   AspNetUsers" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="75" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ds2" value="D2   StoreMembers" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="160" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ds3" value="D3   Products" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="280" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ds4" value="D4   Orders / OrderItems" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="370" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ds5" value="D5   Customers" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="500" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ds6" value="D6   Expenses" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="635" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ds7" value="D7   Forecasts Cache" style="shape=mxgraph.dfd.dataStore;whiteSpace=wrap;html=1;fontSize=11;fontStyle=0;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;" parent="1" vertex="1">
+          <mxGeometry x="750" y="790" width="230" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="f_u_p1" value="Credentials" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ee_user" target="p1_name" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220" y="476" />
+              <mxPoint x="220" y="119" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_u_p2" value="Product Data" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ee_user" target="p2_box" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="260" y="486" />
+              <mxPoint x="260" y="245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_u_p3" value="Cart / Order" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ee_user" target="p3_box" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="492" />
+              <mxPoint x="300" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_u_p4" value="Customer Info" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ee_user" target="p4_box" edge="1">
+          <mxGeometry x="0.5508" y="15" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_u_p5" value="Expense Entry" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ee_user" target="p5_box" edge="1">
+          <mxGeometry x="0.0174" y="10" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="270" y="505" />
+              <mxPoint x="270" y="665" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_u_p6" value="Dashboard Request" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ee_user" target="p6_box" edge="1">
+          <mxGeometry x="0.0045" y="10" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="184" y="510" />
+              <mxPoint x="190" y="510" />
+              <mxPoint x="190" y="805" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_u_p7" value="Report Request" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="530" as="sourcePoint" />
+            <mxPoint x="380" y="960" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="110" y="532" />
+              <mxPoint x="110" y="960" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p1_u" value="Session Cookie" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="p1_name" target="ee_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_p6_u" value="KPIs, Charts, Alerts" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="p6_box" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="790" />
+              <mxPoint x="240" y="790" />
+              <mxPoint x="240" y="517" />
+            </Array>
+            <mxPoint x="190" y="517" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p7_u" value="PDF Report" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="p7_box" target="ee_user_sh" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="940" />
+              <mxPoint x="150" y="940" />
+            </Array>
+            <mxPoint x="170" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p1_ds1" value="Verify / Write Session" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;" parent="1" source="p1_box" target="ds1" edge="1">
+          <mxGeometry x="0.0286" y="11" relative="1" as="geometry">
+            <mxPoint x="-5" y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p1_ds2" value="Check Store Membership" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="p1_box" target="ds2" edge="1">
+          <mxGeometry x="-0.2353" y="-15" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="665" y="120" />
+              <mxPoint x="665" y="185" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p2_ds3a" value="CRUD Products / Stock" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" parent="1" source="p2_box" target="ds3" edge="1">
+          <mxGeometry x="-0.4872" y="16" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="236" />
+              <mxPoint x="680" y="300" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ds3_p2" value="Product Records" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" parent="1" source="ds3" target="p2_box" edge="1">
+          <mxGeometry x="-0.0265" y="40" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="310" />
+              <mxPoint x="650" y="254" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p3_ds4" value="Write Order (Transaction)" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0.99;exitY=0.387;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;exitPerimeter=0;" parent="1" source="p3_name" target="ds4" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="392" />
+              <mxPoint x="580" y="390" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p3_ds3" value="Deduct Stock" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0.99;exitY=0.161;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="p3_name" edge="1">
+          <mxGeometry x="0.6721" y="-10" relative="1" as="geometry">
+            <mxPoint x="750" y="320" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="665" y="378" />
+              <mxPoint x="665" y="320" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p4_ds5" value="Update RFM Scores" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" parent="1" source="p4_box" target="ds5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ds5_p4" value="Customer Records" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.6;entryDx=0;entryDy=0;" parent="1" source="ds5" target="p4_box" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_p5_ds6" value="CRUD Expenses" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" parent="1" source="p5_box" target="ds6" edge="1">
+          <mxGeometry x="0.0058" y="15" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ds6_p5" value="Expense Records" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" parent="1" target="p5_name" edge="1">
+          <mxGeometry x="0.0284" relative="1" as="geometry">
+            <mxPoint x="750" y="670" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="630" y="670" />
+              <mxPoint x="630" y="695" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ds4_p6" value="90-day Order History" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" parent="1" source="ds4" target="p6_box" edge="1">
+          <mxGeometry x="0.0688" y="-50" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="405" />
+              <mxPoint x="640" y="787" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ds6_p6" value="Expense Data (P&amp;L)" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" target="p6_name" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="750" y="670" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="750" y="680" />
+              <mxPoint x="665" y="680" />
+              <mxPoint x="665" y="804" />
+              <mxPoint x="590" y="804" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p6_ds7" value="Store Forecast (24h TTL)" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" parent="1" source="p6_name" target="ds7" edge="1">
+          <mxGeometry x="0.0503" y="-5" relative="1" as="geometry">
+            <mxPoint x="-5" y="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ds7_p6" value="Cached Forecast" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=-0.007;exitY=0.884;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;exitPerimeter=0;" parent="1" source="ds7" target="p6_name" edge="1">
+          <mxGeometry x="-0.0077" y="6" relative="1" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ds4_p7" value="Order Data for Report" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ds4" target="p7_box" edge="1">
+          <mxGeometry x="-0.0143" y="50" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="415" />
+              <mxPoint x="700" y="945" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_p6_ml" value="90-day Sales History" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.403;entryY=0.969;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="p6_name" target="ee_ml_sh" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="530" y="870" />
+              <mxPoint x="1150" y="870" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_ml_p6" value="30-day Demand Forecast" style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" target="p6_name" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1190" y="548" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="1190" y="548" />
+              <mxPoint x="1190" y="890" />
+              <mxPoint x="480" y="890" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
