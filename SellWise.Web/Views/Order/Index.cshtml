@@ -190,6 +190,16 @@
                     <tr>
                         <td class="align-middle fw-bold">
                             <a asp-action="Details" asp-route-id="@o.Id" class="text-dark text-decoration-none">@o.OrderNumber</a>
+                            <div class="mt-1">
+                                @if (string.Equals(o.OrderType, "online", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="badge bg-primary-subtle text-primary border" style="font-size: .65rem; font-weight: 600;">Online</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-dark border" style="font-size: .65rem; font-weight: 600;">In-Store</span>
+                                }
+                            </div>
                         </td>
                         <td class="align-middle">
                             <div class="fw-semibold text-dark">@(o.CustomerName ?? "Walk-in")</div>

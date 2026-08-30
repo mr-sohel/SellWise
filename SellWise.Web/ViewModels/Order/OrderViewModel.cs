@@ -12,6 +12,8 @@ public class OrderViewModel
     public DateTime OrderDate { get; set; }
     public decimal Total { get; set; }
     public string? Status { get; set; }
+    public string OrderType { get; set; } = "offline";
+    public string? SalespersonName { get; set; }
 }
 
 public class OrderDetailsViewModel
@@ -19,6 +21,8 @@ public class OrderDetailsViewModel
     public Guid Id { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public string? Status { get; set; }
+    public string OrderType { get; set; } = "offline";
+    public string? SalespersonName { get; set; }
     public DateTime OrderDate { get; set; }
     public decimal Total { get; set; }
     public decimal DeliveryCharge { get; set; }
@@ -26,6 +30,8 @@ public class OrderDetailsViewModel
     public string? Notes { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerPhone { get; set; }
+    public string? CustomerEmail { get; set; }
+    public string? CustomerAddress { get; set; }
 
     // Store Information for Invoice
     public string? StoreName { get; set; }

@@ -52,6 +52,10 @@ public class AuthController : Controller
                 if (member != null)
                 {
                     HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+                    if (string.Equals(member.Role, "employee", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return RedirectToAction("Index", "Order");
+                    }
                 }
             }
             return RedirectToAction("Index", "Dashboard");
@@ -211,6 +215,16 @@ public class AuthController : Controller
         if (member != null)
         {
             HttpContext.Session.SetString("ActiveStoreId", storeId.ToString());
+            if (string.Equals(member.Role, "employee", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(returnUrl) || returnUrl == "/" ||
+                    returnUrl.StartsWith("/Dashboard", StringComparison.OrdinalIgnoreCase) ||
+                    returnUrl.StartsWith("/Expense", StringComparison.OrdinalIgnoreCase) ||
+                    returnUrl.StartsWith("/Report", StringComparison.OrdinalIgnoreCase))
+                {
+                    return RedirectToAction("Index", "Order");
+                }
+            }
         }
 
         if (Url.IsLocalUrl(returnUrl))
@@ -225,10 +239,6 @@ public class AuthController : Controller
     {
         if (User.Identity?.IsAuthenticated != true) return null;
 
-        var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
-        if (!string.IsNullOrEmpty(storeIdStr))
-            return RedirectToAction("Index", "Dashboard");
-
         var userId = _userManager.GetUserId(User);
         if (userId == null)
         {
@@ -236,14 +246,29 @@ public class AuthController : Controller
             return null;
         }
 
-        var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == userId);
-        if (member == null)
+        var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
+        StoreMember? member = null;
+        if (!string.IsNullOrEmpty(storeIdStr) && Guid.TryParse(storeIdStr, out var currentStoreGuid))
         {
-            await _signInManager.SignOutAsync();
-            return null;
+            member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.StoreId == currentStoreGuid && m.UserId == userId);
         }
 
-        HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+        if (member == null)
+        {
+            member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == userId);
+            if (member == null)
+            {
+                await _signInManager.SignOutAsync();
+                return null;
+            }
+            HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+        }
+
+        if (string.Equals(member.Role, "employee", StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectToAction("Index", "Order");
+        }
+
         return RedirectToAction("Index", "Dashboard");
     }
 }

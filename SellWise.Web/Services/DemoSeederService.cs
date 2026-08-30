@@ -278,6 +278,8 @@ public class DemoSeederService
                     CustomerId = customer.Id,
                     OrderNumber = $"SW-V{startOrderNum + orderCount}",
                     Status = status,
+                    OrderType = isDelivery ? "online" : "offline",
+                    SalespersonName = isDelivery ? "Online Store" : (rnd.Next(2) == 0 ? "Sales Staff" : "Admin User"),
                     Total = product.SellingPrice * qty,
                     DeliveryCharge = isDelivery ? 60 : 0,
                     Discount = 0,

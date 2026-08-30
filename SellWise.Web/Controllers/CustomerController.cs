@@ -107,7 +107,12 @@ public class CustomerController : BaseController
     public async Task<IActionResult> RecalculateRfm()
     {
         var storeId = GetCurrentStoreId();
-
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to recalculate RFM scores.";
+            return RedirectToAction(nameof(Index));
+        }
 
         await _rfmService.RecalculateAllAsync(storeId);
 
@@ -116,10 +121,34 @@ public class CustomerController : BaseController
     }
 
     [HttpGet]
+    public IActionResult Create()
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        return View(new CustomerCreateViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(CustomerCreateViewModel model)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        if (!ModelState.IsValid) return View(model);
+
+        await _customerService.CreateCustomerAsync(storeId, model);
+        TempData["SuccessMessage"] = $"Customer \"{model.Name}\" created successfully.";
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
         var storeId = GetCurrentStoreId();
-
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
         var customer = await Db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
         if (customer == null) return NotFound();
@@ -142,9 +171,10 @@ public class CustomerController : BaseController
     {
         if (id != model.Id) return BadRequest();
 
-        if (!ModelState.IsValid) return View(model);
-
         var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+
+        if (!ModelState.IsValid) return View(model);
 
         try
         {

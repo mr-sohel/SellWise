@@ -8,6 +8,7 @@ namespace SellWise.Web.ViewModels.Order;
 public class OrderFormViewModel
 {
     public Guid? CustomerId { get; set; }
+    public string OrderType { get; set; } = "offline";
 
     // Optional fields to create a new customer on the fly
     public string? NewCustomerName { get; set; }

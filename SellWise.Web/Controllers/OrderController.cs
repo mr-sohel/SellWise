@@ -13,6 +13,8 @@ using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Order;
 using SellWise.Web.Services;
 
+using Microsoft.AspNetCore.Identity;
+
 namespace SellWise.Web.Controllers;
 
 // [Authorize] ensures only logged-in users can access this controller.
@@ -21,12 +23,14 @@ namespace SellWise.Web.Controllers;
 public class OrderController : BaseController
 {
     private readonly IOrderService _orderService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    // DEPENDENCY INJECTION: We inject AppDbContext (database) and IOrderService (business logic).
+    // DEPENDENCY INJECTION: We inject AppDbContext (database), IOrderService (business logic), and UserManager.
     // This keeps the controller thin, modular, and highly testable.
-    public OrderController(AppDbContext db, IOrderService orderService) : base(db)
+    public OrderController(AppDbContext db, IOrderService orderService, UserManager<ApplicationUser> userManager) : base(db)
     {
         _orderService = orderService;
+        _userManager = userManager;
     }
 
     public async Task<IActionResult> Index(string search, string status, string dateRange, int page = 1)
@@ -84,7 +88,9 @@ public class OrderController : BaseController
                 CustomerPhone = o.Customer != null ? o.Customer.Phone : null,
                 OrderDate = o.OrderDate,
                 Total = o.Total,
-                Status = o.Status
+                Status = o.Status,
+                OrderType = o.OrderType ?? "offline",
+                SalespersonName = o.SalespersonName
             })
             .ToListAsync();
 
@@ -114,6 +120,8 @@ public class OrderController : BaseController
             Id = order.Id,
             OrderNumber = order.OrderNumber,
             Status = order.Status,
+            OrderType = order.OrderType ?? "offline",
+            SalespersonName = order.SalespersonName,
             OrderDate = order.OrderDate,
             Total = order.Total,
             DeliveryCharge = order.DeliveryCharge,
@@ -121,6 +129,8 @@ public class OrderController : BaseController
             Notes = order.Notes,
             CustomerName = order.Customer?.Name,
             CustomerPhone = order.Customer?.Phone,
+            CustomerEmail = order.Customer?.Email,
+            CustomerAddress = order.Customer?.Address,
             StoreName = order.Store?.Name,
             Currency = order.Store?.Currency ?? "BDT",
             Items = order.Items.Select(i => new OrderDetailItemViewModel
@@ -195,7 +205,9 @@ public class OrderController : BaseController
 
         if (ModelState.IsValid)
         {
-            var error = await _orderService.CreateOrderAsync(storeId, model);
+            var currentUser = await _userManager.GetUserAsync(User);
+            var salespersonName = !string.IsNullOrWhiteSpace(currentUser?.OwnerName) ? currentUser.OwnerName : (currentUser?.UserName ?? "Staff");
+            var error = await _orderService.CreateOrderAsync(storeId, model, salespersonName);
             if (error == null)
             {
                 return RedirectToAction(nameof(Index));

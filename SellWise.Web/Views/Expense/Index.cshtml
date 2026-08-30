@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Expenses";
     var expenseCount = Model.Count();
+    var isEmployee = string.Equals(ViewData["CurrentStoreRole"]?.ToString(), "employee", StringComparison.OrdinalIgnoreCase);
 }
 
 <style>
@@ -24,10 +25,13 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print
         </button>
-        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Expense
-        </button>
+        @if (!isEmployee)
+        {
+            <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Expense
+            </button>
+        }
     </div>
 </div>
 
@@ -117,57 +121,60 @@
     </div>
 </div>
 
-<!-- Add Expense Modal -->
-<div class="modal fade d-print-none" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden; box-shadow: var(--shadow-lg);">
-            <div class="modal-header bg-light border-bottom p-4">
-                <h5 class="modal-title fw-bold text-dark" id="addExpenseModalLabel">Add New Expense</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+@if (!isEmployee)
+{
+    <!-- Add Expense Modal -->
+    <div class="modal fade d-print-none" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: var(--radius-lg); border: none; overflow: hidden; box-shadow: var(--shadow-lg);">
+                <div class="modal-header bg-light border-bottom p-4">
+                    <h5 class="modal-title fw-bold text-dark" id="addExpenseModalLabel">Add New Expense</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form asp-action="Create" method="post">
+                    <div class="modal-body p-4">
+                        @{
+                            var newExpense = ViewData["NewExpense"] as SellWise.Web.ViewModels.Expense.ExpenseCreateViewModel;
+                        }
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div class="mb-3">
+                            <label class="form-label" for="expenseCategory">Category</label>
+                            <select name="Category" id="expenseCategory" class="form-select" required>
+                                <option value="Rent" selected="@(newExpense?.Category == "Rent")">Rent</option>
+                                <option value="Salary" selected="@(newExpense?.Category == "Salary")">Salary</option>
+                                <option value="Utilities" selected="@(newExpense?.Category == "Utilities")">Utilities</option>
+                                <option value="Marketing" selected="@(newExpense?.Category == "Marketing")">Marketing</option>
+                                <option value="Packaging" selected="@(newExpense?.Category == "Packaging")">Packaging</option>
+                                <option value="Supplies" selected="@(newExpense?.Category == "Supplies")">Supplies</option>
+                                <option value="Other" selected="@(newExpense?.Category == "Other")">Other</option>
+                            </select>
+                            <span class="text-danger field-validation-valid" data-valmsg-for="Category" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="expenseAmount">Amount (৳)</label>
+                            <input type="number" name="Amount" id="expenseAmount" class="form-control" placeholder="e.g. 5000" min="1" value="@(newExpense?.Amount)" required />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="Amount" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="expenseDate">Expense Date</label>
+                            <input type="date" name="ExpenseDate" id="expenseDate" class="form-control" value="@(newExpense?.ExpenseDate.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" required />
+                            <span class="text-danger field-validation-valid" data-valmsg-for="ExpenseDate" data-valmsg-replace="true"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="expenseNotes">Notes</label>
+                            <textarea name="Notes" id="expenseNotes" class="form-control" rows="3" placeholder="Describe the expense details…">@(newExpense?.Notes)</textarea>
+                            <span class="text-danger field-validation-valid" data-valmsg-for="Notes" data-valmsg-replace="true"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top p-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Expense</button>
+                    </div>
+                </form>
             </div>
-            <form asp-action="Create" method="post">
-                <div class="modal-body p-4">
-                    @{
-                        var newExpense = ViewData["NewExpense"] as SellWise.Web.ViewModels.Expense.ExpenseCreateViewModel;
-                    }
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                    <div class="mb-3">
-                        <label class="form-label" for="expenseCategory">Category</label>
-                        <select name="Category" id="expenseCategory" class="form-select" required>
-                            <option value="Rent" selected="@(newExpense?.Category == "Rent")">Rent</option>
-                            <option value="Salary" selected="@(newExpense?.Category == "Salary")">Salary</option>
-                            <option value="Utilities" selected="@(newExpense?.Category == "Utilities")">Utilities</option>
-                            <option value="Marketing" selected="@(newExpense?.Category == "Marketing")">Marketing</option>
-                            <option value="Packaging" selected="@(newExpense?.Category == "Packaging")">Packaging</option>
-                            <option value="Supplies" selected="@(newExpense?.Category == "Supplies")">Supplies</option>
-                            <option value="Other" selected="@(newExpense?.Category == "Other")">Other</option>
-                        </select>
-                        <span class="text-danger field-validation-valid" data-valmsg-for="Category" data-valmsg-replace="true"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="expenseAmount">Amount (৳)</label>
-                        <input type="number" name="Amount" id="expenseAmount" class="form-control" placeholder="e.g. 5000" min="1" value="@(newExpense?.Amount)" required />
-                        <span class="text-danger field-validation-valid" data-valmsg-for="Amount" data-valmsg-replace="true"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="expenseDate">Expense Date</label>
-                        <input type="date" name="ExpenseDate" id="expenseDate" class="form-control" value="@(newExpense?.ExpenseDate.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" required />
-                        <span class="text-danger field-validation-valid" data-valmsg-for="ExpenseDate" data-valmsg-replace="true"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="expenseNotes">Notes</label>
-                        <textarea name="Notes" id="expenseNotes" class="form-control" rows="3" placeholder="Describe the expense details…">@(newExpense?.Notes)</textarea>
-                        <span class="text-danger field-validation-valid" data-valmsg-for="Notes" data-valmsg-replace="true"></span>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-top p-4 d-flex justify-content-end gap-2">
-                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Expense</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
+}
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

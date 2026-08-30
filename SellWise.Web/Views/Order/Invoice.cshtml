@@ -156,6 +156,27 @@
             letter-spacing: 0.3px;
         }
 
+        .channel-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .channel-offline {
+            background: #f4f4f5;
+            color: #18181b;
+            border: 1px solid #e4e4e7;
+        }
+        .channel-online {
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+        }
+
         /* ── Items table ── */
         .inv-table {
             width: 100%;
@@ -285,17 +306,44 @@
 
         <div class="invoice-body">
 
-            <!-- Meta: Billed To + Status -->
+            <!-- Meta: Billed To + Sales & Channel + Status -->
             <div class="meta-row">
-                <div>
+                <div style="flex: 1.2;">
                     <div class="meta-section-label">Billed To</div>
                     <div class="meta-name">@(Model.CustomerName ?? "Walk-in Customer")</div>
                     @if (!string.IsNullOrEmpty(Model.CustomerPhone))
                     {
-                        <div class="meta-detail">@Model.CustomerPhone</div>
+                        <div class="meta-detail"><strong>Phone:</strong> @Model.CustomerPhone</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.CustomerEmail))
+                    {
+                        <div class="meta-detail"><strong>Email:</strong> @Model.CustomerEmail</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.CustomerAddress))
+                    {
+                        <div class="meta-detail"><strong>Address:</strong> @Model.CustomerAddress</div>
                     }
                 </div>
-                <div style="text-align:right;">
+
+                <div style="flex: 1;">
+                    <div class="meta-section-label">Order Info</div>
+                    <div class="meta-detail" style="margin-bottom: 0.35rem;">
+                        <strong>Channel:</strong>
+                        @if (string.Equals(Model.OrderType, "online", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <span class="channel-badge channel-online">Online Order</span>
+                        }
+                        else
+                        {
+                            <span class="channel-badge channel-offline">Offline (In-Store)</span>
+                        }
+                    </div>
+                    <div class="meta-detail">
+                        <strong>Salesperson:</strong> @(!string.IsNullOrWhiteSpace(Model.SalespersonName) ? Model.SalespersonName : "Staff")
+                    </div>
+                </div>
+
+                <div style="text-align:right; flex: 0.8;">
                     <div class="meta-section-label">Status</div>
                     <span class="status-badge" style="background:@statusBg; color:@statusColor;">
                         @Model.Status?.Replace("_", " ")

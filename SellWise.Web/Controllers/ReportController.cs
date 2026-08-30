@@ -24,6 +24,11 @@ public class ReportController : BaseController
     {
         var storeId = GetCurrentStoreId();
         if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to access reports.";
+            return RedirectToAction("Index", "Order");
+        }
 
         var totalOrders = await Db.Orders.Where(o => o.StoreId == storeId).CountAsync();
         var totalRevenue = await Db.Orders.Where(o => o.StoreId == storeId).SumAsync(o => o.Total);

@@ -25,7 +25,12 @@ public class ExpenseController : BaseController
     {
         if (page < 1) page = 1;
         var storeId = GetCurrentStoreId();
-
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to access expenses.";
+            return RedirectToAction("Index", "Order");
+        }
 
         var query = Db.Expenses.Where(e => e.StoreId == storeId);
 
@@ -65,6 +70,14 @@ public class ExpenseController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ExpenseCreateViewModel model)
     {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to add expenses.";
+            return RedirectToAction(nameof(Index));
+        }
+
         if (!ModelState.IsValid)
         {
             ViewData["ShowExpenseModal"] = true;
@@ -72,7 +85,6 @@ public class ExpenseController : BaseController
             return await Index(0, 1);
         }
 
-        var storeId = GetCurrentStoreId();
         await _expenseService.CreateExpenseAsync(storeId, model);
 
         return RedirectToAction(nameof(Index));
