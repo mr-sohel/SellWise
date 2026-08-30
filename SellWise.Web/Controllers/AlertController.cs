@@ -25,7 +25,11 @@ public class AlertController : BaseController
         var storeId = GetCurrentStoreId();
         if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
 
-        var query = Db.Alerts.Where(a => a.StoreId == storeId);
+        await _alertService.ScanAndGenerateAlertsAsync(storeId);
+
+        var query = Db.Alerts
+            .Include(a => a.Product)
+            .Where(a => a.StoreId == storeId && a.Type == "Low Stock");
 
         if (showUnreadOnly)
         {

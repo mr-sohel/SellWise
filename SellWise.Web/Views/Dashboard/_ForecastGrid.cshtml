@@ -105,9 +105,11 @@
             <div class="d-flex justify-content-between align-items-center mt-2 gap-2">
                 @if (f.HasStockOutRisk)
                 {
-                    <span title="Predicted demand exceeds current stock — order more" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;">
+                    <button type="button" class="btn-restock-pill" 
+                            onclick="openRestockModal('@f.ProductId', '@Html.Raw(Html.Encode(f.ProductName))', @f.Stock, @((int)Math.Ceiling(f.RestockQty)), '@(f.Unit ?? "units")', function() { loadForecastPage('@Model.Range', @Model.CurrentPage); })"
+                            title="Click to restock @f.RestockQty.ToString("N0") units">
                         ⚠ Restock @f.RestockQty.ToString("N0") units
-                    </span>
+                    </button>
                 }
                 else if (f.DaysOfCover > 90)
                 {

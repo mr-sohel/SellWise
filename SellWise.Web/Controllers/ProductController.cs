@@ -174,4 +174,26 @@ public class ProductController : BaseController
 
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Restock(Guid productId, int quantity)
+    {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return Unauthorized();
+
+        var result = await _productService.RestockProductAsync(storeId, productId, quantity);
+        if (!result.Success)
+        {
+            return BadRequest(new { success = false, message = result.Message });
+        }
+
+        return Json(new
+        {
+            success = true,
+            productId = productId,
+            newStock = result.NewStock,
+            message = result.Message
+        });
+    }
 }

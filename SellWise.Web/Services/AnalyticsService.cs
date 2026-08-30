@@ -407,8 +407,10 @@ public class AnalyticsService
 
         return new ProductForecastCard
         {
+            ProductId = product.Id,
             ProductName = product.Name,
             Category = product.Category ?? "Other",
+            Unit = product.Unit ?? "pcs",
             SparklineData = values,
             PredictedUnits = Math.Round(predictedUnits, 1),
             Stock = product.StockQuantity,
@@ -515,8 +517,10 @@ public class AnalyticsService
 
         return new ProductForecastCard
         {
+            ProductId = product.Id,
             ProductName = product.Name,
             Category = product.Category ?? "Other",
+            Unit = product.Unit ?? "pcs",
             SparklineData = sparkline,
             PredictedUnits = sparkline.Sum(),
             Stock = product.StockQuantity,

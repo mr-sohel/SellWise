@@ -62,6 +62,9 @@ try {
     if (Test-Path "SellWise.Web") {
         Push-Location SellWise.Web
         dotnet ef database update --no-build 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            dotnet ef database update 2>$null | Out-Null
+        }
         Pop-Location
         Write-Host "[OK] Database ready." -ForegroundColor Green
     } else {

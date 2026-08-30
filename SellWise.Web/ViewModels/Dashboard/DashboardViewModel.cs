@@ -67,8 +67,10 @@ public class ProductAttentionPoint
 
 public class ProductForecastCard
 {
+    public System.Guid ProductId { get; set; }
     public string? ProductName { get; set; } = string.Empty;
     public string? Category { get; set; } = string.Empty;
+    public string? Unit { get; set; } = "pcs";
     public List<double> SparklineData { get; set; } = new List<double>();
     public double PredictedUnits { get; set; }
     public int Stock { get; set; }

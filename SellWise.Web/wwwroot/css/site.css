@@ -729,6 +729,34 @@ h1, h2, h3, h4, h5, h6,
   color: var(--text-primary);
 }
 
+.btn-restock-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.btn-restock-pill:hover {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #c2410c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(234, 88, 12, 0.15);
+}
+
+.btn-restock-pill:active {
+  transform: translateY(0);
+}
+
 /* ==================== PERFORMERS LISTS ==================== */
 .performers-list {
   display: flex;

@@ -345,8 +345,140 @@
                 }
             });
         });
+
+        let currentRestockCallback = null;
+
+        function openRestockModal(productId, productName, currentStock, suggestedQty, unit, callback) {
+            document.getElementById('restockProductId').value = productId;
+            document.getElementById('restockProductName').textContent = productName || 'Product';
+            document.getElementById('restockCurrentStock').textContent = (currentStock || 0) + ' ' + (unit || 'units');
+            document.getElementById('restockQuantity').value = Math.max(1, suggestedQty || 1);
+            document.getElementById('restockUnitHelp').textContent = 'Units to add to inventory (' + (unit || 'units') + ')';
+            document.getElementById('restockError').classList.add('d-none');
+            document.getElementById('restockError').textContent = '';
+            
+            currentRestockCallback = callback || null;
+
+            const modalEl = document.getElementById('restockModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+            setTimeout(() => {
+                const qtyInput = document.getElementById('restockQuantity');
+                qtyInput.focus();
+                qtyInput.select();
+            }, 300);
+        }
+
+        function adjustRestockQty(delta) {
+            const input = document.getElementById('restockQuantity');
+            let val = (parseInt(input.value, 10) || 0) + delta;
+            if (val < 1) val = 1;
+            input.value = val;
+        }
+
+        function handleRestockSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const submitBtn = document.getElementById('restockSubmitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Restocking...';
+
+            const formData = new FormData(form);
+            const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            fetch('/Product/Restock', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to restock product.');
+                }
+                return data;
+            })
+            .then(data => {
+                const modalEl = document.getElementById('restockModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                if (typeof currentRestockCallback === 'function') {
+                    currentRestockCallback(data);
+                } else {
+                    if (typeof loadForecastPage === 'function') {
+                        const range = window.currentForecastRange || '30d';
+                        const page = window.currentForecastPage || 1;
+                        loadForecastPage(range, page);
+                    }
+                    if (window.location.pathname.toLowerCase().includes('/alert')) {
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(err => {
+                const errEl = document.getElementById('restockError');
+                errEl.textContent = err.message;
+                errEl.classList.remove('d-none');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Restock Modal -->
+    <div class="modal fade" id="restockModal" tabindex="-1" aria-labelledby="restockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+                <form id="restockForm" onsubmit="handleRestockSubmit(event)">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="restockProductId" name="productId" />
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="p-2 rounded-circle" style="background:#e0e7ff; color:#4338ca;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark mb-0" id="restockModalLabel">Restock Product</h5>
+                                <p class="text-muted small mb-0 text-truncate" id="restockProductName" style="max-width: 250px;">Product Name</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded" style="font-size:0.85rem;">
+                            <span class="text-muted">Current Stock:</span>
+                            <span class="fw-bold text-dark" id="restockCurrentStock">0 units</span>
+                        </div>
+
+                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.85rem;" for="restockQuantity">Units to Add</label>
+                        <div class="input-group">
+                            <button class="btn btn-outline-secondary" type="button" onclick="adjustRestockQty(-5)">-5</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="adjustRestockQty(-1)">-1</button>
+                            <input type="number" id="restockQuantity" name="quantity" class="form-control text-center fw-bold" value="1" min="1" required />
+                            <button class="btn btn-outline-secondary" type="button" onclick="adjustRestockQty(1)">+1</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="adjustRestockQty(5)">+5</button>
+                        </div>
+                        <div id="restockUnitHelp" class="form-text text-muted small mt-1 text-center"></div>
+                        <div id="restockError" class="alert alert-danger p-2 small mt-2 d-none"></div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
+                        <button type="submit" id="restockSubmitBtn" class="btn btn-primary px-4 d-flex align-items-center gap-2" style="background-color: #4338ca; border: none; border-radius: 20px;">
+                            <span>Confirm Restock</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Create Store Modal -->
     <div class="modal fade" id="createStoreModal" tabindex="-1" aria-labelledby="createStoreModalLabel" aria-hidden="true">

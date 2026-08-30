@@ -12,4 +12,5 @@ public interface IProductService
     Task UpdateProductAsync(Guid storeId, Guid id, ProductFormViewModel model);
     Task DeleteProductAsync(Guid storeId, Guid id);
     Task<(int Count, string? Error)> BulkImportAsync(Guid storeId, IFormFile file);
+    Task<(bool Success, int NewStock, string Message)> RestockProductAsync(Guid storeId, Guid productId, int quantity);
 }
