@@ -238,6 +238,8 @@ We adopted the Agile Development Model for this project. Agile is an iterative, 
 * Defects are identified and resolved early in the development cycle, rather than at the end.
 
 ### **3.3.2 Gantt Chart**
+![Gantt Chart](diagrams/Gantt%20Chart%20Diagram.drawio.svg)
+
 | Task | Week 1-2 | Week 3-4 | Week 5-6 | Week 7-8 | Week 9-10 |
 |------|----------|----------|----------|----------|-----------|
 | Database & Auth | ████ | | | | |
@@ -248,30 +250,41 @@ We adopted the Agile Development Model for this project. Agile is an iterative, 
 
 ### **3.3.3 Data Flow Diagram**
 **Context Level DFD (Level 0):**
-```text
-[Owner/Manager/Employee] <---> [SellWise System] <---> [SQL Database & ML Service]
-```
+![DFD Level 0](diagrams/DFD%20LEVEL0%20Diagram.drawio.svg)
+
+**Level 1 Data Flow Diagram:**
+![DFD Level 1](diagrams/DFD%20LEVEL%201%20Diagram.drawio.svg)
 
 ### **3.3.4 ER Diagram**
+![ER Diagram](diagrams/ER%20Diagram.drawio.svg)
+
 **Key Entities:**
 * User, Store, StoreMember
 * Product, Order, OrderItem
 * Customer, Expense, InventoryAlert, Forecast
 
 ### **3.3.5 Use Case Diagram**
+![Use Case Diagram](diagrams/USE%20CASE%20Diagram.drawio.svg)
+
 * **Owner:** Manage Staff, View Dashboard, Switch Store, Generate Reports.
 * **Manager:** Process Orders, Manage Inventory, View Analytics, Manage Customers.
 * **Employee:** Process Orders, View Catalog.
 
 ### **3.3.6 Activity Diagram**
+![Activity Diagram](diagrams/New_06_Activity_Diagram.svg)
+
 Order Creation Activity:
 User clicks "Create Order" -> Adds items to cart -> Selects customer -> Submits form -> System begins database transaction -> Validates stock -> If sufficient, deducts stock and saves order -> Commits transaction.
 
 ### **3.3.7 Sequence Diagram**
+![Sequence Diagram](diagrams/new%20sequence%20Diagram.drawio.svg)
+
 Dashboard Sequence:
 Browser requests Dashboard -> AnalyticsService checks Database -> Checks Forecast Cache -> If miss, requests Python ML Service -> Python returns prediction -> AnalyticsService saves cache -> Returns data to Browser.
 
 ### **3.3.8 Class Diagram**
+![Class Diagram](diagrams/Class%20Diagram.drawio.svg)
+
 * **BaseController:** Handles current store session.
 * **DashboardController, OrderController:** Inherit BaseController.
 * **AnalyticsService:** Calculates KPIs.
