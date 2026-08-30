@@ -775,6 +775,18 @@ h1, h2, h3, h4, h5, h6,
 
 .performers-item:last-child { border-bottom: none; }
 
+.performers-item-clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.5rem;
+  margin: 0 -0.5rem;
+  transition: background-color 0.15s ease;
+}
+
+.performers-item-clickable:hover {
+  background-color: var(--brand-lighter);
+}
+
 .performers-num {
   width: 26px;
   height: 26px;
@@ -1219,6 +1231,30 @@ button, a, input, select, textarea, label {
 
 .app-footer {
   padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+}
+
+/* ==================== NUMBER INPUTS / STEPPERS ==================== */
+input[type="number"].no-spinners::-webkit-inner-spin-button,
+input[type="number"].no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"].no-spinners {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.restock-quick-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  transition: all 0.15s ease;
+}
+
+.restock-quick-btn:hover {
+  transform: translateY(-1px);
 }
 
 /* ==================== PRINT ==================== */

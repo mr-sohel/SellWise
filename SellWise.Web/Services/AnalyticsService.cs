@@ -105,20 +105,25 @@ public class AnalyticsService
             .OrderBy(p => p.StockQuantity)
             .Take(5)
             .Select(p => new {
+                p.Id,
                 p.Name,
                 p.StockQuantity,
                 p.LowStockThreshold,
-                p.SellingPrice
+                p.SellingPrice,
+                p.Unit
             })
             .ToListAsync();
 
         var needsAttention = needsAttentionData
             .Select((p, idx) => new ProductAttentionPoint {
+                ProductId = p.Id,
                 ProductName = p.Name,
                 Stock = p.StockQuantity,
                 Threshold = p.LowStockThreshold,
                 Revenue = p.SellingPrice * p.StockQuantity,
-                Rank = idx + 1
+                Rank = idx + 1,
+                Unit = string.IsNullOrWhiteSpace(p.Unit) ? "pcs" : p.Unit,
+                SuggestedRestockQty = Math.Max(10, (p.LowStockThreshold > 0 ? p.LowStockThreshold * 2 : 20) - p.StockQuantity)
             })
             .ToList();
 
