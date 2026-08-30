@@ -25,7 +25,7 @@ builder.Services.AddScoped<SellWise.Web.Services.ICustomerService, SellWise.Web.
 builder.Services.AddScoped<SellWise.Web.Services.IExpenseService, SellWise.Web.Services.ExpenseService>();
 builder.Services.AddHttpClient<SellWise.Web.Services.ForecastService>(client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(5);
+    client.Timeout = TimeSpan.FromSeconds(15);
 });
 
 builder.Services.ConfigureApplicationCookie(options => {
