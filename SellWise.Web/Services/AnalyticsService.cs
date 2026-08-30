@@ -89,7 +89,7 @@ public class AnalyticsService
             .GroupBy(oi => oi.ProductName)
             .Select(g => new { ProductName = g.Key, Revenue = g.Sum(oi => oi.Quantity * oi.UnitPrice) })
             .OrderByDescending(p => p.Revenue)
-            .Take(5)
+            .Take(50)
             .ToListAsync();
 
         var topPerformers = topPerformersData
@@ -103,7 +103,7 @@ public class AnalyticsService
         var needsAttentionData = await _db.Products
             .Where(p => p.StoreId == storeId)
             .OrderBy(p => p.StockQuantity)
-            .Take(5)
+            .Take(50)
             .Select(p => new {
                 p.Id,
                 p.Name,

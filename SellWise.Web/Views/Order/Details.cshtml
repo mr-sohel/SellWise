@@ -348,10 +348,18 @@
             Orders
         </a>
         <h1 class="detail-title">@Model.OrderNumber</h1>
-        <p class="detail-subtitle">
-            Placed @Model.OrderDate.ToString("MMMM d, yyyy 'at' h:mm tt")
-            &nbsp;·&nbsp;
+        <p class="detail-subtitle d-flex align-items-center gap-2 flex-wrap">
+            <span>Placed @Model.OrderDate.ToString("MMMM d, yyyy 'at' h:mm tt")</span>
+            <span>·</span>
             <span class="order-status-badge @statusCssClass" style="font-size:0.72rem; padding:0.15rem 0.65rem;">@(Model.Status?.Replace("_", " "))</span>
+            @if (string.Equals(Model.OrderType, "online", StringComparison.OrdinalIgnoreCase))
+            {
+                <span class="badge bg-primary-subtle text-primary border" style="font-size:0.72rem; padding:0.15rem 0.65rem; border-radius:50px;">Online Order</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary-subtle text-dark border" style="font-size:0.72rem; padding:0.15rem 0.65rem; border-radius:50px;">Offline (In-Store)</span>
+            }
         </p>
     </div>
     <div class="detail-header-actions">
@@ -501,15 +509,15 @@ else
             </div>
         </div>
 
-        <!-- Customer Card -->
+        <!-- Customer & Order Info Card -->
         <div class="detail-card">
             <div class="detail-card-header">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span class="detail-card-title">Customer</span>
+                <span class="detail-card-title">Customer &amp; Channel</span>
             </div>
             <div class="detail-card-body" style="padding-bottom:1rem;">
                 <div class="info-row">
-                    <span class="info-label">Name</span>
+                    <span class="info-label">Customer</span>
                     <span class="info-value">@(Model.CustomerName ?? "Walk-in Customer")</span>
                 </div>
                 @if (!string.IsNullOrEmpty(Model.CustomerPhone))
@@ -521,6 +529,39 @@ else
                         </span>
                     </div>
                 }
+                @if (!string.IsNullOrEmpty(Model.CustomerEmail))
+                {
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">
+                            <a href="mailto:@Model.CustomerEmail" style="color:var(--brand); text-decoration:none;">@Model.CustomerEmail</a>
+                        </span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.CustomerAddress))
+                {
+                    <div class="info-row">
+                        <span class="info-label">Address</span>
+                        <span class="info-value">@Model.CustomerAddress</span>
+                    </div>
+                }
+                <div class="info-row">
+                    <span class="info-label">Channel</span>
+                    <span class="info-value">
+                        @if (string.Equals(Model.OrderType, "online", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <span class="badge bg-primary-subtle text-primary border" style="font-size:0.7rem;">Online Order</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary-subtle text-dark border" style="font-size:0.7rem;">Offline (In-Store)</span>
+                        }
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Salesperson</span>
+                    <span class="info-value fw-semibold text-dark">@(!string.IsNullOrWhiteSpace(Model.SalespersonName) ? Model.SalespersonName : "Staff")</span>
+                </div>
                 <div class="info-row">
                     <span class="info-label">Date</span>
                     <span class="info-value">@Model.OrderDate.ToString("MMM d, yyyy")</span>

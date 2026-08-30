@@ -37,7 +37,7 @@ public class OrderService : IOrderService
         return (kpis.TodayRevenue, kpis.TodayOrdersCount, kpis.PendingOrdersCount);
     }
 
-    public async Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model)
+    public async Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model, string? salespersonName = null)
     {
         // START TRANSACTION: We use a database transaction to ensure ACID properties.
         // If anything fails (e.g., out of stock), the entire operation rolls back,
@@ -74,15 +74,22 @@ public class OrderService : IOrderService
                 // Altitude #4 and Efficiency #2 fix: Do not save immediately. Let EF Core handle insertion.
             }
 
+            var isOffline = string.Equals(model.OrderType, "offline", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(model.OrderType);
+            var deliveryCharge = isOffline ? 0m : model.DeliveryCharge;
+            var orderStatus = isOffline ? "completed" : "pending";
+            var orderType = isOffline ? "offline" : "online";
+
             var order = new Order
             {
                 StoreId = storeId,
                 CustomerId = finalCustomerId,
                 Customer = newCustomerEntity,
-                DeliveryCharge = model.DeliveryCharge,
+                DeliveryCharge = deliveryCharge,
                 Discount = model.Discount,
                 Notes = model.Notes,
-                Status = "pending",
+                Status = orderStatus,
+                OrderType = orderType,
+                SalespersonName = salespersonName,
                 OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}"
             };
 

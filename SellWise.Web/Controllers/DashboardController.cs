@@ -27,6 +27,11 @@ public class DashboardController : BaseController
         if (storeId == Guid.Empty)
             return RedirectToAction("Login", "Auth");
 
+        if (await IsEmployeeAsync(storeId))
+        {
+            return RedirectToAction("Index", "Order");
+        }
+
         // Fast check to avoid spinning up background tasks unnecessarily
         bool isSeeded = Db.Products.Any(p => p.StoreId == storeId);
         var storeName = Db.Stores.Where(s => s.Id == storeId).Select(s => s.Name).FirstOrDefault() ?? "";
@@ -58,6 +63,9 @@ public class DashboardController : BaseController
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty)
             return Unauthorized();
+
+        if (await IsEmployeeAsync(storeId))
+            return Forbid();
 
         const int pageSize = 8;
         page = Math.Max(1, page);
