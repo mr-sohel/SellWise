@@ -6,16 +6,18 @@
     var userId = _userManager.GetUserId(User);
     var activeStoreId = Context.Session.GetString("ActiveStoreId");
 
-    var userStores = new List<SellWise.Web.Models.Store>();
+    var userStoreMembers = new List<SellWise.Web.Models.StoreMember>();
     if (userId != null)
     {
-        userStores = _db.StoreMembers
+        userStoreMembers = _db.StoreMembers
             .Include(m => m.Store)
             .Where(m => m.UserId == userId)
-            .Select(m => m.Store)
             .ToList();
     }
-    var currentStore = userStores.FirstOrDefault(s => s.Id.ToString() == activeStoreId);
+    var currentMember = userStoreMembers.FirstOrDefault(m => m.StoreId.ToString() == activeStoreId)
+                        ?? userStoreMembers.FirstOrDefault();
+    var currentStore = currentMember?.Store;
+    var isOwner = currentMember?.Role == "owner";
 
     // Local initials for the profile avatar (no third-party request)
     var emailName = (User.Identity?.Name ?? "User").Split('@')[0];
@@ -54,7 +56,7 @@
                     </div>
                     <span class="brand-text mb-0">SellWise</span>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="sidebar-brand d-none d-lg-flex">
                 <div class="brand-logo">
@@ -148,29 +150,36 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="dropdownStore">
                             <li><h6 class="dropdown-header">Your Stores</h6></li>
-                            @foreach (var store in userStores)
+                            @foreach (var sm in userStoreMembers)
                             {
+                                var store = sm.Store;
+                                if (store != null)
+                                {
+                                    <li>
+                                        <form asp-controller="Auth" asp-action="SwitchStore" method="post" class="m-0 p-0 d-inline">
+                                            <input type="hidden" name="storeId" value="@store.Id" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                            <button type="submit" class="dropdown-item @(store.Id.ToString() == activeStoreId ? "active fw-bold" : "")">
+                                                @if (store.Id.ToString() == activeStoreId)
+                                                {
+                                                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                }
+                                                @store.Name
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
+                            }
+                            @if (isOwner)
+                            {
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form asp-controller="Auth" asp-action="SwitchStore" method="post" class="m-0 p-0 d-inline">
-                                        <input type="hidden" name="storeId" value="@store.Id" />
-                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                                        <button type="submit" class="dropdown-item @(store.Id.ToString() == activeStoreId ? "active fw-bold" : "")">
-                                            @if (store.Id.ToString() == activeStoreId)
-                                            {
-                                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                            }
-                                            @store.Name
-                                        </button>
-                                    </form>
+                                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createStoreModal">
+                                        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        Add Store
+                                    </button>
                                 </li>
                             }
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createStoreModal">
-                                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                    Add Store
-                                </button>
-                            </li>
                         </ul>
                     </div>
                     <div class="dropdown">
@@ -224,8 +233,9 @@
             const form = e.target;
             if (form.classList.contains('no-loader')) return;
 
-            // Only disable if the form is valid (if jQuery validation is present)
-            if ($(form).valid && !$(form).valid()) return;
+            // Only disable if the form is valid (if jQuery validation or HTML5 validation is present)
+            if (typeof $(form).valid === 'function' && !$(form).valid()) return;
+            if (form.checkValidity && !form.checkValidity()) return;
 
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn && !submitBtn.disabled) {
@@ -254,7 +264,7 @@
                 }
             });
 
-            let dropdown = new bootstrap.Dropdown(searchInput);
+            const dropdown = bootstrap.Dropdown.getOrCreateInstance(searchInput);
             let debounceTimer;
 
             searchInput.addEventListener('input', function(e) {
@@ -493,27 +503,30 @@
         </div>
     </div>
 
-    <!-- Create Store Modal -->
-    <div class="modal fade" id="createStoreModal" tabindex="-1" aria-labelledby="createStoreModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: var(--radius-lg);">
-                <form asp-controller="Auth" asp-action="CreateStore" method="post">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark" id="createStoreModalLabel">Create New Store</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;" for="newStoreName">Store Name</label>
-                        <input type="text" id="newStoreName" name="StoreName" class="form-control px-3 py-2" placeholder="e.g. My New Store" required maxlength="100" autocomplete="off" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
-                        <small class="text-muted">A new empty store will be created and you'll be switched into it as owner.</small>
-                    </div>
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
-                        <button type="submit" class="btn btn-primary px-4" style="background-color: #4338ca; border: none; border-radius: 20px;">Create Store</button>
-                    </div>
-                </form>
+    @if (isOwner)
+    {
+        <!-- Create Store Modal -->
+        <div class="modal fade" id="createStoreModal" tabindex="-1" aria-labelledby="createStoreModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: var(--radius-lg);">
+                    <form asp-controller="Auth" asp-action="CreateStore" method="post">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold text-dark" id="createStoreModalLabel">Create New Store</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;" for="newStoreName">Store Name</label>
+                            <input type="text" id="newStoreName" name="StoreName" class="form-control px-3 py-2" placeholder="e.g. My New Store" required maxlength="100" autocomplete="off" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                            <small class="text-muted">A new empty store will be created and you'll be switched into it as owner.</small>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4" style="background-color: #4338ca; border: none; border-radius: 20px;">Create Store</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    }
 </body>
 </html>

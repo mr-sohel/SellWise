@@ -1,4 +1,7 @@
 @model SellWise.Web.ViewModels.Dashboard.ForecastPagedViewModel
+@{
+    var isEmployee = string.Equals(ViewData["CurrentStoreRole"]?.ToString(), "employee", StringComparison.OrdinalIgnoreCase);
+}
 
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-3">
     <div>
@@ -105,11 +108,20 @@
             <div class="d-flex justify-content-between align-items-center mt-2 gap-2">
                 @if (f.HasStockOutRisk)
                 {
-                    <button type="button" class="btn-restock-pill" 
-                            onclick="openRestockModal('@f.ProductId', '@Html.Raw(Html.Encode(f.ProductName))', @f.Stock, @((int)Math.Ceiling(f.RestockQty)), '@(f.Unit ?? "units")', function() { loadForecastPage('@Model.Range', @Model.CurrentPage); })"
-                            title="Click to restock @f.RestockQty.ToString("N0") units">
-                        ⚠ Restock @f.RestockQty.ToString("N0") units
-                    </button>
+                    @if (!isEmployee)
+                    {
+                        <button type="button" class="btn-restock-pill" 
+                                onclick="openRestockModal('@f.ProductId', '@Html.Raw(Html.Encode(f.ProductName))', @f.Stock, @((int)Math.Ceiling(f.RestockQty)), '@(f.Unit ?? "units")', function() { loadForecastPage('@Model.Range', @Model.CurrentPage); })"
+                                title="Click to restock @f.RestockQty.ToString("N0") units">
+                            ⚠ Restock @f.RestockQty.ToString("N0") units
+                        </button>
+                    }
+                    else
+                    {
+                        <span title="Low stock warning (@f.RestockQty.ToString("N0") units needed)" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">
+                            ⚠ Low stock (@f.RestockQty.ToString("N0") units)
+                        </span>
+                    }
                 }
                 else if (f.DaysOfCover > 90)
                 {

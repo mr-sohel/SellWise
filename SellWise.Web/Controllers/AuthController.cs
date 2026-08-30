@@ -138,6 +138,28 @@ public class AuthController : Controller
         var userId = _userManager.GetUserId(User);
         if (userId == null) return RedirectToAction(nameof(Login));
 
+        // Enforce store creation permission: Only owners can create stores
+        var activeStoreId = HttpContext.Session.GetString("ActiveStoreId");
+        bool isOwner = false;
+
+        if (!string.IsNullOrEmpty(activeStoreId) && Guid.TryParse(activeStoreId, out var currentStoreGuid))
+        {
+            var currentMember = await _db.StoreMembers
+                .FirstOrDefaultAsync(m => m.StoreId == currentStoreGuid && m.UserId == userId);
+            isOwner = currentMember?.Role == "owner";
+        }
+        else
+        {
+            isOwner = await _db.StoreMembers.AnyAsync(m => m.UserId == userId && m.Role == "owner");
+        }
+
+        var hasMemberships = await _db.StoreMembers.AnyAsync(m => m.UserId == userId);
+        if (hasMemberships && !isOwner)
+        {
+            TempData["Error"] = "Only store owners are allowed to create new stores.";
+            return RedirectToAction("Index", "Dashboard");
+        }
+
         if (!ModelState.IsValid)
         {
             TempData["Error"] = "Store name is required.";

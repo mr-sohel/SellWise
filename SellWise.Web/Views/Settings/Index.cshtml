@@ -43,14 +43,17 @@
             </span>
         </button>
     </li>
-    <li class="nav-item">
-        <a class="nav-link text-muted px-4 py-2 border-0" asp-controller="Settings" asp-action="Staff">
-            <span class="d-flex align-items-center gap-2">
-                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                Staff Management
-            </span>
-        </a>
-    </li>
+    @if (string.Equals(Model.Role, "owner", StringComparison.OrdinalIgnoreCase))
+    {
+        <li class="nav-item">
+            <a class="nav-link text-muted px-4 py-2 border-0" asp-controller="Settings" asp-action="Staff">
+                <span class="d-flex align-items-center gap-2">
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Staff Management
+                </span>
+            </a>
+        </li>
+    }
 </ul>
 
 <div id="tabContents">
@@ -79,8 +82,16 @@
             </div>
             <div class="col-md-6">
                 <label asp-for="StoreName" class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Store Name</label>
-                <input asp-for="StoreName" type="text" class="form-control px-3 py-2" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
-                <span asp-validation-for="StoreName" class="text-danger"></span>
+                @if (string.Equals(Model.Role, "owner", StringComparison.OrdinalIgnoreCase))
+                {
+                    <input asp-for="StoreName" type="text" class="form-control px-3 py-2" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                    <span asp-validation-for="StoreName" class="text-danger"></span>
+                }
+                else
+                {
+                    <input asp-for="StoreName" type="text" class="form-control px-3 py-2 text-muted" style="border-radius: var(--radius-md); border-color: #e2e8f0; background-color: #f1f5f9; cursor: not-allowed;" readonly>
+                    <small class="text-muted">Only store owners can edit the store name.</small>
+                }
             </div>
             <div class="col-md-6">
                 <label asp-for="OwnerName" class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;">Owner Name</label>

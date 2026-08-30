@@ -1,6 +1,7 @@
 @model SellWise.Web.ViewModels.Dashboard.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    var isEmployee = string.Equals(ViewData["CurrentStoreRole"]?.ToString(), "employee", StringComparison.OrdinalIgnoreCase);
 }
 
 <!-- Top Header section matching 02_dashboard.png -->
@@ -189,19 +190,30 @@
             <div class="performers-list">
                 @foreach (var item in Model.NeedsAttention)
                 {
-                    <div class="performers-item performers-item-clickable"
-                         role="button"
-                         tabindex="0"
-                         title="Click to restock @item.ProductName"
-                         onclick="openRestockModal('@item.ProductId', '@Html.Raw(Html.Encode(item.ProductName))', @item.Stock, @item.SuggestedRestockQty, '@(item.Unit ?? "units")', function() { window.location.reload(); })"
-                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-                        <span class="performers-num normal-rank">@item.Rank</span>
-                        <span class="fw-bold text-dark flex-grow-1 text-truncate" style="font-size: 0.85rem;">@item.ProductName</span>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="performers-stock">@item.Stock left</span>
-                            <span class="btn btn-sm btn-outline-primary py-0 px-2 d-none d-sm-inline-flex align-items-center" style="font-size: 0.72rem; border-radius: 12px; height: 22px;">Restock</span>
+                    @if (!isEmployee)
+                    {
+                        <div class="performers-item performers-item-clickable"
+                             role="button"
+                             tabindex="0"
+                             title="Click to restock @item.ProductName"
+                             onclick="openRestockModal('@item.ProductId', '@Html.Raw(Html.Encode(item.ProductName))', @item.Stock, @item.SuggestedRestockQty, '@(item.Unit ?? "units")', function() { window.location.reload(); })"
+                             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+                            <span class="performers-num normal-rank">@item.Rank</span>
+                            <span class="fw-bold text-dark flex-grow-1 text-truncate" style="font-size: 0.85rem;">@item.ProductName</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="performers-stock">@item.Stock left</span>
+                                <span class="btn btn-sm btn-outline-primary py-0 px-2 d-none d-sm-inline-flex align-items-center" style="font-size: 0.72rem; border-radius: 12px; height: 22px;">Restock</span>
+                            </div>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="performers-item">
+                            <span class="performers-num normal-rank">@item.Rank</span>
+                            <span class="fw-bold text-dark flex-grow-1 text-truncate" style="font-size: 0.85rem;">@item.ProductName</span>
+                            <span class="performers-stock">@item.Stock left</span>
+                        </div>
+                    }
                 }
                 @if (!Model.NeedsAttention.Any())
                 {

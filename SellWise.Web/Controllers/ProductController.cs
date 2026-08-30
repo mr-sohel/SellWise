@@ -65,8 +65,16 @@ public class ProductController : BaseController
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to add products.";
+            return RedirectToAction(nameof(Index));
+        }
+
         return View(new ProductFormViewModel());
     }
 
@@ -74,11 +82,16 @@ public class ProductController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ProductFormViewModel model)
     {
-        if (!ModelState.IsValid)
-            return View(model);
-
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to add products.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (!ModelState.IsValid)
+            return View(model);
 
         await _productService.CreateProductAsync(storeId, model);
 
@@ -90,6 +103,12 @@ public class ProductController : BaseController
     {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to edit products.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
 
         if (product == null)
@@ -115,14 +134,19 @@ public class ProductController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, ProductFormViewModel model)
     {
+        var storeId = GetCurrentStoreId();
+        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to edit products.";
+            return RedirectToAction(nameof(Index));
+        }
+
         if (id != model.Id)
             return BadRequest();
 
         if (!ModelState.IsValid)
             return View(model);
-
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
 
         try
         {
@@ -142,6 +166,11 @@ public class ProductController : BaseController
     {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to delete products.";
+            return RedirectToAction(nameof(Index));
+        }
 
         await _productService.DeleteProductAsync(storeId, id);
 
@@ -155,6 +184,11 @@ public class ProductController : BaseController
     {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to import products.";
+            return RedirectToAction(nameof(Index));
+        }
 
         if (file == null || file.Length == 0)
         {
@@ -181,6 +215,10 @@ public class ProductController : BaseController
     {
         var storeId = GetCurrentStoreId();
         if (storeId == Guid.Empty) return Unauthorized();
+        if (await IsEmployeeAsync(storeId))
+        {
+            return BadRequest(new { success = false, message = "Employees are not permitted to restock products." });
+        }
 
         var result = await _productService.RestockProductAsync(storeId, productId, quantity);
         if (!result.Success)
