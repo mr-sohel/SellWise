@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SellWise - Use Case Diagram [Corrected]" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="400" y="20" width="800" height="40" as="geometry"/></mxCell>
+
+    <!-- System Boundary -->
+    <mxCell id="boundary" value="SellWise System" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;strokeWidth=2;fontSize=14;fontStyle=1;dashed=1;" vertex="1" parent="1"><mxGeometry x="200" y="70" width="1150" height="980" as="geometry"/></mxCell>
+
+    <!-- ═══ ACTORS ═══ -->
+    <!-- Owner (outside left) -->
+    <mxCell id="owner" value="Owner" style="shape=mxgraph.archimate3.actor;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="50" y="130" width="60" height="80" as="geometry"/></mxCell>
+    <mxCell id="ownerLbl" value="Owner" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="35" y="215" width="90" height="20" as="geometry"/></mxCell>
+    <!-- Manager (outside left, mid) -->
+    <mxCell id="manager" value="Manager" style="shape=mxgraph.archimate3.actor;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="50" y="450" width="60" height="80" as="geometry"/></mxCell>
+    <mxCell id="managerLbl" value="Manager" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="30" y="535" width="100" height="20" as="geometry"/></mxCell>
+    <!-- Employee (outside left, bottom) -->
+    <mxCell id="employee" value="Employee" style="shape=mxgraph.archimate3.actor;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="50" y="790" width="60" height="80" as="geometry"/></mxCell>
+    <mxCell id="employeeLbl" value="Employee" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="28" y="875" width="104" height="20" as="geometry"/></mxCell>
+    <!-- ML Service (outside right) -->
+    <mxCell id="mlactor" value="Python ML Service" style="shape=mxgraph.archimate3.actor;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="1400" y="450" width="60" height="80" as="geometry"/></mxCell>
+    <mxCell id="mlLbl" value="Python ML Service" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=11;" vertex="1" parent="1"><mxGeometry x="1375" y="535" width="110" height="30" as="geometry"/></mxCell>
+
+    <!-- ═══════════════════════════════════════
+         USE CASES  (grouped by access level)
+         ═══════════════════════════════════════ -->
+
+    <!-- Shared Auth (all 3 roles) -->
+    <mxCell id="uc_login" value="Login / Logout" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary"><mxGeometry x="50" y="130" width="180" height="50" as="geometry"/></mxCell>
+    <mxCell id="uc_register" value="Register Account &amp; Create Store" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="boundary"><mxGeometry x="280" y="130" width="220" height="50" as="geometry"/></mxCell>
+
+    <!-- Owner-only use cases -->
+    <mxCell id="grpOwner" value="Owner Only" style="swimlane;startSize=20;fillColor=#fffde7;strokeColor=#d6b656;fontSize=11;dashed=1;" vertex="1" parent="boundary"><mxGeometry x="50" y="230" width="600" height="190" as="geometry"/></mxCell>
+    <mxCell id="uc_switch" value="Switch / Create Store" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grpOwner"><mxGeometry x="20" y="40" width="170" height="50" as="geometry"/></mxCell>
+    <mxCell id="uc_staff" value="Manage Staff&#xa;(Invite / Remove / Assign Role)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grpOwner"><mxGeometry x="220" y="40" width="185" height="60" as="geometry"/></mxCell>
+    <mxCell id="uc_storesettings" value="Store Settings&#xa;(Name, Currency, Timezone)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grpOwner"><mxGeometry x="20" y="120" width="185" height="55" as="geometry"/></mxCell>
+    <mxCell id="uc_profile" value="Edit Profile &amp; Password" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="grpOwner"><mxGeometry x="220" y="120" width="185" height="55" as="geometry"/></mxCell>
+
+    <!-- Manager / Owner use cases -->
+    <mxCell id="grpMgr" value="Manager + Owner" style="swimlane;startSize=20;fillColor=#f0fff0;strokeColor=#82b366;fontSize=11;dashed=1;" vertex="1" parent="boundary"><mxGeometry x="50" y="440" width="1050" height="360" as="geometry"/></mxCell>
+    <mxCell id="uc_products" value="Manage Products&#xa;(Create / Edit / Delete / CSV Import)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="20" y="40" width="195" height="65" as="geometry"/></mxCell>
+    <mxCell id="uc_alerts" value="View Inventory Alerts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="240" y="40" width="175" height="55" as="geometry"/></mxCell>
+    <mxCell id="uc_customers" value="Manage Customers&#xa;(Add / Edit / View)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="440" y="40" width="175" height="65" as="geometry"/></mxCell>
+    <mxCell id="uc_rfm" value="View RFM Segments&#xa;(Champion / Loyal / At Risk...)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="640" y="40" width="185" height="65" as="geometry"/></mxCell>
+    <mxCell id="uc_expenses" value="Track Expenses" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="850" y="40" width="165" height="55" as="geometry"/></mxCell>
+    <mxCell id="uc_dashboard" value="View Dashboard &amp; KPIs&#xa;(Revenue, Orders, Health Score)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="20" y="145" width="195" height="65" as="geometry"/></mxCell>
+    <mxCell id="uc_forecast" value="View Demand Forecasts&#xa;(30-day Prophet / EWMA)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="240" y="145" width="190" height="65" as="geometry"/></mxCell>
+    <mxCell id="uc_report" value="Generate PDF Sales Reports&#xa;(QuestPDF)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="460" y="145" width="190" height="65" as="geometry"/></mxCell>
+    <mxCell id="uc_search" value="Global Search" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="680" y="145" width="165" height="55" as="geometry"/></mxCell>
+    <mxCell id="uc_orders_mgr" value="View / Manage All Orders&#xa;(Filter by date / status)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="grpMgr"><mxGeometry x="20" y="260" width="195" height="65" as="geometry"/></mxCell>
+
+    <!-- Employee + Manager + Owner (shared POS) -->
+    <mxCell id="grpEmp" value="All Roles (including Employee)" style="swimlane;startSize=20;fillColor=#fff0f0;strokeColor=#b85450;fontSize=11;dashed=1;" vertex="1" parent="boundary"><mxGeometry x="50" y="820" width="800" height="130" as="geometry"/></mxCell>
+    <mxCell id="uc_catalog" value="View Product Catalog" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grpEmp"><mxGeometry x="20" y="40" width="185" height="55" as="geometry"/></mxCell>
+    <mxCell id="uc_pos" value="Add Items to Cart&#xa;&amp; Process POS Order" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grpEmp"><mxGeometry x="240" y="35" width="185" height="65" as="geometry"/></mxCell>
+    <mxCell id="uc_orderstatus" value="Update Order Status&#xa;(pending / processing / completed)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="grpEmp"><mxGeometry x="455" y="35" width="200" height="65" as="geometry"/></mxCell>
+
+    <!-- ML Service Use Case -->
+    <mxCell id="uc_mlforecast" value="Compute 30-day Forecast&#xa;(Prophet model)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="boundary"><mxGeometry x="880" y="450" width="190" height="65" as="geometry"/></mxCell>
+
+    <!-- ═══ ACTOR ASSOCIATIONS ═══ -->
+    <!-- Owner -> Auth -->
+    <mxCell id="a_ol" style="edgeStyle=none;html=1;" edge="1" source="owner" target="uc_login" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_or" style="edgeStyle=none;html=1;" edge="1" source="owner" target="uc_register" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Owner -> Owner group -->
+    <mxCell id="a_oswitch" style="edgeStyle=none;html=1;" edge="1" source="owner" target="uc_switch" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_ostaff" style="edgeStyle=none;html=1;" edge="1" source="owner" target="uc_staff" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_osett" style="edgeStyle=none;html=1;" edge="1" source="owner" target="uc_storesettings" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_oprof" style="edgeStyle=none;html=1;" edge="1" source="owner" target="uc_profile" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Owner -> Manager group (all) -->
+    <mxCell id="a_odash" style="edgeStyle=none;html=1;" edge="1" source="owner" target="uc_dashboard" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Manager -> Auth -->
+    <mxCell id="a_ml" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_login" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Manager -> Manager group -->
+    <mxCell id="a_mprod" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_products" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_malerts" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_alerts" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_mcust" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_customers" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_mrfm" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_rfm" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_mexp" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_expenses" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_mfcast" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_forecast" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_mrep" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_report" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_msrch" style="edgeStyle=none;html=1;" edge="1" source="manager" target="uc_search" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Employee -> Auth -->
+    <mxCell id="a_el" style="edgeStyle=none;html=1;" edge="1" source="employee" target="uc_login" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Employee -> Employee group -->
+    <mxCell id="a_ecat" style="edgeStyle=none;html=1;" edge="1" source="employee" target="uc_catalog" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_epos" style="edgeStyle=none;html=1;" edge="1" source="employee" target="uc_pos" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="a_eord" style="edgeStyle=none;html=1;" edge="1" source="employee" target="uc_orderstatus" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- ML Service association -->
+    <mxCell id="a_mluc" style="edgeStyle=none;html=1;" edge="1" source="mlactor" target="uc_mlforecast" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- Dashboard uses ML forecast (include) -->
+    <mxCell id="inc_fcast" value="&lt;&lt;include&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;endArrow=open;endFill=0;" edge="1" source="uc_forecast" target="uc_mlforecast" parent="boundary"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>

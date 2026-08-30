@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="680" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SellWise - DFD Level 0 (Context Diagram)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="200" y="20" width="700" height="40" as="geometry"/></mxCell>
+    <!-- External Entity: User -->
+    <mxCell id="user" value="Owner / Manager / Employee" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="60" y="300" width="170" height="70" as="geometry"/></mxCell>
+    <!-- Central Process -->
+    <mxCell id="system" value="SellWise System" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="440" y="260" width="220" height="140" as="geometry"/></mxCell>
+    <!-- External Entity: DB -->
+    <mxCell id="db" value="SQL Server Database" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="870" y="240" width="150" height="70" as="geometry"/></mxCell>
+    <!-- External Entity: ML -->
+    <mxCell id="ml" value="Python ML Service (Prophet)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="870" y="380" width="150" height="70" as="geometry"/></mxCell>
+    <!-- User --> System -->
+    <mxCell id="e1" value="Login, Orders, Inventory CRUD" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" edge="1" source="user" target="system" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- System --> User -->
+    <mxCell id="e2" value="Reports, Alerts, Forecasts, KPIs" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.65;exitDx=0;exitDy=0;entryX=1;entryY=0.65;entryDx=0;entryDy=0;" edge="1" source="system" target="user" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- System --> DB -->
+    <mxCell id="e3" value="Read / Write Data" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="system" target="db" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- DB --> System -->
+    <mxCell id="e4" value="Stored Records" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="db" target="system" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- System --> ML -->
+    <mxCell id="e5" value="90-day Sales History" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" source="system" target="ml" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <!-- ML --> System -->
+    <mxCell id="e6" value="30-day Prophet Forecast" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" source="ml" target="system" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
