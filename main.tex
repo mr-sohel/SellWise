@@ -1,0 +1,582 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{titlesec}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinelanguage{json}{
+  morestring=[b]",
+  sensitive=false,
+  breaklines=true,
+  columns=fullflexible,
+  showstringspaces=false
+}
+
+\emergencystretch=2em
+\pdfsuppresswarningpagegroup=1
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\LARGE}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{0.4cm}
+    
+    {\Large \textsc{B.Sc. Engg. Project}}\\[1cm]
+    
+    {\huge \textbf{SELLWISE (Predictive Sales \& Inventory Analytics)}}\\[1.5cm]
+    
+    {\Large Developed by}\\[0.35cm]
+    {\large
+    \begin{tabular}{c}
+        Md. Sohel Rana (ID: 222351083) \\
+        Md. Labu Miah (ID: 222351215) \\
+        Faysal Islam Fahad (ID: 222351133) \\
+        Naushin Sultana Mim (ID: 222351203) \\
+        Milhan Jannat Jarin (ID: 222351125)
+    \end{tabular}}\\[0.8cm]
+    
+    {\Large Supervised by}\\[0.3cm]
+    {\large Humaira Ahmed}\\[0.15cm]
+    {\large Assistant Professor}\\[0.8cm]
+    
+    {\Large Department of Computer Science \& Engineering}\\[0.3cm]
+    {\large (In partial fulfillment of the requirements for the degree of\\
+    Bachelor of Science in Computer Science \& Engineering)}\\[0.8cm]
+    
+    \vfill
+
+    \includegraphics[height=5cm]{safe_diagrams/bubt_logo.png}\\[0.2cm]
+
+    {\Large Department of Computer Science \& Engineering}\\[0.3cm]
+    {\Large Bangladesh University of Business \& Technology (BUBT)}\\[0.3cm]
+    {\large Rupnagar, Mirpur-2, Dhaka-1216, Bangladesh}\\[0.3cm]
+    {\large \today}
+\end{titlepage}
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\pagenumbering{arabic}
+
+\chapter{INTRODUCTION}
+\section{Introduction}
+SellWise is a web application designed to help retail businesses manage their daily operations more effectively. It combines sales processing, inventory management, and customer tracking into one system. Even today, many small and medium-sized shops use paper registers or basic spreadsheets to keep track of their business. These manual methods are slow, prone to mistakes, and difficult to manage as the business grows. SellWise replaces these older methods with a reliable digital system to keep operations organized.
+
+In addition to handling daily transactions, SellWise uses machine learning to predict how much of a product will be needed in the upcoming weeks. The system is divided into two main parts: an ASP.NET Core web application that manages users and sales, and a separate Python service that runs the demand forecasting. Keeping these two parts separate ensures that the main website remains fast and responsive, even when complex calculations are happening in the background.
+
+\section{Project overview}
+This project provides a practical and affordable software solution for small to medium-sized retail shops. It is built with a simple user interface so that shop owners and employees can use it without needing advanced technical skills. 
+
+SellWise uses a multi-tenant design, which means that each shop gets its own secure workspace and data from different stores is kept completely separate. By handling the difficult tasks of record-keeping, tracking stock, and predicting future sales, the system allows shop owners to focus on growing their business instead of managing paperwork.
+
+\section{Problem Statement}
+Without proper management software, small businesses face several common problems. Depending on manual records or disconnected tools usually leads to:
+\begin{itemize}
+    \item \textbf{Inventory Issues:} Shops often tie up their money by overstocking items that are not selling well, or they run out of popular items and lose potential sales.
+    \item \textbf{Losing Customers:} Because store owners cannot easily track what customers are buying over time, they often fail to notice when a regular customer stops visiting.
+    \item \textbf{Scattered Information:} Keeping sales records in one place and inventory in another makes it very difficult to calculate the actual profit or loss of the business.
+    \item \textbf{No Future Planning:} Traditional methods only show what has already happened. Owners do not have the tools to predict what products they will need to order for the next month.
+\end{itemize}
+
+\section{Motivation}
+Seeing the struggles that small shop owners face every day motivated us to build SellWise. We wanted to create a system that brings advanced analytics to small businesses. Our main motivations are to:
+\begin{itemize}
+    \item Give shop owners a clear, single dashboard to monitor their entire business.
+    \item Help businesses plan their inventory accurately by forecasting future demand.
+    \item Track customer buying habits automatically to improve customer service.
+    \item Provide an affordable and efficient alternative to manual record-keeping.
+    \item Prevent data loss and the calculation errors that frequently occur with paper records.
+\end{itemize}
+
+\section{Objectives}
+\begin{itemize}
+    \item Build a responsive and easy-to-use web platform for managing sales and stock.
+    \item Implement a machine learning model to forecast product demand for the next 30 days.
+    \item Ensure that database transactions are processed safely, so inventory data is never corrupted during a sale.
+    \item Automatically group customers based on their purchase history using the RFM (Recency, Frequency, Monetary) method.
+    \item Create an automated alert system that warns managers when a product's stock is running low.
+    \item Generate downloadable PDF reports that summarize daily and monthly sales.
+    \item Reduce the amount of manual paperwork required to run a shop.
+\end{itemize}
+
+\section{Development Tools}
+SellWise is built using a combination of a relational database, a web framework, and a machine learning service.
+\begin{itemize}
+    \item \textbf{Technology:}
+    \begin{itemize}
+        \item SQL Server (running in Docker) for the database.
+        \item ASP.NET Core 10 MVC for the main web application.
+        \item FastAPI (Python) for the machine learning API.
+        \item Meta Prophet for time-series forecasting.
+        \item Entity Framework Core 10 for database interactions.
+    \end{itemize}
+    \item \textbf{Languages:}
+    \begin{itemize}
+        \item C\#
+        \item Python
+        \item HTML5, CSS3 (Bootstrap 5), and JavaScript
+        \item SQL
+    \end{itemize}
+\end{itemize}
+
+\section{Proposed System}
+The proposed system includes three main types of users: Business Owner, Store Manager, and Employee. Users log into the system with their email and password. A single owner account can manage multiple store locations from one place.
+
+The \textbf{Owner} has full control over all settings and reports. The \textbf{Manager} can process sales, check inventory levels, and view business analytics. The \textbf{Employee} is only allowed to process sales orders and view the product list.
+
+When an order is placed, the system immediately checks the inventory. If the stock is too low, it prevents the sale or shows a warning. At the same time, a background service looks at past sales data to predict future demand, which is displayed on the owner's dashboard.
+
+\section{Purpose Of The System}
+Many small shop owners know they need better software, but they cannot afford the expensive systems used by large companies. The purpose of SellWise is to make these advanced tools accessible to small businesses.
+
+By putting the point-of-sale, customer tracking, and inventory management into one application, owners do not have to switch between different programs. The system handles the complex math—like figuring out which customers are the most loyal and predicting what will sell next month—so small businesses have a better chance to compete and grow.
+
+\section{Goal}
+The main goal of this project is to create an easy-to-use system that makes running a retail shop much more efficient. Another important goal is to improve how owners make decisions by giving them accurate data and future predictions. Ultimately, we want to provide a reliable online platform so that business owners can check their store's performance from anywhere at any time.
+
+\chapter{EXISTING SYSTEM}
+
+\section{Introduction}
+Using technology is now essential for a business to grow. While many local shops still use manual methods, using proper software increases speed and reduces mistakes. This chapter analyzes existing retail software to understand what features are necessary. It also looks at the tools currently available in the market to identify their limitations, especially why small shops often avoid using them.
+
+\section{Existing System}
+We examined several popular retail management systems. The details are discussed below.
+
+\subsection{Shopify Analytics}
+Shopify is a well-known e-commerce platform that includes built-in analytics. It helps sellers track their sales, website visitors, and inventory.
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Very easy to use with clear dashboard designs.
+    \item Connects online stores with physical point-of-sale systems.
+    \item Tracks inventory and sends basic low-stock warnings.
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item The more advanced analytics features require expensive monthly plans.
+    \item It does not have built-in machine learning to predict future product demand.
+    \item Users often have to buy third-party apps to get all the features they need.
+\end{itemize}
+
+\subsection{Square for Retail}
+Square provides a popular point-of-sale system for small businesses that includes basic inventory and reporting features.
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item The basic point-of-sale and inventory tracking software is free.
+    \item Provides reliable sales reports and history.
+    \item Keeps a directory of customers and what they have bought.
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item Detailed analytics are only available if you pay for the Square Analytics upgrade.
+    \item It does not predict future sales trends automatically.
+    \item It can be difficult to manage multiple store locations using the free version.
+\end{itemize}
+
+\subsection{Lightspeed Retail}
+Lightspeed is a more advanced retail system made for detailed inventory management and data analysis.
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item Very detailed inventory tracking, which is great for stores with multiple branches.
+    \item Provides excellent custom reports and sales analytics.
+    \item Includes tools for managing suppliers and creating purchase orders.
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item The price is generally too high for small startups.
+    \item It lacks machine learning tools for automated demand forecasting.
+    \item The system is complex, meaning it takes a lot of time to set up and train staff.
+\end{itemize}
+
+\section{Supporting Literature}
+
+\subsection{Used Diagram}
+
+\textbf{Entity Relationship Diagram (ERD)}\\
+An Entity-Relationship model shows the logical structure of a database using a diagram. It acts as a blueprint for how data is stored. The main parts are:
+\begin{itemize}
+    \item \textbf{Entity:} An object or concept (like a User or Product) stored in the database. In a database, this is usually a table.
+    \item \textbf{Attribute:} The details or properties that describe the entity.
+    \item \textbf{Relationship:} Shown as a diamond shape, this describes how different entities interact with each other (for example, a Customer makes an Order).
+\end{itemize}
+
+\textbf{Data Flow Diagram (DFD)}\\
+A Data Flow Diagram shows how data moves through a system. It shows where the data comes from, where it goes, and where it is stored. The main parts are:
+\begin{itemize}
+    \item \textbf{Process:} An action that takes input data and changes it into output data.
+    \item \textbf{Data Flow:} The path the data takes between processes and storage.
+    \item \textbf{Data Store:} A place where data is kept so it can be used later.
+    \item \textbf{External Entity:} People or other systems outside the software that send or receive data.
+\end{itemize}
+
+\textbf{Use Case Diagram}\\
+A Use Case Diagram gives a simple overview of what the system does from the user's point of view. It shows how people interact with the software.
+\begin{itemize}
+    \item \textbf{System:} The boundary that contains all the actions the software can perform.
+    \item \textbf{Actors:} The people (like the Owner or Manager) who use the system.
+\end{itemize}
+
+\subsection{Technology Used}
+To build SellWise, we used ASP.NET Core for the web application, HTML, CSS, and JavaScript for the user interface, and Python for the machine learning features.
+\begin{itemize}
+    \item \textbf{ASP.NET Core MVC:} This framework was used to build the main website. It separates the database code (Model), the user interface (View), and the logic (Controller).
+    \item \textbf{Entity Framework Core:} This tool allows us to interact with the SQL Server database using C\# code instead of writing complex SQL queries.
+    \item \textbf{Python FastAPI:} We used this fast web framework to create the machine learning service as a separate API.
+    \item \textbf{Meta Prophet:} An open-source forecasting tool used to predict future sales based on past data.
+    \item \textbf{Bootstrap 5 \& Chart.js:} These tools were used to make the website look good on all devices and to draw the graphs on the dashboard.
+\end{itemize}
+
+\section{Conclusion}
+While there are many software options for retail management, most of them are either too basic or too expensive and complicated. SellWise fills this gap by offering advanced features—like predicting sales and grouping loyal customers—in a package that is simple and affordable for small businesses.
+
+\chapter{SYSTEM EVALUATION}
+
+\section{Introduction}
+Retail management software covers many areas, from simply recording sales to complex online reporting. After seeing what was missing in basic software, we built SellWise using modern web tools and machine learning. By combining sales records, inventory warnings, and future predictions into one system, we aim to give shop owners tools that are easy to use and actually help them make better business choices.
+
+\section{Requirement Analysis}
+Requirement Analysis is the process of defining exactly what the software needs to do before starting to build it. It makes sure the final product meets the users' needs.
+
+\subsection{Non-Functional Requirements}
+Non-functional requirements describe how well the system should perform its tasks:
+\begin{itemize}
+    \item \textbf{Performance:} The dashboard must load quickly, and saving an order should take only a few seconds.
+    \item \textbf{Security:} Passwords must be encrypted, and users can only access pages allowed by their specific role (Owner, Manager, or Employee).
+    \item \textbf{Reliability:} If the system crashes while an order is being saved, the database must not be corrupted.
+    \item \textbf{Manageability:} The code should be organized so that it is easy to update in the future.
+    \item \textbf{Usability:} The website must adapt to different screen sizes, working well on both computers and mobile phones.
+\end{itemize}
+
+\subsection{Functional Requirements}
+Functional requirements list the specific features the system must have:
+\begin{itemize}
+    \item Users must be able to register, log in, and log out.
+    \item The system must allow users to add, edit, and delete products.
+    \item Users can add items to a cart and complete a sales order.
+    \item The system must have a dashboard showing sales statistics and graphs.
+    \item The dashboard must show predicted future demand for products.
+    \item The system must alert the user when a product is running low on stock.
+    \item The system must save customer details and calculate their loyalty score.
+    \item Users must be able to download sales reports as PDF files.
+\end{itemize}
+
+\section{Methodology}
+
+\subsection{Agile Development Model}
+For this project, we used the Agile Development Model. Agile focuses on building the software in small, manageable pieces and making improvements based on testing and feedback.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.82\textwidth,height=0.5\textheight,keepaspectratio]{safe_diagrams/agile.png}
+    \caption{Agile Development Cycle}
+\end{figure}
+
+\textbf{Reasons for choosing the Agile Model:}
+\begin{itemize}
+    \item It allows us to build and test features one by one, making it easier to fix mistakes early.
+    \item It is flexible, so if we needed to change a requirement during development, we could do so easily.
+    \item It encourages regular communication and testing throughout the project.
+    \item Bugs are found and fixed during the development cycle rather than waiting until the very end.
+\end{itemize}
+
+\clearpage
+\subsection{Gantt Chart}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{safe_diagrams/gantt_chart.svg}
+    \caption{Project Gantt Chart}
+\end{figure}
+
+\subsection{Data Flow Diagram}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{safe_diagrams/dfd_level0.svg}
+    \caption{Context Level DFD (Level 0)}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{safe_diagrams/dfd_level1.svg}
+    \caption{Level 1 Data Flow Diagram}
+\end{figure}
+
+\subsection{ER Diagram}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/ER Diagram.drawio.pdf"}
+    \caption{Entity Relationship Diagram}
+\end{figure}
+
+\textbf{Key Tables:}
+\begin{itemize}
+    \item Users and Stores: User, Store, StoreMember
+    \item Sales Data: Product, Order, OrderItem
+    \item Other Records: Customer, Expense, InventoryAlert, Forecast
+\end{itemize}
+
+\subsection{Use Case Diagram}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/USE CASE Digram.drawio.pdf"}
+    \caption{Use Case Diagram}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Owner:} Can manage staff, view the dashboard, switch between stores, and download reports.
+    \item \textbf{Manager:} Can process orders, update inventory, and manage customer profiles.
+    \item \textbf{Employee:} Can only process sales and look at the product list.
+\end{itemize}
+
+\subsection{Activity Diagram}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/Activity Diagram.drawio.pdf"}
+    \caption{Activity Diagram for Order Processing}
+\end{figure}
+
+\textbf{How an order is processed:}\\
+The user clicks "Create Order" $\rightarrow$ Adds items to the cart $\rightarrow$ Selects a customer $\rightarrow$ Submits the form $\rightarrow$ The system starts a database transaction $\rightarrow$ It checks if there is enough stock $\rightarrow$ If yes, it reduces the stock and saves the order $\rightarrow$ The transaction is completed successfully.
+
+\subsection{Sequence Diagram}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/Sequence Diagram.drawio.pdf"}
+    \caption{Sequence Diagram for the Dashboard}
+\end{figure}
+
+\textbf{How the dashboard loads data:}\\
+The browser requests the dashboard page $\rightarrow$ AnalyticsService checks the database for past sales $\rightarrow$ It checks if a recent forecast is saved $\rightarrow$ If not, it sends a request to the Python ML Service $\rightarrow$ Python calculates the prediction and sends it back $\rightarrow$ AnalyticsService saves the new prediction $\rightarrow$ The dashboard is displayed to the user.
+
+\subsection{Class Diagram}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/Class Diagram.drawio.pdf"}
+    \caption{Class Diagram}
+\end{figure}
+
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \setlength{\parskip}{0pt}
+    \setlength{\topsep}{4pt}
+    \item \textbf{BaseController:} Checks which store the user is currently logged into.
+    \item \textbf{DashboardController and OrderController:} Use the BaseController to ensure data is saved to the correct store.
+    \item \textbf{AnalyticsService:} Does the math for the dashboard statistics.
+    \item \textbf{ForecastService:} Communicates with the Python machine learning program.
+\end{itemize}
+
+\subsection{Database Design}
+Important tables in our database include:
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \setlength{\parskip}{0pt}
+    \setlength{\topsep}{4pt}
+    \item \textbf{Products:} Keeps track of the product name, price, and how many are in stock.
+    \item \textbf{Orders:} Saves the total price and date of a sale.
+    \item \textbf{OrderItems:} Connects an Order to specific Products and records the quantity sold.
+    \item \textbf{Customers:} Saves customer contact details and their calculated loyalty scores.
+\end{itemize}
+
+
+\chapter{DESIGN IMPLEMENTATION}
+
+\section{User Section}
+In our system, users are divided into three roles to control what they can do:
+\begin{itemize}
+    \item Owner
+    \item Manager
+    \item Employee
+\end{itemize}
+
+Below are the details of how the main features were implemented in the background.
+
+\subsection{Database Connection}
+The application connects to the SQL Server database using Entity Framework Core. The connection details are safely stored in the \texttt{appsettings.json} file.
+\begin{lstlisting}[language=json, basicstyle=\small\ttfamily, backgroundcolor=\color{lightgray!20}]
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=SellWise;
+    User Id=sa;Password=YourPass123!;TrustServerCertificate=True;"
+  }
+}
+\end{lstlisting}
+
+\subsection{Authentication}
+When a user logs in, ASP.NET Core Identity checks their password. If it is correct, the system saves their Store ID in a secure cookie. This makes sure that the user only sees data belonging to their specific store.
+
+\subsection{Order Processing}
+To prevent errors when selling items, the system uses database transactions. This means that deducting the stock from the inventory and saving the payment record happen together. If an error occurs midway, the system cancels the whole process so the database does not get corrupted.
+
+\subsection{Inventory Alerts}
+A background task constantly checks the quantity of every product. If a product's stock drops below a set minimum limit, the system automatically creates a warning alert. When new stock is added, the alert is automatically cleared.
+
+\subsection{Customer Segmentation (RFM)}
+SellWise automatically calculates a score for each customer using the RFM model: Recency (when they last bought), Frequency (how often they buy), and Monetary (how much they spend). Based on this score, customers are grouped into categories like "Loyal" or "At Risk".
+
+\subsection{Machine Learning Forecasting}
+We created a separate Python program (microservice) to handle predictions. It uses a library called Prophet to look at past sales and predict what will sell in the next 30 days. The C\# web application asks this Python service for the prediction and then displays it on the dashboard.
+
+\section{Conclusions}
+A few important design choices helped make the system stable:
+\begin{enumerate}
+    \item Writing the business calculations in separate "Service" files kept the main web code clean and easy to read.
+    \item Using database transactions for orders completely prevented issues where stock numbers did not match the sales records.
+    \item Checking the Store ID for every database request ensured that data from one shop never mixed with another.
+    \item Adding a backup calculation method means the dashboard still works even if the Python prediction service is turned off.
+\end{enumerate}
+
+
+\chapter{TESTING}
+
+\section{Testing}
+Testing is the process of running the software with test data to check if it works exactly as it is supposed to. During testing, we try to find errors so they can be fixed before the software is given to the final users.
+
+\section{Validation Criteria}
+The system was checked against the following rules:
+\begin{itemize}
+    \item User inputs must be checked for mistakes before being saved to the database.
+    \item The design and colors of the website must look consistent on every page.
+    \item If the system crashes during an update, the database must not be corrupted.
+\end{itemize}
+
+\section{Importance of Testing}
+Testing is very important because it ensures the system is reliable. Finding and fixing bugs during the testing phase prevents the software from crashing when the shop owner is using it to run their business.
+
+\section{Structural Testing}
+Structural testing checks the internal code of the software. We reviewed the code to ensure that important database actions are placed inside \texttt{try-catch} blocks. This prevents the website from crashing completely if an error happens.
+
+\section{Functional Testing}
+Functional testing involves testing the features from the user's perspective. We manually tested logging in, adding products to the cart, processing orders, and checking if the dashboard numbers correctly updated after a sale.
+
+\section{Acceptance Test Generation}
+To see how the system handles a lot of data, we wrote a script to generate test data. We created two fake stores, added hundreds of customers, and generated 180 days of past orders. This helped us see how the system would perform in a real-world scenario.
+
+\section{Unit Testing}
+Unit testing focuses on checking small, individual parts of the code. For example, we tested the math behind the customer loyalty (RFM) calculation and the code that reads the prediction from the Python service to ensure they gave the correct results.
+
+\section{Integration Testing}
+Integration testing checks how different parts of the system work together. We specifically tested the connection between the main C\# web application and the Python machine learning service to make sure they communicated properly.
+
+\section{Test Data Used}
+\begin{itemize}
+    \item \textbf{Live Test Data:} We manually typed in real examples of products and sales to test the website forms.
+    \item \textbf{Artificial Test Data:} We used automated scripts to enter thousands of fake orders to test if the database slowed down.
+\end{itemize}
+
+\section{Test Cases}
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{6cm}|l|l|}
+\hline
+\textbf{Module} & \textbf{Test Case Scenarios} & \textbf{Tested} & \textbf{Working} \\
+\hline
+Authentication & 1. Check login with correct password\newline 2. Check account locks after 5 wrong attempts\newline 3. Check if user is restricted to their own store & Yes & Yes \\
+\hline
+Dashboard & 1. Verify the sales statistics are correct\newline 2. Check if the graphs show the right data & Yes & Yes \\
+\hline
+POS Orders & 1. Check adding and removing items in the cart\newline 2. Verify an order cannot be placed without enough stock\newline 3. Verify the transaction cancels safely on error & Yes & Yes \\
+\hline
+Products & 1. Test adding, editing, and deleting a product\newline 2. Check if low stock alerts appear correctly & Yes & Yes \\
+\hline
+Customers & 1. Verify the loyalty score calculation is accurate\newline 2. Verify customers are assigned the correct group & Yes & Yes \\
+\hline
+\end{tabular}
+\caption{Test Cases and Results}
+\end{table}
+
+\section{Testing Result}
+The login system worked perfectly, showing warnings for wrong passwords and locking the account after too many tries. The order processing system also worked safely, correctly deducting stock only when the sale was finalized.
+
+\section{Testing Summary}
+We tested all the pages available to the Owner, Manager, and Employee. We checked the login process, order creation, and report generation. After finding and fixing a few minor display issues, the project passed all tests and is working smoothly.
+
+
+\chapter{USER MANUAL}
+
+\section{Introduction}
+SellWise provides a complete set of tools to manage a retail shop. Because it is a web application, it is flexible and can be accessed from anywhere, making it easy to monitor sales and inventory.
+
+\section{System Requirements}
+
+\subsection{Hardware Requirements}
+\begin{itemize}
+    \item \textbf{Operating System:} Windows 10/11, macOS, or Linux.
+    \item \textbf{Processor:} Standard Dual-Core processor.
+    \item \textbf{RAM:} Minimum 4GB (8GB recommended if running the database locally).
+    \item \textbf{Storage:} 128GB of storage space.
+    \item \textbf{Network:} An internet connection is required.
+\end{itemize}
+
+\subsection{Software Requirements}
+\begin{itemize}
+    \item \textbf{Browser:} Google Chrome, Mozilla Firefox, or Microsoft Edge.
+    \item \textbf{Docker:} Docker Desktop is needed to run the SQL database.
+    \item \textbf{Python:} Python 3.11 or higher is needed to run the machine learning service.
+\end{itemize}
+
+\section{User Interface}
+When you open the system, the first page is the "User Login". You must enter your registered email and password.
+
+After logging in, you will see the \textbf{Dashboard}. This page shows important numbers, sales graphs, and a chart predicting future demand for your products.
+
+To make a sale, go to the \textbf{Orders} section. Here, you can search for products, add them to the cart, select the customer's name, and complete the order.
+
+To manage your stock, go to the \textbf{Products} page. You can add new items or update the prices and quantities of existing items.
+
+The \textbf{Customers} page displays a list of your buyers. It shows their contact information and automatically tells you if they are a loyal customer or a new customer.
+
+\section{Conclusion}
+This chapter explained the basic hardware and software needed to run SellWise. It also provided a quick guide on how to navigate the website. The user interface is designed to be straightforward, so users can learn how to use it very quickly.
+
+
+\chapter{CONCLUSION AND FUTURE WORKS}
+
+\section{Conclusion}
+The SellWise project was created to solve a real problem: small shop owners need better software to manage their business, but existing tools are often too complicated or expensive. Throughout this project, we successfully built a complete web application that handles point-of-sale operations, tracks inventory, automatically groups customers, and predicts future sales using machine learning.
+
+Building this system showed the importance of keeping the design simple and separating the complex parts. By keeping the Python prediction code separate from the main C\# website, we made sure the application runs fast while still providing advanced features.
+
+\section{Outcomes}
+\begin{itemize}
+    \item Shop owners can now see all their business data in one place, which saves a lot of time compared to writing things down on paper.
+    \item The machine learning predictions help owners know what to restock, preventing them from running out of popular items.
+    \item The automatic customer grouping helps owners easily see who their best customers are.
+    \item The safe order processing ensures that inventory numbers always match the actual sales.
+    \item Automatic alerts warn the manager before an item completely runs out of stock.
+\end{itemize}
+
+\section{Current Limitations}
+While the system works well, there are a few limitations to keep in mind:
+\begin{itemize}
+    \item The prediction feature only uses one specific machine learning model (Prophet). It does not test other models to see if they might be more accurate.
+    \item The system requires a network connection to work. There is currently no offline mode if the internet goes down.
+    \item A single store can only use one type of currency, which might be an issue for shops near international borders.
+\end{itemize}
+
+\section{Future Works}
+There are several improvements we plan to add in the future:
+\begin{itemize}
+    \item \textbf{Email Marketing:} We want to connect the system to email services so owners can automatically send discount codes to their loyal customers.
+    \item \textbf{Mobile App:} Building an Android or iOS app would allow managers to check their store's performance from their phones, and could include an offline mode.
+    \item \textbf{Cloud Hosting:} Moving the database and website to a cloud service like AWS or Azure would make the system more reliable and easier to set up for new users.
+\end{itemize}
+
+\end{document}
