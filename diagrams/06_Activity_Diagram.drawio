@@ -1,286 +1,276 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1500" math="0" shadow="0">
   <root>
-    <mxCell id="0"/>
-    <mxCell id="1" parent="0"/>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
 
-    <!-- Title -->
+    
     <mxCell id="title" value="SellWise – Activity Diagram: Order Creation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="100" y="15" width="900" height="35" as="geometry"/>
+      <mxGeometry x="100" y="15" width="900" height="35" as="geometry" />
     </mxCell>
 
-    <!-- ======================== SWIMLANE HEADERS ======================== -->
-    <!-- Lane 1: User (Browser) -->
+    
+    
     <mxCell id="lane1_header" value="User (Browser)" style="text;html=1;strokeColor=#336791;fillColor=#dae8fc;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;rounded=0;" vertex="1" parent="1">
-      <mxGeometry x="20" y="60" width="300" height="40" as="geometry"/>
+      <mxGeometry x="20" y="60" width="300" height="40" as="geometry" />
     </mxCell>
     <mxCell id="lane1_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#336791;opacity=50;" vertex="1" parent="1">
-      <mxGeometry x="20" y="100" width="300" height="1330" as="geometry"/>
+      <mxGeometry x="20" y="100" width="300" height="1330" as="geometry" />
     </mxCell>
 
-    <!-- Lane 2: Web Server (ASP.NET) -->
+    
     <mxCell id="lane2_header" value="Web Server (ASP.NET Core)" style="text;html=1;strokeColor=#336791;fillColor=#d5e8d4;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;rounded=0;" vertex="1" parent="1">
-      <mxGeometry x="320" y="60" width="420" height="40" as="geometry"/>
+      <mxGeometry x="320" y="60" width="420" height="40" as="geometry" />
     </mxCell>
     <mxCell id="lane2_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0fff0;strokeColor=#336791;opacity=50;" vertex="1" parent="1">
-      <mxGeometry x="320" y="100" width="420" height="1330" as="geometry"/>
+      <mxGeometry x="320" y="100" width="420" height="1330" as="geometry" />
     </mxCell>
 
-    <!-- Lane 3: Database (SQL Server) -->
+    
     <mxCell id="lane3_header" value="Database (SQL Server)" style="text;html=1;strokeColor=#336791;fillColor=#fff2cc;align=center;verticalAlign=middle;fontStyle=1;fontSize=13;rounded=0;" vertex="1" parent="1">
-      <mxGeometry x="740" y="60" width="330" height="40" as="geometry"/>
+      <mxGeometry x="740" y="60" width="330" height="40" as="geometry" />
     </mxCell>
     <mxCell id="lane3_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fffdf0;strokeColor=#336791;opacity=50;" vertex="1" parent="1">
-      <mxGeometry x="740" y="100" width="330" height="1330" as="geometry"/>
+      <mxGeometry x="740" y="100" width="330" height="1330" as="geometry" />
     </mxCell>
 
-    <!-- ======================== NODES ======================== -->
+    
 
-    <!-- Start -->
+    
     <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#ffffff;" vertex="1" parent="1">
-      <mxGeometry x="145" y="130" width="40" height="40" as="geometry"/>
+      <mxGeometry x="145" y="130" width="40" height="40" as="geometry" />
     </mxCell>
 
-    <!-- A1: User opens Orders page -->
+    
     <mxCell id="a1" value="Navigate to Orders &amp; Click Create Order" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="60" y="200" width="210" height="50" as="geometry"/>
+      <mxGeometry x="60" y="200" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- A2: Server renders Create Order form -->
+    
     <mxCell id="a2" value="Render Create Order Form" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="390" y="200" width="210" height="50" as="geometry"/>
+      <mxGeometry x="390" y="200" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- A3: User searches and adds products to cart -->
+    
     <mxCell id="a3" value="Search Products &amp; Add to Cart" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="60" y="300" width="210" height="50" as="geometry"/>
+      <mxGeometry x="60" y="300" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- D1: More items? -->
+    
     <mxCell id="d1" value="More items?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="80" y="390" width="170" height="60" as="geometry"/>
+      <mxGeometry x="80" y="390" width="170" height="60" as="geometry" />
     </mxCell>
 
-    <!-- A4: User selects customer and submits order -->
+    
     <mxCell id="a4" value="Select Customer (Optional) &amp; Submit Order" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="60" y="500" width="210" height="50" as="geometry"/>
+      <mxGeometry x="60" y="500" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- A5: Server validates form input -->
+    
     <mxCell id="a5" value="Validate Form Input" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="390" y="500" width="210" height="50" as="geometry"/>
+      <mxGeometry x="390" y="500" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- D2: Valid input? -->
+    
     <mxCell id="d2" value="Valid Input?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="415" y="590" width="160" height="60" as="geometry"/>
+      <mxGeometry x="415" y="590" width="160" height="60" as="geometry" />
     </mxCell>
 
-    <!-- A6: Show validation error to user -->
+    
     <mxCell id="a6" value="Display Validation Error" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="60" y="600" width="190" height="45" as="geometry"/>
+      <mxGeometry x="60" y="600" width="190" height="45" as="geometry" />
     </mxCell>
 
-    <!-- A7: Begin DB Transaction -->
+    
     <mxCell id="a7" value="Begin Database Transaction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="390" y="700" width="210" height="50" as="geometry"/>
+      <mxGeometry x="390" y="700" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- A8: Query stock levels -->
+    
     <mxCell id="a8" value="Query Stock Levels for All Items" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="780" y="700" width="210" height="50" as="geometry"/>
+      <mxGeometry x="780" y="700" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- D3: Stock sufficient? -->
+    
     <mxCell id="d3" value="Stock Sufficient?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="415" y="795" width="160" height="60" as="geometry"/>
+      <mxGeometry x="415" y="795" width="160" height="60" as="geometry" />
     </mxCell>
 
-    <!-- A9: Rollback transaction -->
+    
     <mxCell id="a9" value="Rollback Transaction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="780" y="805" width="210" height="45" as="geometry"/>
+      <mxGeometry x="780" y="805" width="210" height="45" as="geometry" />
     </mxCell>
 
-    <!-- A10: Show stock error -->
+    
     <mxCell id="a10" value="Display Insufficient Stock Error" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="60" y="805" width="210" height="45" as="geometry"/>
+      <mxGeometry x="60" y="805" width="210" height="45" as="geometry" />
     </mxCell>
 
-    <!-- A11: Deduct stock and save order -->
+    
     <mxCell id="a11" value="Deduct Stock &amp; Save Order Record" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="780" y="905" width="210" height="50" as="geometry"/>
+      <mxGeometry x="780" y="905" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- A12: Commit Transaction -->
+    
     <mxCell id="a12" value="Commit Transaction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="390" y="1005" width="210" height="50" as="geometry"/>
+      <mxGeometry x="390" y="1005" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- A13: Update Inventory Alerts -->
-    <mxCell id="a13" value="Update Inventory Alerts &amp; RFM Score" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="780" y="1005" width="210" height="50" as="geometry"/>
+    
+    <mxCell id="a14" value="Redirect to Orders List (Index)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="390" y="1105" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- A14: Redirect to Order Details -->
-    <mxCell id="a14" value="Redirect to Order Details Page" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="390" y="1105" width="210" height="50" as="geometry"/>
-    </mxCell>
-
-    <!-- A15: User views order confirmation -->
+    
     <mxCell id="a15" value="View Order Confirmation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="60" y="1105" width="210" height="50" as="geometry"/>
+      <mxGeometry x="60" y="1105" width="210" height="50" as="geometry" />
     </mxCell>
 
-    <!-- End -->
+    
     <mxCell id="end_inner" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#ffffff;" vertex="1" parent="1">
-      <mxGeometry x="152" y="1210" width="36" height="36" as="geometry"/>
+      <mxGeometry x="152" y="1210" width="36" height="36" as="geometry" />
     </mxCell>
     <mxCell id="end_outer" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1">
-      <mxGeometry x="145" y="1203" width="50" height="50" as="geometry"/>
+      <mxGeometry x="145" y="1203" width="50" height="50" as="geometry" />
     </mxCell>
 
-    <!-- ======================== EDGES ======================== -->
+    
 
-    <!-- Start to A1 -->
+    
     <mxCell id="e_s_a1" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="start" target="a1" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A1 to A2: User navigates → Server renders form -->
+    
     <mxCell id="e_a1_a2" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a1" target="a2" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A2 to A3: Form rendered → User searches products -->
+    
     <mxCell id="e_a2_a3" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a2" target="a3" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A3 to D1: User adds product → More items? -->
+    
     <mxCell id="e_a3_d1" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a3" target="d1" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- D1 → A3: Yes, loop back to add more -->
+    
     <mxCell id="e_d1_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" source="d1" target="a3" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="300" y="420"/>
-          <mxPoint x="300" y="300"/>
+          <mxPoint x="300" y="420" />
+          <mxPoint x="300" y="300" />
         </Array>
       </mxGeometry>
     </mxCell>
 
-    <!-- D1 → A4: No, proceed to submit -->
+    
     <mxCell id="e_d1_no" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="d1" target="a4" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A4 to A5: User submits → Server validates -->
+    
     <mxCell id="e_a4_a5" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a4" target="a5" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A5 to D2 -->
+    
     <mxCell id="e_a5_d2" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a5" target="d2" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- D2 → A6: Invalid → show error to user -->
+    
     <mxCell id="e_d2_invalid" value="Invalid" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="d2" target="a6" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A6 → A4: User corrects and resubmits -->
+    
     <mxCell id="e_a6_a4" value="Re-submit" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="a6" target="a4" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="40" y="623"/>
-          <mxPoint x="40" y="525"/>
+          <mxPoint x="40" y="623" />
+          <mxPoint x="40" y="525" />
         </Array>
       </mxGeometry>
     </mxCell>
 
-    <!-- D2 → A7: Valid → Begin transaction -->
+    
     <mxCell id="e_d2_valid" value="Valid" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="d2" target="a7" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A7 to A8: Begin transaction → Query stock -->
+    
     <mxCell id="e_a7_a8" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a7" target="a8" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A8 to D3: Stock query result -->
+    
     <mxCell id="e_a8_d3" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a8" target="d3" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- D3 → A9: No → Rollback -->
+    
     <mxCell id="e_d3_no" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="d3" target="a9" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="730" y="825"/>
-          <mxPoint x="1010" y="825"/>
+          <mxPoint x="730" y="825" />
+          <mxPoint x="1010" y="825" />
         </Array>
       </mxGeometry>
     </mxCell>
 
-    <!-- A9 → A10: Rollback → Show error -->
+    
     <mxCell id="e_a9_a10" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="a9" target="a10" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="780" y="827"/>
-          <mxPoint x="310" y="827"/>
+          <mxPoint x="780" y="827" />
+          <mxPoint x="310" y="827" />
         </Array>
       </mxGeometry>
     </mxCell>
 
-    <!-- A10 → A4: User tries again -->
+    
     <mxCell id="e_a10_a4" value="Try Again" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" source="a10" target="a4" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="165" y="880"/>
-          <mxPoint x="40" y="880"/>
-          <mxPoint x="40" y="550"/>
-          <mxPoint x="60" y="550"/>
+          <mxPoint x="165" y="880" />
+          <mxPoint x="40" y="880" />
+          <mxPoint x="40" y="550" />
+          <mxPoint x="60" y="550" />
         </Array>
       </mxGeometry>
     </mxCell>
 
-    <!-- D3 → A11: Yes → Deduct stock and save -->
+    
     <mxCell id="e_d3_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" source="d3" target="a11" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="495" y="875"/>
-          <mxPoint x="885" y="875"/>
+          <mxPoint x="495" y="875" />
+          <mxPoint x="885" y="875" />
         </Array>
       </mxGeometry>
     </mxCell>
 
-    <!-- A11 to A12: Save → Commit -->
+    
     <mxCell id="e_a11_a12" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a11" target="a12" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A12 to A13: Commit → Update alerts and RFM -->
-    <mxCell id="e_a12_a13" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a12" target="a13" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
-    </mxCell>
-
-    <!-- A12 to A14: Commit → Redirect -->
+    
     <mxCell id="e_a12_a14" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a12" target="a14" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A14 to A15: Redirect → User views confirmation -->
+    
     <mxCell id="e_a14_a15" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a14" target="a15" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- A15 to End -->
+    
     <mxCell id="e_a15_end" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="a15" target="end_inner" parent="1">
-      <mxGeometry relative="1" as="geometry"/>
+      <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
   </root>
