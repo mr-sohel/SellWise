@@ -21,6 +21,33 @@
   showstringspaces=false
 }
 
+\lstdefinestyle{chaptercode}{
+  basicstyle=\footnotesize\ttfamily\color{black},
+  keywordstyle=\bfseries\color{black},
+  commentstyle=\itshape\color{black},
+  stringstyle=\color{black},
+  backgroundcolor=\color{white},
+  frame=single,
+  rulecolor=\color{black},
+  framesep=5pt,
+  breaklines=true,
+  breakatwhitespace=false,
+  breakindent=1.5em,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=4,
+  numbers=left,
+  numberstyle=\tiny\color{black},
+  numbersep=7pt,
+  xleftmargin=1.8em,
+  framexleftmargin=1.4em,
+  aboveskip=0.8em,
+  belowskip=0.8em
+}
+
+\lstset{style=chaptercode}
+
 \emergencystretch=2em
 \pdfsuppresswarningpagegroup=1
 
@@ -57,7 +84,7 @@
     
     \vfill
 
-    \includegraphics[height=5cm]{safe_diagrams/bubt_logo.png}\\[0.2cm]
+    \includegraphics[height=5cm]{diagrams/bubt_logo.png}\\[0.2cm]
 
     {\Large Department of Computer Science \& Engineering}\\[0.3cm]
     {\Large Bangladesh University of Business \& Technology (BUBT)}\\[0.3cm]
@@ -286,7 +313,7 @@ For this project, we used the Agile Development Model. Agile focuses on building
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.82\textwidth,height=0.5\textheight,keepaspectratio]{safe_diagrams/agile.png}
+    \includegraphics[width=0.82\textwidth,height=0.5\textheight,keepaspectratio]{diagrams/agile.png}
     \caption{Agile Development Cycle}
 \end{figure}
 
@@ -302,27 +329,27 @@ For this project, we used the Agile Development Model. Agile focuses on building
 \subsection{Gantt Chart}
 \begin{figure}[H]
     \centering
-    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{safe_diagrams/gantt_chart.svg}
+    \includesvg[inkscapelatex=false,width=0.8\textwidth,height=0.4\textheight,keepaspectratio]{diagrams/gantt_chart.svg}
     \caption{Project Gantt Chart}
 \end{figure}
 
 \subsection{Data Flow Diagram}
 \begin{figure}[H]
     \centering
-    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{safe_diagrams/dfd_level0.svg}
+    \includesvg[inkscapelatex=false,width=0.78\textwidth,height=0.4\textheight,keepaspectratio]{diagrams/dfd_level0.svg}
     \caption{Context Level DFD (Level 0)}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{safe_diagrams/dfd_level1.svg}
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{diagrams/dfd_level1.svg}
     \caption{Level 1 Data Flow Diagram}
 \end{figure}
 
 \subsection{ER Diagram}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/ER Diagram.drawio.pdf"}
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"diagrams/ER Diagram.drawio.pdf"}
     \caption{Entity Relationship Diagram}
 \end{figure}
 
@@ -336,7 +363,7 @@ For this project, we used the Agile Development Model. Agile focuses on building
 \subsection{Use Case Diagram}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/USE CASE Digram.drawio.pdf"}
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"diagrams/USE CASE Digram.drawio.pdf"}
     \caption{Use Case Diagram}
 \end{figure}
 
@@ -349,7 +376,7 @@ For this project, we used the Agile Development Model. Agile focuses on building
 \subsection{Activity Diagram}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/Activity Diagram.drawio.pdf"}
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"diagrams/Activity Diagram.drawio.pdf"}
     \caption{Activity Diagram for Order Processing}
 \end{figure}
 
@@ -359,7 +386,7 @@ The user clicks "Create Order" $\rightarrow$ Adds items to the cart $\rightarrow
 \subsection{Sequence Diagram}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/Sequence Diagram.drawio.pdf"}
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"diagrams/Sequence Diagram.drawio.pdf"}
     \caption{Sequence Diagram for the Dashboard}
 \end{figure}
 
@@ -369,7 +396,7 @@ The browser requests the dashboard page $\rightarrow$ AnalyticsService checks th
 \subsection{Class Diagram}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"safe_diagrams/Class Diagram.drawio.pdf"}
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{"diagrams/Class Diagram.drawio.pdf"}
     \caption{Class Diagram}
 \end{figure}
 
@@ -408,9 +435,10 @@ In our system, users are divided into three roles to control what they can do:
 
 Below are the details of how the main features were implemented in the background.
 
+\noindent\begin{minipage}{\textwidth}
 \subsection{Database Connection}
 The application connects to the SQL Server database using Entity Framework Core. The connection details are safely stored in the \texttt{appsettings.json} file.
-\begin{lstlisting}[language=json, basicstyle=\small\ttfamily, backgroundcolor=\color{lightgray!20}]
+\begin{lstlisting}[language=json]
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost,1433;Database=SellWise;
@@ -418,21 +446,354 @@ The application connects to the SQL Server database using Entity Framework Core.
   }
 }
 \end{lstlisting}
+\end{minipage}
+\vspace{1em}
 
-\subsection{Authentication}
+\subsection{Login and Sign Up}
+The authentication interface provides separate screens for existing users to log in and new users to create an account.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth,height=0.36\textheight,keepaspectratio]{diagrams/login_page.png}\\[0.15cm]
+        \small Login screen
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth,height=0.36\textheight,keepaspectratio]{diagrams/signup_page.png}\\[0.15cm]
+        \small Sign Up screen
+    \end{minipage}
+    \caption{Login and Sign Up User Interfaces}
+\end{figure}
+
+\noindent\begin{minipage}{\textwidth}
+\subsection{Login and Sign Up Backend}
 When a user logs in, ASP.NET Core Identity checks their password. If it is correct, the system saves their Store ID in a secure cookie. This makes sure that the user only sees data belonging to their specific store.
+\begin{lstlisting}[language={[Sharp]C}]
+[HttpPost]
+public async Task<IActionResult> Login(
+    LoginViewModel model)
+{
+    if (!ModelState.IsValid)
+        return View(model);
 
-\subsection{Order Processing}
-To prevent errors when selling items, the system uses database transactions. This means that deducting the stock from the inventory and saving the payment record happen together. If an error occurs midway, the system cancels the whole process so the database does not get corrupted.
+    var result = await _signInManager
+        .PasswordSignInAsync(
+            model.Email!,
+            model.Password!,
+            isPersistent: true,
+            lockoutOnFailure: false);
+
+    if (result.Succeeded)
+    {
+        var user = await _userManager
+            .FindByEmailAsync(model.Email!);
+
+        // Redirect to dashboard
+    }
+
+    return View(model);
+}
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
+
+\subsection{Dashboard}
+The dashboard presents the main sales KPIs, interactive charts, and Prophet-based demand forecasts in one view.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.68\textheight,keepaspectratio]{diagrams/dashboard_page.png}
+    \caption{Dashboard with KPIs, Sales Charts, and Demand Forecasts}
+\end{figure}
+
+\noindent\begin{minipage}{\textwidth}
+\subsection{Dashboard Backend}
+The analytics service calculates today's revenue, order counts, and pending orders for the active store to display on the dashboard.
+\begin{lstlisting}[language={[Sharp]C}]
+public async Task<(
+    decimal TodayRevenue,
+    int TodayOrdersCount,
+    int PendingOrdersCount)> GetDashboardKpisAsync(
+        Guid storeId)
+{
+    var today = DateTime.UtcNow.Date;
+
+    var kpis = await _db.Orders
+        .Where(o => o.StoreId == storeId)
+        .GroupBy(o => 1)
+        .Select(g => new
+        {
+            TodayRevenue = g
+                .Where(o => o.OrderDate >= today &&
+                            o.Status != "cancelled")
+                .Sum(o => o.Total),
+            TodayOrdersCount = g.Count(
+                o => o.OrderDate >= today),
+            PendingOrdersCount = g.Count(
+                o => o.Status == "pending" ||
+                     o.Status == "processing")
+        })
+        .FirstOrDefaultAsync();
+
+    return (
+        kpis?.TodayRevenue ?? 0m,
+        kpis?.TodayOrdersCount ?? 0,
+        kpis?.PendingOrdersCount ?? 0);
+}
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
+
+\subsection{POS Order Screen}
+The point-of-sale screen allows users to select products, manage the cart, choose a customer, and complete an order.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.68\textheight,keepaspectratio]{diagrams/pos_order_screen.png}
+    \caption{POS Cart and Order Creation Screen}
+\end{figure}
+
+\noindent\begin{minipage}{\textwidth}
+\subsection{Order Processing Backend}
+To prevent errors when selling items, the system uses database transactions. This means that deducting the stock from the inventory and saving the payment record happen together.
+\begin{lstlisting}[language={[Sharp]C}]
+public async Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model)
+{
+    using var transaction = await _db.Database.BeginTransactionAsync();
+    try
+    {
+        Guid? finalCustomerId = model.CustomerId;
+        // ... (customer setup omitted for brevity) ...
+
+        var order = new Order
+        {
+            StoreId = storeId,
+            CustomerId = finalCustomerId,
+            Status = "pending",
+            OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6]}"
+        };
+
+        decimal subtotal = 0;
+        var validItems = model.Items.Where(i => i.ProductId != Guid.Empty && i.Quantity > 0).ToList();
+
+        foreach (var item in validItems)
+        {
+            var product = await _db.Products.FindAsync(item.ProductId);
+            if (product == null || product.StockQuantity < item.Quantity)
+            {
+                await transaction.RollbackAsync();
+                return $"Insufficient stock for {product?.Name ?? "product"}.";
+            }
+            product.StockQuantity -= item.Quantity; // Deduct stock safely
+            // ...
+        }
+        await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return null;
+    }
+    catch (Exception ex)
+    {
+        await transaction.RollbackAsync();
+        return "Failed to place order.";
+    }
+}
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
+
+\subsection{Inventory and Products}
+The product catalog displays the available products and provides controls for maintaining prices, quantities, and other inventory information.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.68\textheight,keepaspectratio]{diagrams/inventory_products.png}
+    \caption{Inventory Product Catalog}
+\end{figure}
+
+\noindent\begin{minipage}{\textwidth}
+\subsection{Inventory and Products Backend}
+When creating a new product, the system automatically assigns it to the current user's store and validates all input constraints before saving to the database.
+\begin{lstlisting}[language={[Sharp]C}]
+public async Task CreateProductAsync(
+    Guid storeId,
+    ProductFormViewModel model)
+{
+    var product = new Product
+    {
+        StoreId = storeId,
+        Name = model.Name!,
+        Sku = model.Sku,
+        Category = model.Category!,
+        Price = model.Price,
+        StockQuantity = model.StockQuantity,
+        IsActive = true
+    };
+
+    _db.Products.Add(product);
+    await _db.SaveChangesAsync();
+}
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
 
 \subsection{Inventory Alerts}
-A background task constantly checks the quantity of every product. If a product's stock drops below a set minimum limit, the system automatically creates a warning alert. When new stock is added, the alert is automatically cleared.
+Low-stock and critical warning badges make products requiring immediate attention easy to identify.
 
-\subsection{Customer Segmentation (RFM)}
-SellWise automatically calculates a score for each customer using the RFM model: Recency (when they last bought), Frequency (how often they buy), and Monetary (how much they spend). Based on this score, customers are grouped into categories like "Loyal" or "At Risk".
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.68\textheight,keepaspectratio]{diagrams/inventory_alerts.png}
+    \caption{Low-Stock and Critical Inventory Alerts}
+\end{figure}
 
-\subsection{Machine Learning Forecasting}
-We created a separate Python program (microservice) to handle predictions. It uses a library called Prophet to look at past sales and predict what will sell in the next 30 days. The C\# web application asks this Python service for the prediction and then displays it on the dashboard.
+\noindent\begin{minipage}{\textwidth}
+\subsection{Inventory Alerts Backend}
+A background task constantly checks the quantity of every product. If a product's stock drops below a set minimum limit, the system automatically creates a warning alert.
+\begin{lstlisting}[language={[Sharp]C}]
+public async Task ScanAndGenerateAlertsAsync(Guid storeId)
+{
+    // Remove alerts for products that are healthy
+    var healthyOrInactiveProductIds = await _db.Products
+        .Where(p => p.StoreId == storeId && (!p.IsActive || p.StockQuantity > p.LowStockThreshold))
+        .Select(p => p.Id).ToListAsync();
+
+    var alertsToRemove = await _db.Alerts
+        .Where(a => a.StoreId == storeId && (healthyOrInactiveProductIds.Contains(a.ProductId) || a.Type.Contains("Resolved")))
+        .ToListAsync();
+
+    if (alertsToRemove.Any()) _db.Alerts.RemoveRange(alertsToRemove);
+
+    // Generate alerts for low stock products
+    var lowStockProducts = await _db.Products
+        .Where(p => p.StoreId == storeId && p.IsActive && p.StockQuantity <= p.LowStockThreshold)
+        .ToListAsync();
+        
+    // ... insert alerts logic ...
+    await _db.SaveChangesAsync();
+}
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
+
+\subsection{Customers}
+The customer list displays customer information together with automatically calculated RFM segments, such as Champion and At Risk.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.68\textheight,keepaspectratio]{diagrams/customers.png}
+    \caption{Customer List with RFM Segments}
+\end{figure}
+
+\noindent\begin{minipage}{\textwidth}
+\subsection{Customer Segmentation (RFM) Backend}
+SellWise automatically calculates a score for each customer using the RFM model: Recency, Frequency, and Monetary value. Based on this score, customers are grouped.
+\begin{lstlisting}[language={[Sharp]C}]
+public async Task RecalculateAllAsync(Guid storeId)
+{
+    var customers = await _db.Customers.Where(c => c.StoreId == storeId).ToListAsync();
+    if (customers.Count == 0) return;
+
+    var now = DateTime.UtcNow;
+    var cutoffDate = now.AddDays(-365);
+
+    var customerOrders = await _db.Orders
+        .Where(o => o.StoreId == storeId && o.CustomerId.HasValue && o.OrderDate >= cutoffDate)
+        .GroupBy(o => o.CustomerId!.Value)
+        .Select(g => new
+        {
+            CustomerId = g.Key,
+            LastOrderDate = g.Max(o => o.OrderDate),
+            Frequency = g.Count(),
+            Monetary = g.Sum(o => o.Total)
+        }).ToListAsync();
+
+    // Calculate quartiles and assign segments (e.g. "Champion", "At Risk")
+    foreach (var customer in customers)
+    {
+        // Segment assignment logic based on Recency, Frequency, Monetary quartiles...
+        customer.RfmSegment = DetermineSegment(rScore, fScore, mScore);
+    }
+    await _db.SaveChangesAsync();
+}
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
+
+\noindent\begin{minipage}{\textwidth}
+\subsection{Machine Learning Forecasting Backend}
+We created a separate Python program (microservice) to handle predictions. It uses a library called Prophet to look at past sales and predict what will sell in the next 30 days.
+\begin{lstlisting}[language=python]
+@router.post("/forecast", response_model=ForecastResponse)
+def create_forecast(request: ForecastRequest):
+    try:
+        # Generate forecast using the prophet service
+        predictions = generate_forecast(
+            request.history,
+            request.periods
+        )
+        return ForecastResponse(
+            store_id=request.store_id,
+            product_id=request.product_id,
+            forecast=predictions
+        )
+    except Exception as e:
+        logger.exception("Forecast generation failed")
+        raise HTTPException(
+            status_code=500,
+            detail="Forecast generation failed."
+        )
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
+
+\subsection{Generated PDF Report}
+SellWise can export a formatted PDF sales report so that users can save, print, or share business summaries.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth,height=0.68\textheight,keepaspectratio]{diagrams/pdf_report.png}
+    \caption{Generated PDF Sales Report}
+\end{figure}
+
+\noindent\begin{minipage}{\textwidth}
+\subsection{PDF Generation Backend}
+The system generates PDF reports dynamically using the QuestPDF library, providing a clean and easily downloadable summary of sales and orders.
+\begin{lstlisting}[language={[Sharp]C}]
+[Authorize]
+public class ReportController : BaseController
+{
+    public ReportController(AppDbContext db)
+        : base(db)
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        var storeId = GetCurrentStoreId();
+
+        if (storeId == System.Guid.Empty)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
+
+        var totalOrders = await Db.Orders
+            .Where(o => o.StoreId == storeId)
+            .CountAsync();
+
+        var totalRevenue = await Db.Orders
+            .Where(o => o.StoreId == storeId)
+            .SumAsync(o => o.Total);
+
+        // Render PDF view or return data
+        return View();
+    }
+}
+\end{lstlisting}
+\end{minipage}
+\vspace{1em}
 
 \section{Conclusions}
 A few important design choices helped make the system stable:
@@ -442,7 +803,6 @@ A few important design choices helped make the system stable:
     \item Checking the Store ID for every database request ensured that data from one shop never mixed with another.
     \item Adding a backup calculation method means the dashboard still works even if the Python prediction service is turned off.
 \end{enumerate}
-
 
 \chapter{TESTING}
 
@@ -505,6 +865,26 @@ Customers & 1. Verify the loyalty score calculation is accurate\newline 2. Verif
 \section{Testing Result}
 The login system worked perfectly, showing warnings for wrong passwords and locking the account after too many tries. The order processing system also worked safely, correctly deducting stock only when the sale was finalized.
 
+The following screenshots demonstrate validation and error handling during functional testing.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth,height=0.65\textheight,keepaspectratio]{diagrams/test_wrong_password.png}
+    \caption{Invalid Password Warning During Login Testing}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth,height=0.65\textheight,keepaspectratio]{diagrams/test_out_of_stock.png}
+    \caption{Out-of-Stock Validation During Order Testing}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth,height=0.65\textheight,keepaspectratio]{diagrams/test_product_error.png}
+    \caption{Product Input Validation Error}
+\end{figure}
+
 \section{Testing Summary}
 We tested all the pages available to the Owner, Manager, and Employee. We checked the login process, order creation, and report generation. After finding and fixing a few minor display issues, the project passed all tests and is working smoothly.
 
@@ -512,71 +892,99 @@ We tested all the pages available to the Owner, Manager, and Employee. We checke
 \chapter{USER MANUAL}
 
 \section{Introduction}
-SellWise provides a complete set of tools to manage a retail shop. Because it is a web application, it is flexible and can be accessed from anywhere, making it easy to monitor sales and inventory.
+The SellWise User Manual is designed to help shop owners, managers, and employees quickly learn how to use the system. SellWise provides a comprehensive set of tools to manage a retail shop by combining point-of-sale, inventory tracking, and sales forecasting into one accessible platform. Because it is a web-based application, it offers the flexibility to monitor your sales and inventory from any device on your network.
+
+This chapter covers the system requirements necessary to run the application and provides a step-by-step guide to using the core features of the user interface.
 
 \section{System Requirements}
 
-\subsection{Hardware Requirements}
+Because SellWise is a web application, the system requirements are divided into two categories: what the server needs to host the application, and what the end-user needs to access it.
+
+\subsection{Server-Side Requirements (Hosting \& Deployment)}
+To host the SellWise application, run the machine learning forecasts, and manage the database, the server environment must meet the following specifications:
 \begin{itemize}
-    \item \textbf{Operating System:} Windows 10/11, macOS, or Linux.
-    \item \textbf{Processor:} Standard Dual-Core processor.
-    \item \textbf{RAM:} Minimum 4GB (8GB recommended if running the database locally).
-    \item \textbf{Storage:} 128GB of storage space.
-    \item \textbf{Network:} An internet connection is required.
+    \item \textbf{Operating System:} Windows 10/11, macOS, or a modern Linux distribution (e.g., Ubuntu).
+    \item \textbf{Hardware:} Minimum Dual-Core processor with 8GB of RAM (required to smoothly run Docker and the Python environment simultaneously). At least 50GB of free storage.
+    \item \textbf{Database Engine:} Docker Engine (or Docker Desktop) is required to run the Microsoft SQL Server 2022 container.
+    \item \textbf{Web Framework:} .NET 10.0 SDK/Runtime to host the main ASP.NET Core MVC application.
+    \item \textbf{Machine Learning Environment:} Python 3.11 or higher, configured with the FastAPI framework and the Meta Prophet library for sales forecasting.
 \end{itemize}
 
-\subsection{Software Requirements}
+\subsection{Client-Side Requirements (End-Users)}
+For shop owners, managers, and employees, no installation of the software is required. They only need the following to use the system:
 \begin{itemize}
-    \item \textbf{Browser:} Google Chrome, Mozilla Firefox, or Microsoft Edge.
-    \item \textbf{Docker:} Docker Desktop is needed to run the SQL database.
-    \item \textbf{Python:} Python 3.11 or higher is needed to run the machine learning service.
+    \item \textbf{Hardware:} Any basic PC, laptop, or tablet.
+    \item \textbf{Operating System:} Any OS (Windows, macOS, Linux, Android, iOS).
+    \item \textbf{Web Browser:} A modern, up-to-date web browser such as Google Chrome, Mozilla Firefox, Safari, or Microsoft Edge.
+    \item \textbf{Network:} A stable internet or local area network (LAN) connection to communicate with the SellWise web server.
 \end{itemize}
 
-\section{User Interface}
-When you open the system, the first page is the "User Login". You must enter your registered email and password.
+\section{User Interface Guide}
 
-After logging in, you will see the \textbf{Dashboard}. This page shows important numbers, sales graphs, and a chart predicting future demand for your products.
+The user interface of SellWise was built using Bootstrap 5 to ensure it is clean, intuitive, and mobile-friendly. Below is a guide to navigating the primary sections of the application.
 
-To make a sale, go to the \textbf{Orders} section. Here, you can search for products, add them to the cart, select the customer's name, and complete the order.
+\subsection{Getting Started and Authentication}
+When you launch the system, the first page you encounter is the \textbf{User Login} screen. This page restricts access so that only authorized personnel can view sensitive store data. You must enter your registered email address and password. If you do not have an account, the \textbf{Sign Up} page allows you to register and automatically creates a new isolated store workspace for you.
 
-To manage your stock, go to the \textbf{Products} page. You can add new items or update the prices and quantities of existing items.
+\subsection{Dashboard and Analytics}
+Immediately after logging in, you will be directed to the \textbf{Dashboard}. This is the central hub for monitoring your business.
+\begin{itemize}
+    \item \textbf{KPI Cards:} At the top, you will see today's total revenue, the number of orders processed today, and any pending orders.
+    \item \textbf{Sales Charts:} Interactive graphs show your sales performance over the past week and month.
+    \item \textbf{Machine Learning Forecast:} A dedicated chart displays the Prophet-based prediction of your product demand for the next 30 days, helping you decide when to restock.
+\end{itemize}
 
-The \textbf{Customers} page displays a list of your buyers. It shows their contact information and automatically tells you if they are a loyal customer or a new customer.
+\subsection{Point of Sale (Orders)}
+To process a customer's purchase, navigate to the \textbf{Orders} section. 
+\begin{itemize}
+    \item You can search for products using the search bar and click to add them to the current cart.
+    \item You can adjust quantities and apply discounts or delivery charges.
+    \item Before finalizing the sale, you can select an existing customer from the dropdown or quickly register a new customer.
+    \item Clicking "Complete Order" will safely deduct the items from your inventory and log the sale.
+\end{itemize}
+
+\subsection{Inventory and Alerts}
+To manage your stock, go to the \textbf{Products} page. Here, you can view your entire catalog, add new items, and update prices or stock quantities. If an item's stock falls below its defined minimum threshold, it will trigger an alert. You can view these critical warnings on the \textbf{Inventory Alerts} page, ensuring you never run out of popular items unexpectedly.
+
+\subsection{Customer Management}
+The \textbf{Customers} page displays a comprehensive directory of your buyers. Alongside their contact information, the system displays their automatically calculated RFM segment (such as "Champion", "Loyal", or "At Risk"). This helps you identify which customers to reward and which ones you might need to re-engage.
 
 \section{Conclusion}
-This chapter explained the basic hardware and software needed to run SellWise. It also provided a quick guide on how to navigate the website. The user interface is designed to be straightforward, so users can learn how to use it very quickly.
+This chapter detailed the hardware and software prerequisites needed to operate SellWise successfully. It also provided a foundational walkthrough of the user interface, outlining how to perform daily operations from processing sales to analyzing AI-driven forecasts. The intuitive design ensures that shop employees require minimal training to become proficient.
 
 
 \chapter{CONCLUSION AND FUTURE WORKS}
 
 \section{Conclusion}
-The SellWise project was created to solve a real problem: small shop owners need better software to manage their business, but existing tools are often too complicated or expensive. Throughout this project, we successfully built a complete web application that handles point-of-sale operations, tracks inventory, automatically groups customers, and predicts future sales using machine learning.
+The SellWise project was developed to address a significant operational gap in the retail sector: small and medium-sized shop owners desperately need modern software to manage their businesses, but existing enterprise tools are often too complicated, bloated, or expensive. Throughout the lifecycle of this project, we successfully engineered a complete, full-stack web application that handles point-of-sale operations, tracks inventory in real-time, automatically segments customers, and leverages machine learning to predict future sales.
 
-Building this system showed the importance of keeping the design simple and separating the complex parts. By keeping the Python prediction code separate from the main C\# website, we made sure the application runs fast while still providing advanced features.
+Building this system highlighted the importance of a clean architectural design. By enforcing strict multi-tenancy at the database level and handling financial transactions safely through Entity Framework Core, we ensured that the system is both secure and reliable. Furthermore, separating the computationally heavy Python prediction code into an isolated microservice guaranteed that the main C\# web application remained fast and responsive for cashiers processing live orders. 
 
 \section{Outcomes}
+The successful implementation of SellWise yielded several positive outcomes:
 \begin{itemize}
-    \item Shop owners can now see all their business data in one place, which saves a lot of time compared to writing things down on paper.
-    \item The machine learning predictions help owners know what to restock, preventing them from running out of popular items.
-    \item The automatic customer grouping helps owners easily see who their best customers are.
-    \item The safe order processing ensures that inventory numbers always match the actual sales.
-    \item Automatic alerts warn the manager before an item completely runs out of stock.
+    \item \textbf{Centralized Management:} Shop owners can now visualize all their critical business data on a single, unified dashboard, drastically reducing the time spent compiling paper records or managing disparate spreadsheets.
+    \item \textbf{Proactive Restocking:} The integration of the Meta Prophet machine learning model helps owners accurately forecast upcoming product demand, preventing stockouts of popular items and reducing the financial burden of overstocking.
+    \item \textbf{Automated Customer Insights:} By automatically calculating RFM scores, the system instantly identifies the most valuable customers without requiring the owner to perform complex data analysis manually.
+    \item \textbf{Data Integrity:} The robust order processing pipeline ensures that inventory numbers are strictly tied to finalized sales, eliminating the discrepancies that plague manual systems.
+    \item \textbf{Early Warnings:} Automated background tasks continuously scan the database to provide managers with early warning alerts before an item reaches critical stock levels.
 \end{itemize}
 
 \section{Current Limitations}
-While the system works well, there are a few limitations to keep in mind:
+While the system fulfills its primary objectives exceptionally well, we have identified a few limitations during testing that should be noted:
 \begin{itemize}
-    \item The prediction feature only uses one specific machine learning model (Prophet). It does not test other models to see if they might be more accurate.
-    \item The system requires a network connection to work. There is currently no offline mode if the internet goes down.
-    \item A single store can only use one type of currency, which might be an issue for shops near international borders.
+    \item \textbf{Single ML Model Dependency:} The demand forecasting currently relies entirely on the Prophet library. While effective for general seasonal trends, the system does not evaluate or compare alternative machine learning models (such as ARIMA or neural networks) that might yield higher accuracy for highly volatile products.
+    \item \textbf{Network Dependency:} SellWise is a web-based application requiring an active network connection to process sales. There is currently no localized offline mode to queue transactions if the internet or local server connection drops.
+    \item \textbf{Single Currency Constraint:} A registered store is bound to a single type of currency and taxation rule. This could present challenges for shops operating near international borders that accept multiple currencies.
 \end{itemize}
 
 \section{Future Works}
-There are several improvements we plan to add in the future:
+To further evolve SellWise into an enterprise-grade retail platform, several enhancements are planned for future development iterations:
 \begin{itemize}
-    \item \textbf{Email Marketing:} We want to connect the system to email services so owners can automatically send discount codes to their loyal customers.
-    \item \textbf{Mobile App:} Building an Android or iOS app would allow managers to check their store's performance from their phones, and could include an offline mode.
-    \item \textbf{Cloud Hosting:} Moving the database and website to a cloud service like AWS or Azure would make the system more reliable and easier to set up for new users.
+    \item \textbf{Automated Marketing Integrations:} We plan to integrate the RFM customer segmentation data directly with email marketing APIs (such as SendGrid or Mailchimp). This would allow the system to automatically send promotional codes or "We miss you" emails to customers categorized as "At Risk".
+    \item \textbf{Mobile Application Counterpart:} Developing a companion Android and iOS application using frameworks like Flutter or .NET MAUI would empower managers to review dashboard analytics remotely and allow employees to process inventory checks using their smartphone cameras as barcode scanners.
+    \item \textbf{Cloud Deployment Architecture:} Transitioning the current Docker-based local setup into a fully managed cloud architecture (using services like AWS ECS or Azure App Services) would enhance scalability, provide automated off-site backups, and drastically simplify the onboarding process for new store owners.
+    \item \textbf{Multi-Branch Support:} Enhancing the system to support a single owner managing shared inventory across multiple geographic store branches, allowing for inter-store stock transfers.
 \end{itemize}
 
 \end{document}

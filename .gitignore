@@ -62,6 +62,24 @@ SellWise.ML/data/models/
 **/Screen/
 
 # =========================
+# Images & Diagrams (documentation assets)
+# =========================
+**/images/
+**/diagrams/
+**/safe_diagrams/
+*.drawio
+
+# =========================
+# Temporary & Backup Files
+# =========================
+*.tmp
+*.bak
+*.old
+*.orig
+*.cache
+*.lock
+
+# =========================
 # Docker Volumes (local data)
 # =========================
 *.mdf
