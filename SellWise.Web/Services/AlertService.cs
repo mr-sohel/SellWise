@@ -18,50 +18,59 @@ public class AlertService : IAlertService
 
     public async Task ScanAndGenerateAlertsAsync(Guid storeId)
     {
-        // Find products below or equal to their low stock threshold
+        // 1. Remove alerts for products that are healthy (StockQuantity > LowStockThreshold), inactive, or legacy resolved
+        var healthyOrInactiveProductIds = await _db.Products
+            .Where(p => p.StoreId == storeId && (!p.IsActive || p.StockQuantity > p.LowStockThreshold))
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        var alertsToRemove = await _db.Alerts
+            .Where(a => a.StoreId == storeId && (healthyOrInactiveProductIds.Contains(a.ProductId) || a.Type.Contains("Resolved")))
+            .ToListAsync();
+
+        bool hasChanges = alertsToRemove.Any();
+        if (alertsToRemove.Any())
+        {
+            _db.Alerts.RemoveRange(alertsToRemove);
+        }
+
+        // 2. Find active products at or below their low stock threshold
         var lowStockProducts = await _db.Products
             .Where(p => p.StoreId == storeId && p.IsActive && p.StockQuantity <= p.LowStockThreshold)
             .ToListAsync();
 
-        var healthyProductsIds = await _db.Products
-            .Where(p => p.StoreId == storeId && p.IsActive && p.StockQuantity > p.LowStockThreshold)
-            .Select(p => p.Id)
-            .ToListAsync();
-
-        var alertsToResolve = await _db.Alerts
-            .Where(a => a.StoreId == storeId && a.Type == "Low Stock" && healthyProductsIds.Contains(a.ProductId))
-            .ToListAsync();
-
-        bool hasChanges = alertsToResolve.Any();
-
-        foreach (var alert in alertsToResolve)
-        {
-            alert.Type = "Low Stock (Resolved)";
-            alert.IsRead = true;
-        }
-
-        // Get existing unresolved alerts for these products to avoid duplicates
-        // By checking Type == "Low Stock" (not checking IsRead), we ensure
-        // we don't generate duplicates even if the user marks it as read.
-        var existingAlertProductIds = await _db.Alerts
+        var existingAlerts = await _db.Alerts
             .Where(a => a.StoreId == storeId && a.Type == "Low Stock")
-            .Select(a => a.ProductId)
             .ToListAsync();
+
+        var existingAlertProductIds = existingAlerts.Select(a => a.ProductId).ToHashSet();
 
         foreach (var product in lowStockProducts)
         {
+            var expectedMsg = product.StockQuantity == 0
+                ? $"Out of stock. Currently at zero units — threshold is {product.LowStockThreshold}."
+                : $"Only {product.StockQuantity} unit{(product.StockQuantity == 1 ? "" : "s")} left — threshold is {product.LowStockThreshold}.";
+            var expectedSeverity = product.StockQuantity == 0 ? "Critical" : "Warning";
+
             if (existingAlertProductIds.Contains(product.Id))
-                continue; // Already has an active alert
+            {
+                var existing = existingAlerts.First(a => a.ProductId == product.Id);
+                if (existing.Message != expectedMsg || existing.Severity != expectedSeverity)
+                {
+                    existing.Message = expectedMsg;
+                    existing.Severity = expectedSeverity;
+                    hasChanges = true;
+                }
+                continue;
+            }
 
             var alert = new InventoryAlert
             {
                 StoreId = storeId,
                 ProductId = product.Id,
                 Type = "Low Stock",
-                Message = product.StockQuantity == 0
-                    ? $"Out of stock. Currently at zero units — threshold is {product.LowStockThreshold}."
-                    : $"Only {product.StockQuantity} unit{(product.StockQuantity == 1 ? "" : "s")} left — threshold is {product.LowStockThreshold}.",
-                Severity = product.StockQuantity == 0 ? "Critical" : "Warning",
+                Message = expectedMsg,
+                Severity = expectedSeverity,
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
             };

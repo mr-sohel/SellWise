@@ -6,16 +6,18 @@
     var userId = _userManager.GetUserId(User);
     var activeStoreId = Context.Session.GetString("ActiveStoreId");
 
-    var userStores = new List<SellWise.Web.Models.Store>();
+    var userStoreMembers = new List<SellWise.Web.Models.StoreMember>();
     if (userId != null)
     {
-        userStores = _db.StoreMembers
+        userStoreMembers = _db.StoreMembers
             .Include(m => m.Store)
             .Where(m => m.UserId == userId)
-            .Select(m => m.Store)
             .ToList();
     }
-    var currentStore = userStores.FirstOrDefault(s => s.Id.ToString() == activeStoreId);
+    var currentMember = userStoreMembers.FirstOrDefault(m => m.StoreId.ToString() == activeStoreId)
+                        ?? userStoreMembers.FirstOrDefault();
+    var currentStore = currentMember?.Store;
+    var isOwner = currentMember?.Role == "owner";
 
     // Local initials for the profile avatar (no third-party request)
     var emailName = (User.Identity?.Name ?? "User").Split('@')[0];
@@ -54,7 +56,7 @@
                     </div>
                     <span class="brand-text mb-0">SellWise</span>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="sidebar-brand d-none d-lg-flex">
                 <div class="brand-logo">
@@ -148,29 +150,36 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="dropdownStore">
                             <li><h6 class="dropdown-header">Your Stores</h6></li>
-                            @foreach (var store in userStores)
+                            @foreach (var sm in userStoreMembers)
                             {
+                                var store = sm.Store;
+                                if (store != null)
+                                {
+                                    <li>
+                                        <form asp-controller="Auth" asp-action="SwitchStore" method="post" class="m-0 p-0 d-inline">
+                                            <input type="hidden" name="storeId" value="@store.Id" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                            <button type="submit" class="dropdown-item @(store.Id.ToString() == activeStoreId ? "active fw-bold" : "")">
+                                                @if (store.Id.ToString() == activeStoreId)
+                                                {
+                                                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                }
+                                                @store.Name
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
+                            }
+                            @if (isOwner)
+                            {
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form asp-controller="Auth" asp-action="SwitchStore" method="post" class="m-0 p-0 d-inline">
-                                        <input type="hidden" name="storeId" value="@store.Id" />
-                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                                        <button type="submit" class="dropdown-item @(store.Id.ToString() == activeStoreId ? "active fw-bold" : "")">
-                                            @if (store.Id.ToString() == activeStoreId)
-                                            {
-                                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                            }
-                                            @store.Name
-                                        </button>
-                                    </form>
+                                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createStoreModal">
+                                        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        Add Store
+                                    </button>
                                 </li>
                             }
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createStoreModal">
-                                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                    Add Store
-                                </button>
-                            </li>
                         </ul>
                     </div>
                     <div class="dropdown">
@@ -224,8 +233,9 @@
             const form = e.target;
             if (form.classList.contains('no-loader')) return;
 
-            // Only disable if the form is valid (if jQuery validation is present)
-            if ($(form).valid && !$(form).valid()) return;
+            // Only disable if the form is valid (if jQuery validation or HTML5 validation is present)
+            if (typeof $(form).valid === 'function' && !$(form).valid()) return;
+            if (form.checkValidity && !form.checkValidity()) return;
 
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn && !submitBtn.disabled) {
@@ -254,7 +264,7 @@
                 }
             });
 
-            let dropdown = new bootstrap.Dropdown(searchInput);
+            const dropdown = bootstrap.Dropdown.getOrCreateInstance(searchInput);
             let debounceTimer;
 
             searchInput.addEventListener('input', function(e) {
@@ -345,30 +355,178 @@
                 }
             });
         });
+
+        let currentRestockCallback = null;
+
+        function openRestockModal(productId, productName, currentStock, suggestedQty, unit, callback) {
+            document.getElementById('restockProductId').value = productId;
+            document.getElementById('restockProductName').textContent = productName || 'Product';
+            document.getElementById('restockCurrentStock').textContent = (currentStock || 0) + ' ' + (unit || 'units');
+            document.getElementById('restockQuantity').value = Math.max(1, suggestedQty || 1);
+            document.getElementById('restockUnitHelp').textContent = 'Units to add to inventory (' + (unit || 'units') + ')';
+            document.getElementById('restockError').classList.add('d-none');
+            document.getElementById('restockError').textContent = '';
+            
+            currentRestockCallback = callback || null;
+
+            const modalEl = document.getElementById('restockModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+            setTimeout(() => {
+                const qtyInput = document.getElementById('restockQuantity');
+                qtyInput.focus();
+                qtyInput.select();
+            }, 300);
+        }
+
+        function adjustRestockQty(delta) {
+            const input = document.getElementById('restockQuantity');
+            let val = (parseInt(input.value, 10) || 0) + delta;
+            if (val < 1) val = 1;
+            input.value = val;
+        }
+
+        function handleRestockSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const submitBtn = document.getElementById('restockSubmitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Restocking...';
+
+            const formData = new FormData(form);
+            const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            fetch('/Product/Restock', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to restock product.');
+                }
+                return data;
+            })
+            .then(data => {
+                const modalEl = document.getElementById('restockModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                if (typeof currentRestockCallback === 'function') {
+                    currentRestockCallback(data);
+                } else {
+                    if (typeof loadForecastPage === 'function') {
+                        const range = window.currentForecastRange || '30d';
+                        const page = window.currentForecastPage || 1;
+                        loadForecastPage(range, page);
+                    }
+                    if (window.location.pathname.toLowerCase().includes('/alert')) {
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(err => {
+                const errEl = document.getElementById('restockError');
+                errEl.textContent = err.message;
+                errEl.classList.remove('d-none');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 
-    <!-- Create Store Modal -->
-    <div class="modal fade" id="createStoreModal" tabindex="-1" aria-labelledby="createStoreModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: var(--radius-lg);">
-                <form asp-controller="Auth" asp-action="CreateStore" method="post">
+    <!-- Restock Modal -->
+    <div class="modal fade" id="restockModal" tabindex="-1" aria-labelledby="restockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+                <form id="restockForm" onsubmit="handleRestockSubmit(event)">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="restockProductId" name="productId" />
                     <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark" id="createStoreModalLabel">Create New Store</h5>
+                        <div class="d-flex align-items-center gap-2" style="min-width: 0;">
+                            <div class="p-2 rounded-circle flex-shrink-0" style="background:#e0e7ff; color:#4338ca;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                            </div>
+                            <div style="min-width: 0;">
+                                <h5 class="modal-title fw-bold text-dark mb-0" id="restockModalLabel">Restock Product</h5>
+                                <p class="text-muted small mb-0 text-truncate" id="restockProductName" style="max-width: 290px;">Product Name</p>
+                            </div>
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;" for="newStoreName">Store Name</label>
-                        <input type="text" id="newStoreName" name="StoreName" class="form-control px-3 py-2" placeholder="e.g. My New Store" required maxlength="100" autocomplete="off" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
-                        <small class="text-muted">A new empty store will be created and you'll be switched into it as owner.</small>
+                    <div class="modal-body py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded" style="font-size:0.85rem;">
+                            <span class="text-muted">Current Stock:</span>
+                            <span class="fw-bold text-dark" id="restockCurrentStock">0 units</span>
+                        </div>
+
+                        <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;" for="restockQuantity">Units to Add</label>
+                        <div class="input-group mb-2">
+                            <button class="btn btn-outline-secondary px-3 d-flex align-items-center justify-content-center" type="button" onclick="adjustRestockQty(-1)" title="Decrease by 1" style="min-width: 48px; border-color: var(--border-color);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </button>
+                            <input type="number" id="restockQuantity" name="quantity" class="form-control text-center fw-bold no-spinners" value="1" min="1" required style="font-size: 1.35rem; border-color: var(--border-color);" />
+                            <button class="btn btn-outline-secondary px-3 d-flex align-items-center justify-content-center" type="button" onclick="adjustRestockQty(1)" title="Increase by 1" style="min-width: 48px; border-color: var(--border-color);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex items-center justify-content-center gap-1 mb-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-light border restock-quick-btn text-muted" onclick="adjustRestockQty(-10)">-10</button>
+                            <button type="button" class="btn btn-sm btn-light border restock-quick-btn text-muted" onclick="adjustRestockQty(-5)">-5</button>
+                            <button type="button" class="btn btn-sm btn-light border restock-quick-btn text-primary" style="background-color: var(--brand-lighter); border-color: #c7d2fe !important;" onclick="adjustRestockQty(5)">+5</button>
+                            <button type="button" class="btn btn-sm btn-light border restock-quick-btn text-primary" style="background-color: var(--brand-lighter); border-color: #c7d2fe !important;" onclick="adjustRestockQty(10)">+10</button>
+                            <button type="button" class="btn btn-sm btn-light border restock-quick-btn text-primary" style="background-color: var(--brand-lighter); border-color: #c7d2fe !important;" onclick="adjustRestockQty(25)">+25</button>
+                            <button type="button" class="btn btn-sm btn-light border restock-quick-btn text-primary" style="background-color: var(--brand-lighter); border-color: #c7d2fe !important;" onclick="adjustRestockQty(50)">+50</button>
+                            <button type="button" class="btn btn-sm btn-light border restock-quick-btn text-primary" style="background-color: var(--brand-lighter); border-color: #c7d2fe !important;" onclick="adjustRestockQty(100)">+100</button>
+                        </div>
+
+                        <div id="restockUnitHelp" class="form-text text-muted small text-center mt-1"></div>
+                        <div id="restockError" class="alert alert-danger p-2 small mt-2 d-none"></div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
-                        <button type="submit" class="btn btn-primary px-4" style="background-color: #4338ca; border: none; border-radius: 20px;">Create Store</button>
+                        <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
+                        <button type="submit" id="restockSubmitBtn" class="btn btn-primary px-4 d-flex align-items-center gap-2" style="background-color: #4338ca; border: none; border-radius: 20px;">
+                            <span>Confirm Restock</span>
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    @if (isOwner)
+    {
+        <!-- Create Store Modal -->
+        <div class="modal fade" id="createStoreModal" tabindex="-1" aria-labelledby="createStoreModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: var(--radius-lg);">
+                    <form asp-controller="Auth" asp-action="CreateStore" method="post">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold text-dark" id="createStoreModalLabel">Create New Store</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.9rem;" for="newStoreName">Store Name</label>
+                            <input type="text" id="newStoreName" name="StoreName" class="form-control px-3 py-2" placeholder="e.g. My New Store" required maxlength="100" autocomplete="off" style="border-radius: var(--radius-md); border-color: #e2e8f0;">
+                            <small class="text-muted">A new empty store will be created and you'll be switched into it as owner.</small>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 20px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4" style="background-color: #4338ca; border: none; border-radius: 20px;">Create Store</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
 </body>
 </html>

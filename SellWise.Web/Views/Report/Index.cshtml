@@ -1,11 +1,20 @@
 @model SellWise.Web.ViewModels.Report.ReportViewModel
 @{
     ViewData["Title"] = "Reports";
+    var isEmployee = string.Equals(ViewData["CurrentStoreRole"]?.ToString(), "employee", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="mb-4">
     <h2 class="fw-bold text-dark">Reports</h2>
 </div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="max-width: 800px; margin: 0 auto;">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="card p-3 p-md-5 border-1 shadow-sm mx-auto" style="max-width: 800px; margin-top: 2rem;">
     <h2 class="fw-bold text-dark mb-2">Generate PDF Report</h2>
@@ -27,12 +36,29 @@
                     </select>
                 </div>
                 <div class="col-12 col-md-4">
-                    <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2">
-                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Download PDF
-                    </button>
+                    @if (!isEmployee)
+                    {
+                        <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download PDF
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center gap-2 py-2" disabled title="Employees cannot generate PDF reports">
+                            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download PDF
+                        </button>
+                    }
                 </div>
             </div>
+            @if (isEmployee)
+            {
+                <div class="alert alert-warning small mt-3 mb-0 py-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Employees are not permitted to generate or download PDF reports.
+                </div>
+            }
         </form>
     </div>
 

@@ -66,9 +66,9 @@ public class SettingsController : BaseController
         var member = await Db.StoreMembers
             .Include(sm => sm.Store)
             .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == user.Id);
-        if (member?.Store != null)
+        if (member?.Store != null && member.Role == "owner" && !string.IsNullOrWhiteSpace(model.StoreName))
         {
-            member.Store.Name = model.StoreName!;
+            member.Store.Name = model.StoreName;
         }
 
         user.OwnerName = model.OwnerName;

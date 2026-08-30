@@ -39,6 +39,23 @@ public abstract class BaseController : Controller
         return await Db.StoreMembers.AnyAsync(m => m.StoreId == storeId && m.UserId == userIdValue);
     }
 
+    protected async Task<string?> GetCurrentUserRoleAsync(Guid storeId)
+    {
+        var userId = System.Security.Claims.ClaimTypes.NameIdentifier;
+        var userIdValue = User.FindFirst(userId)?.Value;
+        if (userIdValue == null) return null;
+
+        var member = await Db.StoreMembers
+            .FirstOrDefaultAsync(m => m.StoreId == storeId && m.UserId == userIdValue);
+        return member?.Role;
+    }
+
+    protected async Task<bool> IsEmployeeAsync(Guid storeId)
+    {
+        var role = await GetCurrentUserRoleAsync(storeId);
+        return string.Equals(role, "employee", StringComparison.OrdinalIgnoreCase);
+    }
+
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -51,6 +68,9 @@ public abstract class BaseController : Controller
                 context.Result = new RedirectToActionResult("Login", "Auth", null);
                 return;
             }
+
+            var role = await GetCurrentUserRoleAsync(storeId);
+            ViewData["CurrentStoreRole"] = role ?? "employee";
         }
 
         await base.OnActionExecutionAsync(context, next);

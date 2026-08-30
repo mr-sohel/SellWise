@@ -42,6 +42,11 @@ public class ReportController : BaseController
     {
         var storeId = GetCurrentStoreId();
         if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
+        if (await IsEmployeeAsync(storeId))
+        {
+            TempData["ErrorMessage"] = "Employees are not permitted to generate PDF reports.";
+            return RedirectToAction(nameof(Index));
+        }
 
         var startDate = DateTime.UtcNow.AddDays(-days);
 

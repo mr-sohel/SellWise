@@ -105,20 +105,25 @@ public class AnalyticsService
             .OrderBy(p => p.StockQuantity)
             .Take(5)
             .Select(p => new {
+                p.Id,
                 p.Name,
                 p.StockQuantity,
                 p.LowStockThreshold,
-                p.SellingPrice
+                p.SellingPrice,
+                p.Unit
             })
             .ToListAsync();
 
         var needsAttention = needsAttentionData
             .Select((p, idx) => new ProductAttentionPoint {
+                ProductId = p.Id,
                 ProductName = p.Name,
                 Stock = p.StockQuantity,
                 Threshold = p.LowStockThreshold,
                 Revenue = p.SellingPrice * p.StockQuantity,
-                Rank = idx + 1
+                Rank = idx + 1,
+                Unit = string.IsNullOrWhiteSpace(p.Unit) ? "pcs" : p.Unit,
+                SuggestedRestockQty = Math.Max(10, (p.LowStockThreshold > 0 ? p.LowStockThreshold * 2 : 20) - p.StockQuantity)
             })
             .ToList();
 
@@ -407,8 +412,10 @@ public class AnalyticsService
 
         return new ProductForecastCard
         {
+            ProductId = product.Id,
             ProductName = product.Name,
             Category = product.Category ?? "Other",
+            Unit = product.Unit ?? "pcs",
             SparklineData = values,
             PredictedUnits = Math.Round(predictedUnits, 1),
             Stock = product.StockQuantity,
@@ -515,8 +522,10 @@ public class AnalyticsService
 
         return new ProductForecastCard
         {
+            ProductId = product.Id,
             ProductName = product.Name,
             Category = product.Category ?? "Other",
+            Unit = product.Unit ?? "pcs",
             SparklineData = sparkline,
             PredictedUnits = sparkline.Sum(),
             Stock = product.StockQuantity,

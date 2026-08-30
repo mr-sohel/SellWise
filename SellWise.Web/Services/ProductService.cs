@@ -57,7 +57,52 @@ public class ProductService : IProductService
         product.Unit = model.Unit!;
         product.UpdatedAt = DateTime.UtcNow;
 
+        // Auto-dismiss low stock alerts if stock is now above threshold
+        if (product.StockQuantity > product.LowStockThreshold)
+        {
+            var alertsToRemove = await _db.Alerts
+                .Where(a => a.StoreId == storeId && a.ProductId == id)
+                .ToListAsync();
+            if (alertsToRemove.Any())
+            {
+                _db.Alerts.RemoveRange(alertsToRemove);
+            }
+        }
+
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<(bool Success, int NewStock, string Message)> RestockProductAsync(Guid storeId, Guid productId, int quantity)
+    {
+        if (quantity <= 0)
+        {
+            return (false, 0, "Restock quantity must be greater than zero.");
+        }
+
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId);
+        if (product == null)
+        {
+            return (false, 0, "Product not found.");
+        }
+
+        product.StockQuantity += quantity;
+        product.UpdatedAt = DateTime.UtcNow;
+
+        // Auto-dismiss low stock alerts if stock is now above threshold
+        if (product.StockQuantity > product.LowStockThreshold)
+        {
+            var alertsToRemove = await _db.Alerts
+                .Where(a => a.StoreId == storeId && a.ProductId == productId)
+                .ToListAsync();
+            if (alertsToRemove.Any())
+            {
+                _db.Alerts.RemoveRange(alertsToRemove);
+            }
+        }
+
+        await _db.SaveChangesAsync();
+
+        return (true, product.StockQuantity, $"Successfully restocked {quantity} {product.Unit}. New stock: {product.StockQuantity} {product.Unit}.");
     }
 
     public async Task DeleteProductAsync(Guid storeId, Guid id)

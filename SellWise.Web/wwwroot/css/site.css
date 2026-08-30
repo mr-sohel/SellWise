@@ -729,6 +729,34 @@ h1, h2, h3, h4, h5, h6,
   color: var(--text-primary);
 }
 
+.btn-restock-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.btn-restock-pill:hover {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #c2410c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(234, 88, 12, 0.15);
+}
+
+.btn-restock-pill:active {
+  transform: translateY(0);
+}
+
 /* ==================== PERFORMERS LISTS ==================== */
 .performers-list {
   display: flex;
@@ -746,6 +774,18 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .performers-item:last-child { border-bottom: none; }
+
+.performers-item-clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.5rem;
+  margin: 0 -0.5rem;
+  transition: background-color 0.15s ease;
+}
+
+.performers-item-clickable:hover {
+  background-color: var(--brand-lighter);
+}
 
 .performers-num {
   width: 26px;
@@ -1191,6 +1231,30 @@ button, a, input, select, textarea, label {
 
 .app-footer {
   padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+}
+
+/* ==================== NUMBER INPUTS / STEPPERS ==================== */
+input[type="number"].no-spinners::-webkit-inner-spin-button,
+input[type="number"].no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"].no-spinners {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.restock-quick-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  transition: all 0.15s ease;
+}
+
+.restock-quick-btn:hover {
+  transform: translateY(-1px);
 }
 
 /* ==================== PRINT ==================== */
