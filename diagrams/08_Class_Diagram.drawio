@@ -1,142 +1,167 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1700" math="0" shadow="0">
-  <root>
-    <mxCell id="0"/><mxCell id="1" parent="0"/>
-    <mxCell id="title" value="SellWise - Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="700" y="20" width="800" height="40" as="geometry"/></mxCell>
-    <!-- DOMAIN ENTITIES -->
-    <mxCell id="AppUser" value="ApplicationUser" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1520" y="80" width="250" height="100" as="geometry"/></mxCell>
-    <mxCell id="AppUser_f" value="+ OwnerName : string?&#xa;+ StoreMembers : ICollection&lt;StoreMember&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AppUser"><mxGeometry y="26" width="250" height="38" as="geometry"/></mxCell>
-    <mxCell id="AppUser_sep" value="" style="line;strokeColor=#6c8ebf;fillColor=none;" vertex="1" parent="AppUser"><mxGeometry y="64" width="250" height="8" as="geometry"/></mxCell>
-    <mxCell id="AppUser_m" value="(extends IdentityUser)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=10;fontStyle=2;" vertex="1" parent="AppUser"><mxGeometry y="72" width="250" height="22" as="geometry"/></mxCell>
-    <mxCell id="Store" value="Store" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1800" y="80" width="260" height="170" as="geometry"/></mxCell>
-    <mxCell id="Store_f" value="+ Id : Guid&#xa;+ Name : string&#xa;+ Currency : string&#xa;+ Timezone : string&#xa;+ BusinessType : string?&#xa;+ CreatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="Store"><mxGeometry y="26" width="260" height="98" as="geometry"/></mxCell>
-    <mxCell id="Store_sep" value="" style="line;strokeColor=#6c8ebf;fillColor=none;" vertex="1" parent="Store"><mxGeometry y="124" width="260" height="8" as="geometry"/></mxCell>
-    <mxCell id="Store_m" value="(nav) Members, Products, Orders, Customers, Expenses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=10;fontStyle=2;" vertex="1" parent="Store"><mxGeometry y="132" width="260" height="34" as="geometry"/></mxCell>
-    <mxCell id="StoreMember" value="StoreMember" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1520" y="220" width="250" height="100" as="geometry"/></mxCell>
-    <mxCell id="SM_f" value="+ StoreId : Guid&#xa;+ UserId : string&#xa;+ Role : string&#xa;+ CreatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="StoreMember"><mxGeometry y="26" width="250" height="70" as="geometry"/></mxCell>
-    <mxCell id="Product" value="Product" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1800" y="290" width="260" height="220" as="geometry"/></mxCell>
-    <mxCell id="Prod_f" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ Name : string&#xa;+ Sku : string?&#xa;+ Category : string?&#xa;+ CostPrice : decimal&#xa;+ SellingPrice : decimal&#xa;+ StockQuantity : int&#xa;+ LowStockThreshold : int&#xa;+ Unit : string&#xa;+ IsActive : bool&#xa;+ CreatedAt / UpdatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="Product"><mxGeometry y="26" width="260" height="190" as="geometry"/></mxCell>
-    <mxCell id="Customer" value="Customer" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1520" y="360" width="250" height="230" as="geometry"/></mxCell>
-    <mxCell id="Cust_f" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ Name : string&#xa;+ Phone : string?&#xa;+ Email : string?&#xa;+ Address : string?&#xa;+ TotalOrders : int&#xa;+ TotalSpent : decimal&#xa;+ LastOrderDate : DateTime?&#xa;+ RecencyScore : int&#xa;+ FrequencyScore : int&#xa;+ MonetaryScore : int&#xa;+ RfmSegment : string&#xa;+ CreatedAt / UpdatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="Customer"><mxGeometry y="26" width="250" height="200" as="geometry"/></mxCell>
-    <mxCell id="Order" value="Order" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1800" y="550" width="260" height="230" as="geometry"/></mxCell>
-    <mxCell id="Ord_f" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ CustomerId : Guid?&#xa;+ OrderNumber : string&#xa;+ Status : string&#xa;+ Total : decimal&#xa;+ DeliveryCharge : decimal&#xa;+ Discount : decimal&#xa;+ Notes : string?&#xa;+ OrderDate : DateTime&#xa;+ CreatedAt / UpdatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="Order"><mxGeometry y="26" width="260" height="170" as="geometry"/></mxCell>
-    <mxCell id="Ord_sep" value="" style="line;strokeColor=#6c8ebf;fillColor=none;" vertex="1" parent="Order"><mxGeometry y="196" width="260" height="8" as="geometry"/></mxCell>
-    <mxCell id="Ord_m" value="(nav) Items : ICollection&lt;OrderItem&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=10;fontStyle=2;" vertex="1" parent="Order"><mxGeometry y="204" width="260" height="22" as="geometry"/></mxCell>
-    <mxCell id="OrderItem" value="OrderItem" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1520" y="630" width="250" height="180" as="geometry"/></mxCell>
-    <mxCell id="OI_f" value="+ Id : Guid&#xa;+ OrderId : Guid&#xa;+ ProductId : Guid?&#xa;+ ProductName : string&#xa;+ UnitPrice : decimal&#xa;+ CostPrice : decimal&#xa;+ Quantity : int&#xa;+ CreatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="OrderItem"><mxGeometry y="26" width="250" height="150" as="geometry"/></mxCell>
-    <mxCell id="Expense" value="Expense" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1800" y="820" width="260" height="150" as="geometry"/></mxCell>
-    <mxCell id="Exp_f" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ Category : string&#xa;+ Amount : decimal&#xa;+ ExpenseDate : DateTime&#xa;+ Notes : string?&#xa;+ CreatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="Expense"><mxGeometry y="26" width="260" height="120" as="geometry"/></mxCell>
-    <mxCell id="Forecast" value="Forecast" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1520" y="860" width="250" height="180" as="geometry"/></mxCell>
-    <mxCell id="FC_f" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ ProductId : Guid&#xa;+ TargetDate : DateTime&#xa;+ PredictedDemand : double&#xa;+ LowerBound : double&#xa;+ UpperBound : double&#xa;+ ModelUsed : string&#xa;+ CreatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="Forecast"><mxGeometry y="26" width="250" height="150" as="geometry"/></mxCell>
-    <mxCell id="InvAlert" value="InventoryAlert" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1800" y="1010" width="260" height="165" as="geometry"/></mxCell>
-    <mxCell id="IA_f" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ ProductId : Guid&#xa;+ Type : string&#xa;+ Message : string&#xa;+ Severity : string&#xa;+ IsRead : bool&#xa;+ CreatedAt : DateTime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="InvAlert"><mxGeometry y="26" width="260" height="135" as="geometry"/></mxCell>
-    <!-- CONTROLLERS -->
-    <mxCell id="BaseCtrl" value="&lt;&lt;abstract&gt;&gt; BaseController" style="swimlane;fontStyle=3;align=center;startSize=28;fillColor=#f0f0f0;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="640" y="80" width="300" height="180" as="geometry"/></mxCell>
-    <mxCell id="BC_f" value="# Db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="BaseCtrl"><mxGeometry y="28" width="300" height="24" as="geometry"/></mxCell>
-    <mxCell id="BC_sep" value="" style="line;strokeColor=#666666;fillColor=none;" vertex="1" parent="BaseCtrl"><mxGeometry y="52" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="BC_m" value="# GetCurrentStoreId() : Guid&#xa;# UserBelongsToStore(storeId) : Task&lt;bool&gt;&#xa;+ OnActionExecutionAsync(...) : override Task" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="BaseCtrl"><mxGeometry y="60" width="300" height="60" as="geometry"/></mxCell>
-    <mxCell id="BC_note" value="[Authorize] [AutoValidateAntiforgeryToken]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=10;fontStyle=2;" vertex="1" parent="BaseCtrl"><mxGeometry y="130" width="300" height="46" as="geometry"/></mxCell>
-    <mxCell id="AuthCtrl" value="AuthController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="280" y="80" width="300" height="160" as="geometry"/></mxCell>
-    <mxCell id="AC_f" value="- _userManager : UserManager&lt;ApplicationUser&gt;&#xa;- _signInManager : SignInManager&lt;ApplicationUser&gt;&#xa;- _db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AuthCtrl"><mxGeometry y="26" width="300" height="56" as="geometry"/></mxCell>
-    <mxCell id="AC_sep" value="" style="line;strokeColor=#666666;fillColor=none;" vertex="1" parent="AuthCtrl"><mxGeometry y="82" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="AC_m" value="+ Login(model) : Task&lt;IActionResult&gt;&#xa;+ Register(model) : Task&lt;IActionResult&gt;&#xa;+ Logout() : Task&lt;IActionResult&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AuthCtrl"><mxGeometry y="90" width="300" height="60" as="geometry"/></mxCell>
-    <mxCell id="DashCtrl" value="DashboardController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="30" y="340" width="300" height="140" as="geometry"/></mxCell>
-    <mxCell id="DC_f" value="- _analytics : AnalyticsService&#xa;- _scopeFactory : IServiceScopeFactory" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="DashCtrl"><mxGeometry y="26" width="300" height="38" as="geometry"/></mxCell>
-    <mxCell id="DC_sep" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="DashCtrl"><mxGeometry y="64" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="DC_m" value="+ Index(range, page) : Task&lt;IActionResult&gt;&#xa;+ ForecastGrid(range, page) : Task&lt;IActionResult&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="DashCtrl"><mxGeometry y="72" width="300" height="44" as="geometry"/></mxCell>
-    <mxCell id="OrdCtrl" value="OrderController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="380" y="340" width="300" height="160" as="geometry"/></mxCell>
-    <mxCell id="OC_f" value="- _orderService : IOrderService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="OrdCtrl"><mxGeometry y="26" width="300" height="24" as="geometry"/></mxCell>
-    <mxCell id="OC_sep" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="OrdCtrl"><mxGeometry y="50" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="OC_m" value="+ Index(search, status, page) : Task&lt;IActionResult&gt;&#xa;+ Create(model) : Task&lt;IActionResult&gt;&#xa;+ Details(id) : Task&lt;IActionResult&gt;&#xa;+ UpdateStatus(id, status) : Task&lt;IActionResult&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="OrdCtrl"><mxGeometry y="58" width="300" height="80" as="geometry"/></mxCell>
-    <mxCell id="ProdCtrl" value="ProductController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="730" y="340" width="300" height="180" as="geometry"/></mxCell>
-    <mxCell id="PC_f" value="- _productService : IProductService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ProdCtrl"><mxGeometry y="26" width="300" height="24" as="geometry"/></mxCell>
-    <mxCell id="PC_sep" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="ProdCtrl"><mxGeometry y="50" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="PC_m" value="+ Index(search, cat, page) : Task&lt;IActionResult&gt;&#xa;+ Create(model) : Task&lt;IActionResult&gt;&#xa;+ Edit(id, model) : Task&lt;IActionResult&gt;&#xa;+ Delete(id) : Task&lt;IActionResult&gt;&#xa;+ ImportCsv(file) : Task&lt;IActionResult&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ProdCtrl"><mxGeometry y="58" width="300" height="100" as="geometry"/></mxCell>
-    <mxCell id="CustCtrl" value="CustomerController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="1090" y="340" width="300" height="180" as="geometry"/></mxCell>
-    <mxCell id="CC_f" value="- _rfmService : IRfmService&#xa;- _customerService : ICustomerService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="CustCtrl"><mxGeometry y="26" width="300" height="38" as="geometry"/></mxCell>
-    <mxCell id="CC_sep" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="CustCtrl"><mxGeometry y="64" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="CC_m" value="+ Index(search, segment, sort, page) : Task&lt;IActionResult&gt;&#xa;+ Create(model) : Task&lt;IActionResult&gt;&#xa;+ Edit(id, model) : Task&lt;IActionResult&gt;&#xa;+ Recalculate(id) : Task&lt;IActionResult&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="CustCtrl"><mxGeometry y="72" width="300" height="96" as="geometry"/></mxCell>
-    <mxCell id="AltCtrl" value="AlertController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="30" y="560" width="300" height="140" as="geometry"/></mxCell>
-    <mxCell id="AltC_f" value="- _alertService : IAlertService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AltCtrl"><mxGeometry y="26" width="300" height="24" as="geometry"/></mxCell>
-    <mxCell id="AltC_sep" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="AltCtrl"><mxGeometry y="50" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="AltC_m" value="+ Index() : Task&lt;IActionResult&gt;&#xa;+ MarkRead(id) : Task&lt;IActionResult&gt;&#xa;+ Scan() : Task&lt;IActionResult&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AltCtrl"><mxGeometry y="58" width="300" height="60" as="geometry"/></mxCell>
-    <mxCell id="ExpCtrl" value="ExpenseController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="380" y="560" width="300" height="140" as="geometry"/></mxCell>
-    <mxCell id="ExpC_f" value="- _expenseService : IExpenseService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ExpCtrl"><mxGeometry y="26" width="300" height="24" as="geometry"/></mxCell>
-    <mxCell id="ExpC_sep" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="ExpCtrl"><mxGeometry y="50" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="ExpC_m" value="+ Index(page) : Task&lt;IActionResult&gt;&#xa;+ Create(model) : Task&lt;IActionResult&gt;&#xa;+ Delete(id) : Task&lt;IActionResult&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ExpCtrl"><mxGeometry y="58" width="300" height="60" as="geometry"/></mxCell>
-    <mxCell id="RepCtrl" value="ReportController" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="730" y="560" width="300" height="120" as="geometry"/></mxCell>
-    <mxCell id="RepC_note" value="(uses Db directly - no injected service)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;fontStyle=2;" vertex="1" parent="RepCtrl"><mxGeometry y="26" width="300" height="24" as="geometry"/></mxCell>
-    <mxCell id="RepC_sep" value="" style="line;strokeColor=#82b366;fillColor=none;" vertex="1" parent="RepCtrl"><mxGeometry y="50" width="300" height="8" as="geometry"/></mxCell>
-    <mxCell id="RepC_m" value="+ SalesSummary(from, to) : Task&lt;IActionResult&gt;&#xa;+ ExportPdf(...) : Task&lt;IActionResult&gt; [QuestPDF]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="RepCtrl"><mxGeometry y="58" width="300" height="44" as="geometry"/></mxCell>
-    <!-- SERVICES -->
-    <mxCell id="AnaServ" value="AnalyticsService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="30" y="780" width="320" height="160" as="geometry"/></mxCell>
-    <mxCell id="AS_f" value="- _db : AppDbContext&#xa;- _forecastService : ForecastService" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AnaServ"><mxGeometry y="26" width="320" height="38" as="geometry"/></mxCell>
-    <mxCell id="AS_sep" value="" style="line;strokeColor=#d6b656;fillColor=none;" vertex="1" parent="AnaServ"><mxGeometry y="64" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="AS_m" value="+ GetOverview(storeId, range, page, size) : Task&#xa;+ GetForecastsPageAsync(storeId, range, page, size) : Task&#xa;- PadHistoryWithZeros(history) : List&lt;DailySales&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AnaServ"><mxGeometry y="72" width="320" height="84" as="geometry"/></mxCell>
-    <mxCell id="FcServ" value="ForecastService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="410" y="780" width="320" height="170" as="geometry"/></mxCell>
-    <mxCell id="FS_f" value="- _http : HttpClient (timeout: 5s)&#xa;- _mlUrl : string [config: MlServiceUrl]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="FcServ"><mxGeometry y="26" width="320" height="38" as="geometry"/></mxCell>
-    <mxCell id="FS_sep" value="" style="line;strokeColor=#d6b656;fillColor=none;" vertex="1" parent="FcServ"><mxGeometry y="64" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="FS_m" value="+ GetForecastAsync(storeId, productId, history, periods) : Task&#xa;  POST {mlUrl}/api/v1/ml/forecast&#xa;+ IsAvailableAsync() : Task&lt;bool&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="FcServ"><mxGeometry y="72" width="320" height="96" as="geometry"/></mxCell>
-    <mxCell id="OrdServ" value="OrderService : IOrderService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="790" y="780" width="320" height="190" as="geometry"/></mxCell>
-    <mxCell id="OS_f" value="- _db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="OrdServ"><mxGeometry y="26" width="320" height="24" as="geometry"/></mxCell>
-    <mxCell id="OS_sep" value="" style="line;strokeColor=#d6b656;fillColor=none;" vertex="1" parent="OrdServ"><mxGeometry y="50" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="OS_m" value="+ CreateOrderAsync(storeId, model) : Task&lt;string?&gt;&#xa;  (BeginTransactionAsync - commit/rollback)&#xa;+ GetDashboardKpisAsync(storeId) : Task&#xa;+ GetOrdersPagedAsync(storeId, ...) : Task&#xa;+ UpdateStatusAsync(orderId, status) : Task" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="OrdServ"><mxGeometry y="58" width="320" height="128" as="geometry"/></mxCell>
-    <mxCell id="ExpServ" value="ExpenseService : IExpenseService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1170" y="780" width="320" height="160" as="geometry"/></mxCell>
-    <mxCell id="ExpS_f" value="- _db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ExpServ"><mxGeometry y="26" width="320" height="24" as="geometry"/></mxCell>
-    <mxCell id="ExpS_sep" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="ExpServ"><mxGeometry y="50" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="ExpS_m" value="+ GetPagedAsync(storeId, page, size) : Task&#xa;+ CreateAsync(model, storeId) : Task&#xa;+ DeleteAsync(id, storeId) : Task" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ExpServ"><mxGeometry y="58" width="320" height="80" as="geometry"/></mxCell>
-    <mxCell id="RfmServ" value="RfmService : IRfmService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="30" y="1010" width="320" height="170" as="geometry"/></mxCell>
-    <mxCell id="RS_f" value="- _db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="RfmServ"><mxGeometry y="26" width="320" height="24" as="geometry"/></mxCell>
-    <mxCell id="RS_sep" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="RfmServ"><mxGeometry y="50" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="RS_m" value="+ RecalculateAllAsync(storeId) : Task&#xa;- CalculateRecencyScore(days) : int&#xa;- CalculateFrequencyScore(orders) : int&#xa;- CalculateMonetaryScore(spent) : int&#xa;- DetermineSegment(r, f, m) : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="RfmServ"><mxGeometry y="58" width="320" height="108" as="geometry"/></mxCell>
-    <mxCell id="AltServ" value="AlertService : IAlertService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="410" y="1010" width="320" height="140" as="geometry"/></mxCell>
-    <mxCell id="AltS_f" value="- _db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AltServ"><mxGeometry y="26" width="320" height="24" as="geometry"/></mxCell>
-    <mxCell id="AltS_sep" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="AltServ"><mxGeometry y="50" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="AltS_m" value="+ ScanAndGenerateAlertsAsync(storeId) : Task&#xa;  (resolves existing + creates InventoryAlert rows)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="AltServ"><mxGeometry y="58" width="320" height="78" as="geometry"/></mxCell>
-    <mxCell id="ProdServ" value="ProductService : IProductService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="790" y="1010" width="320" height="170" as="geometry"/></mxCell>
-    <mxCell id="ProdS_f" value="- _db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ProdServ"><mxGeometry y="26" width="320" height="24" as="geometry"/></mxCell>
-    <mxCell id="ProdS_sep" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="ProdServ"><mxGeometry y="50" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="ProdS_m" value="+ GetPagedAsync(storeId, search, cat, page, size) : Task&#xa;+ CreateAsync(model, storeId) : Task&#xa;+ UpdateAsync(product) : Task&#xa;+ DeleteAsync(id, storeId) : Task&#xa;+ ImportFromCsvAsync(file, storeId) : Task" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="ProdServ"><mxGeometry y="58" width="320" height="108" as="geometry"/></mxCell>
-    <mxCell id="CustServ" value="CustomerService : ICustomerService" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1170" y="1010" width="320" height="160" as="geometry"/></mxCell>
-    <mxCell id="CustS_f" value="- _db : AppDbContext" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="CustServ"><mxGeometry y="26" width="320" height="24" as="geometry"/></mxCell>
-    <mxCell id="CustS_sep" value="" style="line;strokeColor=#9673a6;fillColor=none;" vertex="1" parent="CustServ"><mxGeometry y="50" width="320" height="8" as="geometry"/></mxCell>
-    <mxCell id="CustS_m" value="+ GetPagedAsync(storeId, search, seg, sort, page) : Task&#xa;+ CreateAsync(model, storeId) : Task&#xa;+ UpdateAsync(model, id, storeId) : Task&#xa;+ DeleteAsync(id, storeId) : Task" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;" vertex="1" parent="CustServ"><mxGeometry y="58" width="320" height="96" as="geometry"/></mxCell>
-    <!-- RELATIONSHIPS -->
-    <!-- AuthController: extends plain Controller (dashed, NOT BaseController subclass) -->
-    <mxCell id="rel_auth" value="extends Controller" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;dashed=1;strokeColor=#666666;fontSize=10;fontStyle=2;" edge="1" source="AuthCtrl" target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <!-- BaseController inheritance (solid hollow triangle) -->
-    <mxCell id="inh_dash" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;strokeColor=#82b366;" edge="1" source="DashCtrl" target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="inh_ord"  value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;strokeColor=#82b366;" edge="1" source="OrdCtrl"  target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="inh_prod" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;strokeColor=#82b366;" edge="1" source="ProdCtrl" target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="inh_cust" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;strokeColor=#82b366;" edge="1" source="CustCtrl" target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="inh_alt"  value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;strokeColor=#82b366;" edge="1" source="AltCtrl"  target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="inh_exp"  value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;strokeColor=#82b366;" edge="1" source="ExpCtrl"  target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="inh_rep"  value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=0;strokeColor=#82b366;" edge="1" source="RepCtrl"  target="BaseCtrl" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <!-- Controller uses Service (dashed open arrow) -->
-    <mxCell id="use_da"   value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#d6b656;fontSize=10;fontStyle=2;" edge="1" source="DashCtrl" target="AnaServ"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="use_oo"   value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#d6b656;fontSize=10;fontStyle=2;" edge="1" source="OrdCtrl"  target="OrdServ"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="use_pp"   value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;fontStyle=2;" edge="1" source="ProdCtrl" target="ProdServ" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="use_cr"   value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;fontStyle=2;" edge="1" source="CustCtrl" target="RfmServ"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="use_cs"   value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;fontStyle=2;" edge="1" source="CustCtrl" target="CustServ" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="use_alts" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;fontStyle=2;" edge="1" source="AltCtrl"  target="AltServ"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="use_exps" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#9673a6;fontSize=10;fontStyle=2;" edge="1" source="ExpCtrl"  target="ExpServ"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="use_af"   value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#d6b656;fontSize=10;fontStyle=2;" edge="1" source="AnaServ"  target="FcServ"   parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <!-- Entity associations -->
-    <mxCell id="rel_user_sm" value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="AppUser"  target="StoreMember" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_store_sm" value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Store"    target="StoreMember" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_s_p"  value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Store" target="Product"   parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_s_c"  value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Store" target="Customer"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_s_o"  value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Store" target="Order"     parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_s_e"  value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Store" target="Expense"   parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_s_fc" value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Store" target="Forecast"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_s_ia" value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Store" target="InvAlert"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_c_o"  value="0..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Customer" target="Order"     parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_o_oi" value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=ERmany;startArrow=ERmandOne;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Order" target="OrderItem" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_p_oi" value="0..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Product" target="OrderItem" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_p_fc" value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Product" target="Forecast"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <mxCell id="rel_p_ia" value="1..*" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;" edge="1" source="Product" target="InvAlert"  parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-    <!-- Legend -->
-    <mxCell id="legend" value="Legend" style="swimlane;fontStyle=1;align=center;startSize=24;fillColor=#f9f9f9;strokeColor=#999999;" vertex="1" parent="1"><mxGeometry x="30" y="1240" width="800" height="80" as="geometry"/></mxCell>
-    <mxCell id="leg_txt" value="Blue = Domain Entity | Grey = BaseController (abstract) / AuthController | Green = MVC Controller (extends BaseController) | Yellow = Analytics/Forecast Service | Purple = Domain Service&#xa;Solid arrow (hollow triangle) = Inheritance | Dashed open arrow = uses/dependency | Solid open arrow = Association (1..* multiplicity)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;overflow=hidden;rotatable=0;fontSize=11;" vertex="1" parent="legend"><mxGeometry y="24" width="800" height="52" as="geometry"/></mxCell>
-  </root>
-</mxGraphModel>
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="0xBIWdNlk44Q6qDQA2cH">
+    <mxGraphModel dx="1063" dy="1357" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="light-dark(#ffffff, #121212)" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="SellWise – Class Diagram" vertex="1">
+          <mxGeometry height="40" width="500" x="300" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-2" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="ApplicationUser" vertex="1">
+          <mxGeometry height="90" width="230" x="50" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-3" parent="S6jU1Y9OXJ2z6nHUYylU-2" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ OwnerName : string?&#xa;+ StoreMembers : ICollection" vertex="1">
+          <mxGeometry height="34" width="230" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-4" parent="S6jU1Y9OXJ2z6nHUYylU-2" style="line;strokeColor=#6c8ebf;fillColor=none;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="" vertex="1">
+          <mxGeometry height="8" width="230" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-5" parent="S6jU1Y9OXJ2z6nHUYylU-2" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;fontSize=10;fontStyle=2;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="(extends IdentityUser)" vertex="1">
+          <mxGeometry height="22" width="230" y="68" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-6" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="StoreMember" vertex="1">
+          <mxGeometry height="100" width="230" x="50" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-7" parent="S6jU1Y9OXJ2z6nHUYylU-6" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ StoreId : Guid&#xa;+ UserId : string&#xa;+ Role : string&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="70" width="230" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-8" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="Expense" vertex="1">
+          <mxGeometry height="130" width="230" x="50" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-9" parent="S6jU1Y9OXJ2z6nHUYylU-8" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ Category : string&#xa;+ Amount : decimal&#xa;+ ExpenseDate : DateTime&#xa;+ Notes : string?&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="100" width="230" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-10" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="Customer" vertex="1">
+          <mxGeometry height="248" width="233" x="50" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-11" parent="S6jU1Y9OXJ2z6nHUYylU-10" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ Name : string&#xa;+ Phone : string?&#xa;+ Email : string?&#xa;+ Address : string?&#xa;+ TotalOrders : int&#xa;+ TotalSpent : decimal&#xa;+ LastOrderDate : DateTime?&#xa;+ RecencyScore : int&#xa;+ FrequencyScore : int&#xa;+ MonetaryScore : int&#xa;+ RfmSegment : string&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="200" width="224" x="9" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-12" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="Store" vertex="1">
+          <mxGeometry height="130" width="240" x="400" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-13" parent="S6jU1Y9OXJ2z6nHUYylU-12" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ Name : string&#xa;+ Currency : string&#xa;+ Timezone : string&#xa;+ BusinessType : string?&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="100" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-14" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="Order" vertex="1">
+          <mxGeometry height="200" width="240" x="400" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-15" parent="S6jU1Y9OXJ2z6nHUYylU-14" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ CustomerId : Guid?&#xa;+ OrderNumber : string&#xa;+ Status : string&#xa;+ Total : decimal&#xa;+ DeliveryCharge : decimal&#xa;+ Discount : decimal&#xa;+ Notes : string?&#xa;+ OrderDate : DateTime&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="170" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-16" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="OrderItem" vertex="1">
+          <mxGeometry height="140" width="240" x="400" y="664" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-17" parent="S6jU1Y9OXJ2z6nHUYylU-16" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ OrderId : Guid&#xa;+ ProductId : Guid?&#xa;+ ProductName : string&#xa;+ UnitPrice : decimal&#xa;+ CostPrice : decimal&#xa;+ Quantity : int&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="110" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-18" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="Product" vertex="1">
+          <mxGeometry height="200" width="240" x="780" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-19" parent="S6jU1Y9OXJ2z6nHUYylU-18" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ Name : string&#xa;+ Sku : string?&#xa;+ Category : string?&#xa;+ CostPrice : decimal&#xa;+ SellingPrice : decimal&#xa;+ StockQuantity : int&#xa;+ LowStockThreshold : int&#xa;+ Unit : string&#xa;+ IsActive : bool&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="170" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-20" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="Forecast" vertex="1">
+          <mxGeometry height="160" width="240" x="780" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-21" parent="S6jU1Y9OXJ2z6nHUYylU-20" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ ProductId : Guid&#xa;+ TargetDate : DateTime&#xa;+ PredictedDemand : double&#xa;+ LowerBound : double&#xa;+ UpperBound : double&#xa;+ ModelUsed : string&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="130" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-22" parent="1" style="swimlane;fontStyle=1;align=center;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="InventoryAlert" vertex="1">
+          <mxGeometry height="150" width="240" x="780" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-23" parent="S6jU1Y9OXJ2z6nHUYylU-22" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=11;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="+ Id : Guid&#xa;+ StoreId : Guid&#xa;+ ProductId : Guid&#xa;+ Type : string&#xa;+ Message : string&#xa;+ Severity : string&#xa;+ IsRead : bool&#xa;+ CreatedAt : DateTime" vertex="1">
+          <mxGeometry height="120" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-26" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-2" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-6" value="1..*">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-27" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-12" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-6" value="1..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310.33" y="165" />
+              <mxPoint x="310.33" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-28" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-12" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-18" value="1..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="718.67" y="140.17" />
+              <mxPoint x="718.67" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-29" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-12" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-10" value="1..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="180" />
+              <mxPoint x="340" y="675" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-30" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-12" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-14" value="1..*">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-31" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-12" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-8" value="1..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="210" />
+              <mxPoint x="370" y="455" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-32" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="1..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="712" y="184" />
+              <mxPoint x="712" y="474" />
+            </Array>
+            <mxPoint x="640" y="184" as="sourcePoint" />
+            <mxPoint x="780" y="474" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-33" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-12" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-22" value="1..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="748.67" y="120" />
+              <mxPoint x="748.67" y="625" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-34" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;dashed=1;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" value="0..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="356.17" y="698" />
+              <mxPoint x="356.17" y="513" />
+            </Array>
+            <mxPoint x="280" y="698" as="sourcePoint" />
+            <mxPoint x="400" y="513" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-35" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-14" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=ERmany;startArrow=ERmandOne;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-16" value="1..*">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-36" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-18" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;dashed=1;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-16" value="0..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="677.83" y="280" />
+              <mxPoint x="677.83" y="727.67" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-37" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-18" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-20" value="1..*">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="S6jU1Y9OXJ2z6nHUYylU-38" edge="1" parent="1" source="S6jU1Y9OXJ2z6nHUYylU-18" style="edgeStyle=orthogonalEdgeStyle;jumpStyle=arc;rounded=1;html=1;endArrow=open;strokeColor=#6c8ebf;fontSize=10;fontFamily=Courier New;fontColor=default;labelBackgroundColor=none;labelBorderColor=none;textShadow=0;" target="S6jU1Y9OXJ2z6nHUYylU-22" value="1..*">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1050" y="200" />
+              <mxPoint x="1050" y="625" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
