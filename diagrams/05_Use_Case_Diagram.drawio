@@ -1,6 +1,6 @@
-<mxfile host="drawio-plugin" modified="2026-08-30T12:18:12.345Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" version="22.1.22" etag="3DDR2OJrQERZwMCjFBq2" type="embed">
+<mxfile host="drawio-plugin" modified="2026-08-30T12:23:59.320Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" version="22.1.22" etag="C9uvbkN9XWLmM_9b5Cxq" type="embed">
   <diagram id="NCKuHXzIJjU470t_X4H4" name="Page-1">
-    <mxGraphModel dx="706" dy="433" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="2825" dy="1734" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -8,7 +8,7 @@
           <mxGeometry x="400" y="15" width="800" height="35" as="geometry" />
         </mxCell>
         <mxCell id="boundary" value="SellWise System" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;strokeWidth=2;fontSize=14;fontStyle=1;dashed=1;" parent="1" vertex="1">
-          <mxGeometry x="210" y="60" width="1120" height="980" as="geometry" />
+          <mxGeometry x="210" y="60" width="1120" height="940" as="geometry" />
         </mxCell>
         <mxCell id="grpAuth" value="Authentication" style="swimlane;startSize=20;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;dashed=1;" parent="boundary" vertex="1">
           <mxGeometry x="320" y="50" width="500" height="80" as="geometry" />
@@ -292,7 +292,7 @@
         <mxCell id="a_e_order" style="edgeStyle=none;html=1;" parent="1" source="employee" target="uc_create_order" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="a_e_status" style="edgeStyle=none;html=1;" parent="1" source="employee" target="uc_orderstatus" edge="1">
+        <mxCell id="a_e_status" style="edgeStyle=none;html=1;exitX=0.969;exitY=0.65;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="employee" target="uc_orderstatus" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="150" y="910" />
@@ -301,7 +301,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="a_e_inv" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" target="uc_invoice" edge="1">
+        <mxCell id="a_e_inv" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.951;exitY=0.705;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="employee" target="uc_invoice" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="80" y="880" as="sourcePoint" />
             <Array as="points">
@@ -316,12 +316,12 @@
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1187" y="640" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="1188" y="820" />
+              <mxPoint x="1187" y="815" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="caption" value="Figure 3.6. Use Case Diagram - SellWise AI Sales Analytics and Inventory SaaS" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=2;" parent="1" vertex="1">
-          <mxGeometry x="400" y="1060" width="800" height="25" as="geometry" />
+          <mxGeometry x="400" y="1020" width="800" height="25" as="geometry" />
         </mxCell>
         <mxCell id="13" value="" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
           <mxGeometry x="80" y="200" width="50" height="90" as="geometry" />
