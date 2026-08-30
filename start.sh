@@ -54,6 +54,11 @@ fi
 echo "[2/4] Starting ML Service..."
 if [ -d "SellWise.ML" ]; then
     cd SellWise.ML
+    if [ ! -d ".venv" ]; then
+        echo "Setting up ML virtual environment..."
+        uv venv > /dev/null 2>&1
+        uv pip install -r requirements.txt > /dev/null 2>&1
+    fi
     uv run uvicorn app.main:app --port 8000 --reload > /dev/null 2>&1 &
     ML_PID=$!
     cd ..

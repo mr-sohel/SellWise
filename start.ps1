@@ -44,6 +44,13 @@ try {
     # 2. Start ML Service
     Write-Host "[2/4] Starting ML Service..." -ForegroundColor Yellow
     if (Test-Path "SellWise.ML") {
+        if (-not (Test-Path "SellWise.ML/.venv")) {
+            Write-Host "Setting up ML virtual environment..." -ForegroundColor Yellow
+            Push-Location SellWise.ML
+            uv venv | Out-Null
+            uv pip install -r requirements.txt | Out-Null
+            Pop-Location
+        }
         $mlProcess = Start-Process -FilePath "uv" -ArgumentList "run", "uvicorn", "app.main:app", "--port", "8000", "--reload" -WorkingDirectory "SellWise.ML" -WindowStyle Hidden -PassThru
         Write-Host "[OK] ML Service on port 8000." -ForegroundColor Green
     } else {
