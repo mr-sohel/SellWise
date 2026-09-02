@@ -1,0 +1,96 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SellWise — Production Docker Compose for Oracle Cloud Always Free
+# All 3 services communicate over the internal 'sellwise-net' bridge network.
+# Only the web app is exposed to the outside world (via Caddy on port 80/443).
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── 1. SQL Server 2022 ──────────────────────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sellwise-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD}"
+      MSSQL_PID: "Express"           # Free Express edition — max 10GB DB
+    volumes:
+      - sellwise-data:/var/opt/mssql  # Persistent data volume
+    networks:
+      - sellwise-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${SA_PASSWORD}' -Q 'SELECT 1' -C || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── 2. Python ML Microservice (FastAPI + Prophet) ───────────────────────────
+  sellwise-ml:
+    build:
+      context: ./SellWise.ML
+      dockerfile: Dockerfile
+    container_name: sellwise-ml
+    environment:
+      CORS_ORIGINS: "http://sellwise-web:8080,https://${DOMAIN}"
+      CORS_ALLOW_CREDENTIALS: "true"
+    networks:
+      - sellwise-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/ml/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    # NOTE: No ports exposed — only accessible internally from sellwise-web
+
+  # ── 3. ASP.NET Core 10 Web App ──────────────────────────────────────────────
+  sellwise-web:
+    build:
+      context: ./SellWise.Web
+      dockerfile: Dockerfile
+    container_name: sellwise-web
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=SellWise;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False;"
+      MlServiceUrl: "http://sellwise-ml:8000"
+      ASPNETCORE_ENVIRONMENT: "Production"
+    ports:
+      - "8080:8080"                    # Caddy proxies 80/443 → this port
+    networks:
+      - sellwise-net
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      sellwise-ml:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── 4. Caddy — Reverse Proxy + Auto HTTPS ───────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: sellwise-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data              # Stores Let's Encrypt certificates
+      - caddy-config:/config
+    networks:
+      - sellwise-net
+    depends_on:
+      - sellwise-web
+    restart: unless-stopped
+
+networks:
+  sellwise-net:
+    driver: bridge
+
+volumes:
+  sellwise-data:    # SQL Server database files
+  caddy-data:       # SSL certificates (Let's Encrypt)
+  caddy-config:     # Caddy config cache

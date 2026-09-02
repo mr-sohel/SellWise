@@ -1,0 +1,11 @@
+# Railway configuration for SellWise Web App
+[build]
+builder = "dockerfile"
+dockerfilePath = "SellWise.Web/Dockerfile"
+
+[deploy]
+startCommand = ""
+healthcheckPath = "/"
+healthcheckTimeout = 60
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

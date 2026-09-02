@@ -86,4 +86,4 @@ SellWise.ML/data/models/
 *.ldf
 **/.claude
 **/.agents
-**/graphify-out
+**/graphify-out.env
