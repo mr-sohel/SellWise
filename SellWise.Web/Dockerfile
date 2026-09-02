@@ -23,5 +23,5 @@ USER $APP_UID
 EXPOSE 8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Railway injects $PORT at runtime; fall back to 8080 locally
-CMD ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet SellWise.Web.dll
+# Railway injects $PORT at runtime; fall back to 8080 locally (using JSON array format)
+ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet SellWise.Web.dll"]
