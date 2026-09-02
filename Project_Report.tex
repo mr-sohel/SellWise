@@ -1,0 +1,681 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{titlesec}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinelanguage{json}{
+  morestring=[b]",
+  sensitive=false,
+  breaklines=true,
+  columns=fullflexible,
+  showstringspaces=false
+}
+
+\lstdefinestyle{chaptercode}{
+  basicstyle=\footnotesize\ttfamily\color{black},
+  keywordstyle=\bfseries\color{black},
+  commentstyle=\itshape\color{black},
+  stringstyle=\color{black},
+  backgroundcolor=\color{white},
+  frame=single,
+  rulecolor=\color{black},
+  framesep=5pt,
+  breaklines=true,
+  breakatwhitespace=false,
+  breakindent=1.5em,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  tabsize=4,
+  numbers=left,
+  numberstyle=\tiny\color{black},
+  numbersep=7pt,
+  xleftmargin=1.8em,
+  framexleftmargin=1.4em,
+  aboveskip=0.8em,
+  belowskip=0.8em
+}
+
+\lstset{style=chaptercode}
+
+\emergencystretch=2em
+\pdfsuppresswarningpagegroup=1
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\LARGE}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{0.4cm}
+    
+    {\Large \textsc{B.Sc. Engg. Project}}\\[1cm]
+    
+    {\huge \textbf{SELLWISE (Predictive Sales \& Inventory Analytics)}}\\[1.5cm]
+    
+    {\Large Developed by}\\[0.35cm]
+    {\large
+    \begin{tabular}{c}
+        Md. Sohel Rana (ID: 222351083) \\
+        Md. Labu Miah (ID: 222351215) \\
+        Faysal Islam Fahad (ID: 222351133) \\
+        Naushin Sultana Mim (ID: 222351203) \\
+        Milhan Jannat Jarin (ID: 222351125)
+    \end{tabular}}\\[0.8cm]
+    
+    {\Large Supervised by}\\[0.3cm]
+    {\large Humayra Ahmed}\\[0.15cm]
+    {\large Assistant Professor}\\[0.8cm]
+    
+    {\Large Department of Computer Science \& Engineering}\\[0.3cm]
+    {\large (In partial fulfillment of the requirements for the degree of\\
+    Bachelor of Science in Computer Science \& Engineering)}\\[0.8cm]
+    
+    \vfill
+
+    \includegraphics[height=4.5cm]{Diagrams/bubt_logo.png}\\[0.2cm]
+
+    {\Large Department of Computer Science \& Engineering}\\[0.3cm]
+    {\Large Bangladesh University of Business \& Technology (BUBT)}\\[0.3cm]
+    {\large Rupnagar, Mirpur-2, Dhaka-1216, Bangladesh}\\[0.3cm]
+    {\large \today}
+\end{titlepage}
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\pagenumbering{arabic}
+
+\chapter{INTRODUCTION}
+\section{Introduction}
+SellWise is an enterprise-grade Software-as-a-Service (SaaS) web application designed to help small and medium-sized retail businesses streamline their operational workflow. It consolidates point-of-sale (POS) operations, multi-tenant inventory management, customer behavioral analytics, salesperson attribution, printable invoicing, and machine learning-driven demand forecasting into a unified ecosystem. 
+
+Even today, a large percentage of independent retail outlets rely on paper logs or rudimentary spreadsheets for ledger maintenance. These conventional approaches are error-prone, labor-intensive, lack data security, and offer zero forward-looking analytical visibility. SellWise bridges this technological gap by providing an intuitive digital infrastructure that automates transaction logging, eliminates data loss, and delivers proactive predictive insights.
+
+To optimize scalability and maintain high responsiveness, the platform adopts a decoupled microservice architecture:
+\begin{itemize}
+    \item \textbf{Core Web Layer:} Built with ASP.NET Core 10 MVC and Entity Framework Core 10, executing ACID-compliant business transactions, user authentication, multi-tenant session scoping, role-based authorization, and PDF document generation.
+    \item \textbf{Predictive Analytics Engine:} A standalone asynchronous microservice implemented in Python with FastAPI, running Meta Prophet time-series regression models to compute 30-day demand projections with upper and lower uncertainty bounds.
+\end{itemize}
+
+\section{Project Overview}
+SellWise provides an affordable, turnkey retail management suite requiring zero complex server configuration or specialized technical expertise from shop owners. 
+
+The application utilizes database-level multi-tenancy where each registered business operates within an isolated workspace. Store data (products, orders, customers, and financial audits) is strictly segmented by unique Store Identifiers, preventing cross-tenant data leakage. By delegating data processing, RFM customer clustering, and mathematical forecasting to the software, business owners and store managers can focus on customer satisfaction and growth.
+
+\section{Problem Statement}
+Manual retail management imposes severe constraints on operational efficiency:
+\begin{itemize}
+    \item \textbf{Inventory Imbalance \& Capital Lockup:} Overstocking slow-moving products freezes working capital, while stockouts of high-velocity items cause missed revenue opportunities and customer churn.
+    \item \textbf{Customer Attrition:} Without automated purchase history analysis, businesses fail to recognize when loyal buyers become inactive.
+    \item \textbf{Decentralized Financial Records:} Logging sales, supplier expenses, and operational overhead across disparate books obscures actual net profitability.
+    \item \textbf{Absence of Predictive Planning:} Historical reports only describe past events without projecting future inventory demand or seasonal spikes.
+\end{itemize}
+
+\section{Motivation}
+Our motivation in developing SellWise stems from the desire to democratize advanced enterprise analytics for small businesses:
+\begin{itemize}
+    \item Empower retail owners with a single real-time executive dashboard summarizing revenue, orders, and restock urgencies.
+    \item Equip stores with AI-based 30-day demand forecasts to optimize reorder cycles and inventory capital.
+    \item Automate customer retention using Recency, Frequency, and Monetary (RFM) segmentation.
+    \item Ensure atomic transaction integrity during high-throughput checkouts.
+    \item Provide built-in printable invoices and automated PDF financial audit reports.
+\end{itemize}
+
+\section{Objectives}
+\begin{itemize}
+    \item Construct a responsive, mobile-optimized web application using ASP.NET Core 10, Bootstrap 5.3, and Chart.js.
+    \item Integrate Meta Prophet to predict 30-day future demand per product based on 90-day historical time-series data.
+    \item Guarantee transactional atomicity for POS sales, customer ledger updates, and stock deduction.
+    \item Classify customers automatically into 8 behavioral segments based on RFM scores.
+    \item Implement proactive inventory threshold monitoring with automatic alert generation and resolution.
+    \item Support multiple order types (\textit{Walk-In, Online, Delivery, Phone}) and salesperson tracking.
+    \item Provide instant printable receipts and downloadable QuestPDF executive reports.
+    \item Deploy containerized SQL Server 2022 using Docker with persistent data storage.
+\end{itemize}
+
+\section{Development Tools}
+\begin{itemize}
+    \item \textbf{Core Technologies:}
+    \begin{itemize}
+        \item Microsoft SQL Server 2022 (Docker Linux Container)
+        \item ASP.NET Core 10 MVC (\texttt{net10.0})
+        \item Entity Framework Core 10 (ORM)
+        \item Python 3.11+ with FastAPI \& Uvicorn
+        \item Meta Prophet (Time-Series Regression)
+        \item QuestPDF 2026.7 (Document Generation)
+        \item Bootstrap 5.3.3 \& Chart.js 4.4.7
+    \end{itemize}
+    \item \textbf{Programming Languages:} C\# 13, Python 3.11, SQL (T-SQL), HTML5, CSS3, JavaScript (ES6).
+\end{itemize}
+
+\section{Proposed System}
+The proposed system implements a three-tier Role-Based Access Control (RBAC) hierarchy:
+\begin{itemize}
+    \item \textbf{Business Owner:} Full administrative privileges, store provisioning, multi-store switching, employee management, financial analytics, expense tracking, and PDF audit exports.
+    \item \textbf{Store Manager:} Catalog management, stock updates, order processing, customer directory management, and expense logging.
+    \item \textbf{Salesman / Employee:} High-speed POS checkout, customer lookup, customer registration, and product catalog lookup (restricted from sensitive financial summaries and staff administration).
+\end{itemize}
+
+When an order is submitted, an EF Core transaction validates available stock, deducts inventory, assigns customer order history, and records the active salesperson. In parallel, background analytics query historical sales trends to update demand forecasts.
+
+\section{Purpose Of The System}
+The purpose of SellWise is to provide a comprehensive, all-in-one digital operating system for small retailers. By unifying POS checkouts, inventory health checks, customer segmentation, and predictive forecasting, retailers eliminate software fragmentation and make informed, data-driven decisions.
+
+\section{Goal}
+The primary goal is to deliver an accessible, high-performance web platform that automates routine retail bookkeeping, prevents stockouts through predictive modeling, and enhances business profitability.
+
+\chapter{EXISTING SYSTEM}
+
+\section{Introduction}
+Retail software solutions have evolved significantly over the last decade. However, small-to-medium enterprises (SMEs) continue to face high entry barriers. This chapter evaluates market-leading retail platforms, highlights their strengths and limitations, and details the literature underpinning SellWise's architectural design.
+
+\section{Existing System Analysis}
+
+\subsection{Shopify Analytics}
+Shopify provides an extensive e-commerce platform with integrated POS hardware and cloud reporting.
+\begin{itemize}
+    \item \textbf{Advantages:} Intuitive user interface, extensive app store, multi-channel synchronization.
+    \item \textbf{Disadvantages:} Advanced analytics require high-tier enterprise subscriptions; lack of native predictive demand forecasting without third-party recurring fees.
+\end{itemize}
+
+\subsection{Square for Retail}
+Square offers a free basic POS system tailored for small merchants.
+\begin{itemize}
+    \item \textbf{Advantages:} Low initial cost, integrated card processing, customer directory.
+    \item \textbf{Disadvantages:} In-depth reporting and custom multi-store inventory routing require paid add-ons; lacks automated time-series forecasting.
+\end{itemize}
+
+\subsection{Lightspeed Retail}
+Lightspeed is an enterprise-oriented POS platform specializing in complex multi-location inventory.
+\begin{itemize}
+    \item \textbf{Advantages:} Detailed purchase order management, supplier catalogs, granular reporting.
+    \item \textbf{Disadvantages:} High monthly cost, steep learning curve for non-technical retail clerks, heavy onboarding overhead.
+\end{itemize}
+
+\section{Supporting Literature}
+
+\subsection{Architectural Modeling Diagrams}
+
+\textbf{Entity Relationship Diagram (ERD):}\\
+An ER Diagram represents the relational database schema, highlighting entities (tables), attributes (columns), primary/foreign keys, and cardinalities ($1:N$, $N:M$).
+
+\textbf{Data Flow Diagram (DFD):}\\
+A DFD maps the flow of data through external entities, processes, and persistent data stores at both context (Level 0) and detailed functional (Level 1) layers.
+
+\textbf{Use Case Diagram:}\\
+Use Case modeling illustrates system boundaries and the specific actions accessible by distinct actor roles (Owner, Manager, Salesman).
+
+\subsection{Technology Selection Rationale}
+\begin{itemize}
+    \item \textbf{ASP.NET Core 10 MVC:} Delivers high runtime performance, strong type-safety, built-in dependency injection, and comprehensive security middleware.
+    \item \textbf{Entity Framework Core 10:} Provides LINQ query abstraction, migration versioning, and ACID-compliant transaction execution.
+    \item \textbf{Python FastAPI \& Meta Prophet:} Enables non-blocking asynchronous REST endpoints for machine learning, executing additive time-series models capable of capturing day-of-week and annual seasonality.
+    \item \textbf{Docker Containerization:} Ensures reliable, consistent database deployment across Windows, macOS, and Linux developer environments.
+\end{itemize}
+
+\section{Conclusion}
+While commercial platforms offer rich features, their high subscription costs and lack of built-in predictive machine learning limit their value for small retail businesses. SellWise addresses these gaps by combining lightweight POS operations, multi-tenancy, and predictive modeling into a single cost-effective solution.
+
+\chapter{SYSTEM EVALUATION}
+
+\section{Introduction}
+System evaluation encompasses the formal definition of functional and non-functional requirements, development methodology, and architectural design diagrams that form the foundation of SellWise.
+
+\section{Requirement Analysis}
+
+\subsection{Non-Functional Requirements}
+\begin{itemize}
+    \item \textbf{Performance:} POS order placement response time under 300ms; dashboard page rendering within 1.5 seconds.
+    \item \textbf{Security:} ASP.NET Core Identity with PBKDF2 password hashing, anti-forgery token validation (\texttt{[AutoValidateAntiforgeryToken]}), and automatic 15-minute account lockout after 5 failed login attempts.
+    \item \textbf{Transactional Integrity:} ACID compliance via EF Core \texttt{BeginTransactionAsync}, preventing orphaned records or inconsistent stock deductions.
+    \item \textbf{Multi-Tenant Isolation:} Automatic tenant filtering at the controller and service layer using active session Store IDs.
+    \item \textbf{Responsiveness:} Mobile-first Bootstrap 5.3 UI ensuring fluid operation across desktops, tablets, and mobile devices.
+\end{itemize}
+
+\subsection{Functional Requirements}
+\begin{itemize}
+    \item User registration, cookie-based authentication, and store provisioning.
+    \item Product catalog CRUD with SKU, price, stock quantity, and threshold management.
+    \item POS checkout supporting multiple order channels (\textit{Walk-In, Online, Delivery, Phone}), discounts, delivery charges, and salesperson assignment.
+    \item Dynamic printable invoices formatted for standard and thermal receipt printing.
+    \item Customer management with quick-creation modal, search by phone, and RFM score calculation.
+    \item Proactive low-stock alert monitoring with automatic creation and resolution.
+    \item AI-driven 30-day demand forecast graphs powered by Meta Prophet with EWMA fallback.
+    \item On-demand PDF business audit export engine using QuestPDF.
+\end{itemize}
+
+\section{Methodology}
+
+\subsection{Agile Development Model}
+The project was executed following the Agile Scrum methodology, breaking development into iterative two-week sprint cycles.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.82\textwidth,height=0.45\textheight,keepaspectratio]{Diagrams/agile.png}
+    \caption{Agile Development Methodology Cycle}
+\end{figure}
+
+\subsection{Gantt Chart}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=0.88\textwidth,height=0.42\textheight,keepaspectratio]{Diagrams/gantt_chart.svg}
+    \caption{Project Timeline and Milestone Gantt Chart}
+\end{figure}
+
+\subsection{Data Flow Diagrams}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=0.82\textwidth,height=0.4\textheight,keepaspectratio]{Diagrams/dfd_level0.svg}
+    \caption{Context Level Data Flow Diagram (Level 0)}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{Diagrams/dfd_level1.svg}
+    \caption{Functional Level Data Flow Diagram (Level 1)}
+\end{figure}
+
+\subsection{Entity Relationship Diagram}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{Diagrams/er_diagram.svg}
+    \caption{Entity Relationship Diagram (ERD)}
+\end{figure}
+
+\subsection{Use Case Diagram}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{Diagrams/Use_Case_diagram.png}
+    \caption{Use Case Diagram and Role Hierarchy}
+\end{figure}
+
+\subsection{Activity Diagram}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{Diagrams/activity_diagram.svg}
+    \caption{Activity Diagram for POS Order Processing}
+\end{figure}
+
+\subsection{Sequence Diagram}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{Diagrams/sequence_diagram.svg}
+    \caption{Sequence Diagram for Dashboard Loading \& Forecasting}
+\end{figure}
+
+\subsection{Class Diagram}
+\begin{figure}[H]
+    \centering
+    \includesvg[inkscapelatex=false,width=\textwidth,height=0.85\textheight,keepaspectratio]{Diagrams/class_diagram.svg}
+    \caption{Domain Entities and Service Class Diagram}
+\end{figure}
+
+\chapter{DESIGN IMPLEMENTATION}
+
+\section{User Section \& Architecture}
+SellWise separates presentation, business logic, and data persistence using the ASP.NET Core MVC architecture combined with service-layer encapsulation.
+
+\subsection{Docker Container Creation \& Terminal Setup}
+The Microsoft SQL Server 2022 database is hosted inside a persistent Docker container. Developers can initialize and manage the database environment using the following terminal commands:
+
+\begin{lstlisting}[language=bash]
+# 1. Pull official Microsoft SQL Server 2022 image
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+
+# 2. Create persistent named volume
+docker volume create sellwise-data
+
+# 3. Create and start the SQL Server container
+docker run -d \
+  --name sellwise-sql \
+  -p 1433:1433 \
+  -e "ACCEPT_EULA=Y" \
+  -e "MSSQL_SA_PASSWORD=YourPass123!" \
+  -v sellwise-data:/var/opt/mssql \
+  --restart unless-stopped \
+  mcr.microsoft.com/mssql/server:2022-latest
+
+# 4. Verify container status
+docker ps -f name=sellwise-sql
+\end{lstlisting}
+
+\subsection{Database Connection Configuration}
+The connection string is managed in \texttt{SellWise.Web/appsettings.json} and consumed by Entity Framework Core during dependency injection configuration:
+
+\begin{lstlisting}[language=json]
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=SellWise;User Id=sa;Password=YourPass123!;TrustServerCertificate=True;Encrypt=False;"
+  },
+  "MlServiceUrl": "http://localhost:8000"
+}
+\end{lstlisting}
+
+\subsection{Authentication \& Store Session Management}
+Upon successful authentication, the user's active store context is stored in the session state. Role-based checks redirect employees directly to POS order processing while directing managers and owners to the analytical dashboard:
+
+\begin{lstlisting}[language={[Sharp]C}]
+[HttpPost]
+[AutoValidateAntiforgeryToken]
+public async Task<IActionResult> Login(LoginViewModel model)
+{
+    if (!ModelState.IsValid) return View(model);
+
+    var result = await _signInManager.PasswordSignInAsync(
+        model.Email!, model.Password!, isPersistent: true, lockoutOnFailure: true);
+
+    if (result.Succeeded)
+    {
+        var user = await _userManager.FindByEmailAsync(model.Email!);
+        if (user != null)
+        {
+            var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
+            if (member != null)
+            {
+                HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
+                if (string.Equals(member.Role, "employee", StringComparison.OrdinalIgnoreCase))
+                {
+                    return RedirectToAction("Index", "Order");
+                }
+            }
+        }
+        return RedirectToAction("Index", "Dashboard");
+    }
+
+    ModelState.AddModelError(string.Empty, "Invalid email or password.");
+    return View(model);
+}
+\end{lstlisting}
+
+\subsection{Transactional POS Order Creation with Salesperson Tracking}
+The order processing pipeline uses database transactions to guarantee that product stock deduction, customer total accumulation, order channel classification (\textit{Walk-In, Online, Delivery, Phone}), and salesperson attribution are committed atomically:
+
+\begin{lstlisting}[language={[Sharp]C}]
+public async Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model, string? salespersonName)
+{
+    using var transaction = await _db.Database.BeginTransactionAsync();
+    try
+    {
+        var order = new Order
+        {
+            StoreId = storeId,
+            CustomerId = model.CustomerId,
+            OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6]}",
+            OrderType = model.OrderType ?? "Walk-In",
+            SalespersonName = salespersonName,
+            Status = "pending",
+            DeliveryCharge = model.DeliveryCharge,
+            Discount = model.Discount,
+            Notes = model.Notes,
+            OrderDate = DateTime.UtcNow
+        };
+
+        decimal subtotal = 0;
+        foreach (var item in model.Items.Where(i => i.ProductId != Guid.Empty && i.Quantity > 0))
+        {
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId && p.StoreId == storeId);
+            if (product == null || product.StockQuantity < item.Quantity)
+            {
+                await transaction.RollbackAsync();
+                return $"Insufficient stock for {product?.Name ?? "item"}.";
+            }
+
+            product.StockQuantity -= item.Quantity;
+            var lineTotal = item.Quantity * product.SellingPrice;
+            subtotal += lineTotal;
+
+            order.Items.Add(new OrderItem
+            {
+                ProductId = product.Id,
+                ProductName = product.Name,
+                Quantity = item.Quantity,
+                UnitPrice = product.SellingPrice
+            });
+        }
+
+        order.Total = Math.Max(0, subtotal + order.DeliveryCharge - order.Discount);
+        _db.Orders.Add(order);
+        await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return null;
+    }
+    catch (Exception ex)
+    {
+        await transaction.RollbackAsync();
+        return "Transaction failed during order checkout.";
+    }
+}
+\end{lstlisting}
+
+\subsection{Proactive Inventory Alerts \& Automated Resolution}
+The alert service runs periodic scans across store inventory. If stock falls below the configured threshold, critical or warning alerts are generated. When stock is replenished, the alerts automatically transition to resolved:
+
+\begin{lstlisting}[language={[Sharp]C}]
+public async Task ScanAndGenerateAlertsAsync(Guid storeId)
+{
+    var healthyProductIds = await _db.Products
+        .Where(p => p.StoreId == storeId && p.IsActive && p.StockQuantity > p.LowStockThreshold)
+        .Select(p => p.Id).ToListAsync();
+
+    var alertsToResolve = await _db.Alerts
+        .Where(a => a.StoreId == storeId && a.Type == "Low Stock" && healthyProductIds.Contains(a.ProductId))
+        .ToListAsync();
+
+    foreach (var alert in alertsToResolve)
+    {
+        alert.Type = "Low Stock (Resolved)";
+        alert.IsRead = true;
+    }
+
+    var lowStockProducts = await _db.Products
+        .Where(p => p.StoreId == storeId && p.IsActive && p.StockQuantity <= p.LowStockThreshold)
+        .ToListAsync();
+
+    var existingAlertProductIds = await _db.Alerts
+        .Where(a => a.StoreId == storeId && a.Type == "Low Stock")
+        .Select(a => a.ProductId).ToListAsync();
+
+    foreach (var product in lowStockProducts)
+    {
+        if (existingAlertProductIds.Contains(product.Id)) continue;
+
+        _db.Alerts.Add(new InventoryAlert
+        {
+            StoreId = storeId,
+            ProductId = product.Id,
+            Type = "Low Stock",
+            Severity = product.StockQuantity == 0 ? "Critical" : "Warning",
+            Message = product.StockQuantity == 0
+                ? $"Out of stock. Threshold is {product.LowStockThreshold}."
+                : $"Only {product.StockQuantity} unit(s) left (Threshold: {product.LowStockThreshold}).",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+    await _db.SaveChangesAsync();
+}
+\end{lstlisting}
+
+\subsection{Machine Learning Demand Forecasting Service}
+The Python FastAPI microservice processes historical daily order volumes using Meta Prophet, outputting 30-day point estimates and confidence intervals:
+
+\begin{lstlisting}[language=python]
+from prophet import Prophet
+import pandas as pd
+
+def generate_forecast(history, periods=30):
+    if len(history) < 2:
+        return []
+
+    df = pd.DataFrame([{"ds": point.ds, "y": point.y} for point in history])
+    df = df.groupby("ds", as_index=False)["y"].sum().sort_values("ds").reset_index(drop=True)
+
+    span_days = (df["ds"].max() - df["ds"].min()).days
+    has_yearly_signal = span_days >= 365
+
+    model = Prophet(
+        yearly_seasonality=has_yearly_signal,
+        weekly_seasonality=True,
+        daily_seasonality=False
+    )
+    try:
+        model.fit(df)
+    except Exception as e:
+        return []
+
+    future = model.make_future_dataframe(periods=periods)
+    forecast_df = model.predict(future)
+    future_forecast = forecast_df.tail(periods)
+
+    return [
+        {
+            "ds": row['ds'].date(),
+            "yhat": max(0, float(row['yhat'])),
+            "yhat_lower": max(0, float(row['yhat_lower'])),
+            "yhat_upper": max(0, float(row['yhat_upper']))
+        }
+        for _, row in future_forecast.iterrows()
+    ]
+\end{lstlisting}
+
+\section{Conclusions}
+The modular architectural separation between the ASP.NET Core web host and the Python ML microservice ensures high transaction throughput without blocking web server worker threads. Strict multi-tenancy enforcement and ACID database transactions ensure data security and operational reliability.
+
+\chapter{TESTING}
+
+\section{Testing Methodology}
+Rigorous verification and validation were conducted across the complete software stack, including unit tests, integration tests, security audits, and load testing with simulated multi-store retail data.
+
+\section{Validation Criteria}
+\begin{itemize}
+    \item Strict client-side and server-side Model State validation for all inputs.
+    \item Absolute multi-tenant isolation verifying that users cannot access records belonging to other store IDs.
+    \item Zero tolerance for inventory mismatches or partial transaction writes.
+    \item Graceful degradation to Exponentially Weighted Moving Average (EWMA) when the ML microservice is unreachable.
+\end{itemize}
+
+\section{Structural \& Functional Testing}
+All database read and write actions are enclosed in structured exception handlers. Functional tests validated authentication, POS cart operations, discount/delivery calculations, invoice generation, and PDF export functionality.
+
+\section{Test Cases and Results}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{6.5cm}|c|c|}
+\hline
+\textbf{Module} & \textbf{Test Scenario} & \textbf{Tested} & \textbf{Status} \\
+\hline
+Authentication & Valid credentials grant cookie session & Yes & Passed \\
+Authentication & 5 invalid attempts trigger 15-minute lockout & Yes & Passed \\
+Authentication & Employee role redirected directly to POS & Yes & Passed \\
+\hline
+POS & Cart calculation with discount and delivery fee & Yes & Passed \\
+POS & Out-of-stock item triggers atomic rollback & Yes & Passed \\
+POS & Order tracks active salesperson name & Yes & Passed \\
+\hline
+Invoices & Invoice view renders order metadata and barcode & Yes & Passed \\
+Invoices & Print receipt styles format correctly & Yes & Passed \\
+\hline
+Inventory & Low stock triggers Warning / Critical alert & Yes & Passed \\
+Inventory & Restock above threshold resolves alert & Yes & Passed \\
+\hline
+Forecasting & Prophet predicts 30-day points with bounds & Yes & Passed \\
+Forecasting & Fallback to EWMA executes on ML timeout & Yes & Passed \\
+\hline
+Multi-Tenancy & Store switching scopes all subsequent queries & Yes & Passed \\
+\hline
+\end{tabular}
+\caption{Comprehensive Functional and System Test Matrix}
+\end{table}
+
+\section{Testing Summary}
+All core functional scenarios executed successfully with zero data corruption or unhandled runtime exceptions. The system proved stable under simulated multi-store loads comprising hundreds of concurrent customers and products.
+
+\chapter{USER MANUAL}
+
+\section{Introduction}
+This user manual guides store owners, managers, and sales staff through the daily operation of SellWise.
+
+\section{System Requirements}
+
+\subsection{Server-Side Requirements}
+\begin{itemize}
+    \item \textbf{Operating System:} Windows 10/11, macOS, or Linux (Ubuntu 22.04+).
+    \item \textbf{Runtimes:} .NET 10.0 SDK and Python 3.11+.
+    \item \textbf{Container Engine:} Docker Desktop or Docker Engine.
+    \item \textbf{Hardware:} Dual-core 2.0+ GHz CPU, 4 GB RAM (8 GB recommended), 10 GB disk space.
+\end{itemize}
+
+\subsection{Client-Side Requirements}
+\begin{itemize}
+    \item Any standard desktop, laptop, tablet, or smartphone.
+    \item Modern web browser (Google Chrome, Mozilla Firefox, Microsoft Edge, Safari).
+\end{itemize}
+
+\section{Operational Walkthrough}
+
+\subsection{Starting the Application}
+Launch the environment using the automated startup script:
+\begin{lstlisting}[language=bash]
+# macOS / Linux
+./start.sh
+
+# Windows PowerShell
+.\start.ps1
+\end{lstlisting}
+
+\subsection{Accessing the System}
+Navigate to \url{http://localhost:5000}.
+\begin{itemize}
+    \item \textbf{Default Administrator:} \texttt{admin@sellwise.com} / \texttt{Admin123!}
+    \item \textbf{Pre-configured Demo Stores:} \textit{SellWise Tech BD} (Electronics), \textit{StyleHub BD} (Fashion).
+\end{itemize}
+
+\subsection{Processing a Point-of-Sale (POS) Order}
+\begin{enumerate}
+    \item Select \textbf{Orders $\rightarrow$ New Order} from the navigation bar.
+    \item Click products from the catalog to add them to the active cart.
+    \item Select or create a customer using the Quick-Create modal.
+    \item Choose the order type (\textit{Walk-In, Online, Delivery, Phone}) and enter any discount or delivery fee.
+    \item Click \textbf{Complete Order} to finalize the transaction.
+    \item Click \textbf{Print Invoice} to generate a formatted printable thermal or standard receipt.
+\end{enumerate}
+
+\subsection{Reviewing Demand Forecasts}
+On the \textbf{Dashboard}, inspect the 30-day forecast cards. Products flagged with high projected demand and low current stock indicate an immediate need to reorder.
+
+\chapter{CONCLUSION AND FUTURE WORKS}
+
+\section{Conclusion}
+SellWise successfully delivers a robust, accessible, and AI-enabled retail management platform. By uniting transactional POS operations, multi-tenant inventory control, RFM customer segmentation, salesperson tracking, printable invoicing, and machine learning demand forecasting, SellWise empowers small business owners to operate with enterprise-level efficiency.
+
+\section{Key Outcomes}
+\begin{itemize}
+    \item Replaced manual, error-prone paper registers with an automated ACID-compliant web application.
+    \item Integrated Meta Prophet time-series models to provide reliable 30-day demand forecasts.
+    \item Implemented dynamic customer grouping based on RFM scores to guide targeted retention.
+    \item Guaranteed zero cross-tenant data leakage via session-scoped store query filters.
+\end{itemize}
+
+\section{Future Enhancements}
+\begin{itemize}
+    \item \textbf{Automated Email Marketing:} Connecting RFM customer segments directly to Mailchimp/SendGrid for automated promotional outreach.
+    \item \textbf{Native Mobile App:} Developing cross-platform iOS and Android apps using .NET MAUI with barcode scanning support.
+    \item \textbf{Multi-Warehouse Routing:} Managing shared inventory across distributed warehouse locations with inter-branch transfer tracking.
+\end{itemize}
+
+\end{document}
