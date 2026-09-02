@@ -17,10 +17,8 @@ WORKDIR /app
 # Copy published output
 COPY --from=build /app/publish .
 
-# Non-root user for security
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
-RUN chown -R appuser:appgroup /app
-USER appuser
+# .NET 8+ images already come with a built-in non-root user ($APP_UID)
+USER $APP_UID
 
 EXPOSE 8080
 ENV ASPNETCORE_ENVIRONMENT=Production
