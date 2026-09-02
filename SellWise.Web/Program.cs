@@ -7,7 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorNumbersToAdd: null)));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
@@ -37,67 +41,73 @@ builder.Services.ConfigureApplicationCookie(options => {
 
 var app = builder.Build();
 
-// CLI Data Seeder
-if (args.Contains("--seed"))
+// Auto-migrate database and ensure default admin & stores exist
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
-    var seeder = scope.ServiceProvider.GetRequiredService<SellWise.Web.Services.DemoSeederService>();
-
-    const string adminEmail = "admin@sellwise.com";
-
-    // Ensure admin user exists
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-    if (adminUser == null)
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
     {
-        adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, OwnerName = "Admin" };
-        var result = await userManager.CreateAsync(adminUser, "Admin123!");
-        if (result.Succeeded)
-            Console.WriteLine($"[INFO] Created admin user: {adminEmail} / Admin123!");
-        else
+        var db = services.GetRequiredService<AppDbContext>();
+        logger.LogInformation("[STARTUP] Applying database migrations if needed...");
+        db.Database.Migrate();
+        logger.LogInformation("[STARTUP] Database migrations verified/applied.");
+
+        var userManager = services.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
+        var seeder = services.GetRequiredService<SellWise.Web.Services.DemoSeederService>();
+
+        const string adminEmail = "admin@sellwise.com";
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        if (adminUser == null)
         {
-            Console.WriteLine($"[ERROR] Failed to create admin: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            return;
+            logger.LogInformation("[STARTUP] Initializing default admin user ({AdminEmail})...", adminEmail);
+            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, OwnerName = "Admin" };
+            var result = await userManager.CreateAsync(adminUser, "Admin123!");
+            if (result.Succeeded)
+            {
+                // Store 1: SellWise Tech BD (electronics)
+                var store1 = db.Stores.FirstOrDefault(s => s.Name == "SellWise Tech BD");
+                if (store1 == null)
+                {
+                    store1 = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "SellWise Tech BD", CreatedAt = DateTime.UtcNow };
+                    db.Stores.Add(store1);
+                    await db.SaveChangesAsync();
+                }
+                if (!db.StoreMembers.Any(m => m.StoreId == store1.Id && m.UserId == adminUser.Id))
+                {
+                    db.StoreMembers.Add(new StoreMember { StoreId = store1.Id, UserId = adminUser.Id, Role = "owner" });
+                    await db.SaveChangesAsync();
+                }
+                await seeder.SeedStoreAsync(store1.Id, randomSeed: 42);
+
+                // Store 2: StyleHub BD (fashion/clothing)
+                var store2 = db.Stores.FirstOrDefault(s => s.Name == "StyleHub BD");
+                if (store2 == null)
+                {
+                    store2 = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "StyleHub BD", CreatedAt = DateTime.UtcNow };
+                    db.Stores.Add(store2);
+                    await db.SaveChangesAsync();
+                }
+                if (!db.StoreMembers.Any(m => m.StoreId == store2.Id && m.UserId == adminUser.Id))
+                {
+                    db.StoreMembers.Add(new StoreMember { StoreId = store2.Id, UserId = adminUser.Id, Role = "owner" });
+                    await db.SaveChangesAsync();
+                }
+                await seeder.SeedSecondStoreAsync(store2.Id, randomSeed: 99);
+                logger.LogInformation("[STARTUP] Default admin & demo stores seeded successfully.");
+            }
         }
     }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "[STARTUP] Database migration/seed encountered an error. The app will continue starting.");
+    }
 
-    // --- Store 1: SellWise Tech BD (electronics) ---
-    var store1 = db.Stores.FirstOrDefault(s => s.Name == "SellWise Tech BD");
-    if (store1 == null)
+    if (args.Contains("--seed"))
     {
-        store1 = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "SellWise Tech BD", CreatedAt = DateTime.UtcNow };
-        db.Stores.Add(store1);
-        await db.SaveChangesAsync();
+        Console.WriteLine("[CLI] Explicit --seed completed.");
+        return;
     }
-    if (!db.StoreMembers.Any(m => m.StoreId == store1.Id && m.UserId == adminUser.Id))
-    {
-        db.StoreMembers.Add(new StoreMember { StoreId = store1.Id, UserId = adminUser.Id, Role = "owner" });
-        await db.SaveChangesAsync();
-    }
-    Console.WriteLine($"[INFO] Seeding Store 1: {store1.Name}...");
-    await seeder.SeedStoreAsync(store1.Id, randomSeed: 42);
-    Console.WriteLine($"[OK]   Store 1 done.");
-
-    // --- Store 2: StyleHub BD (fashion/clothing) ---
-    var store2 = db.Stores.FirstOrDefault(s => s.Name == "StyleHub BD");
-    if (store2 == null)
-    {
-        store2 = new SellWise.Web.Models.Store { Id = Guid.NewGuid(), Name = "StyleHub BD", CreatedAt = DateTime.UtcNow };
-        db.Stores.Add(store2);
-        await db.SaveChangesAsync();
-    }
-    if (!db.StoreMembers.Any(m => m.StoreId == store2.Id && m.UserId == adminUser.Id))
-    {
-        db.StoreMembers.Add(new StoreMember { StoreId = store2.Id, UserId = adminUser.Id, Role = "owner" });
-        await db.SaveChangesAsync();
-    }
-    Console.WriteLine($"[INFO] Seeding Store 2: {store2.Name}...");
-    await seeder.SeedSecondStoreAsync(store2.Id, randomSeed: 99);
-    Console.WriteLine($"[OK]   Store 2 done.");
-
-    Console.WriteLine("[SUCCESS] All stores seeded. Login: admin@sellwise.com / Admin123!");
-    return;
 }
 
 // Configure the HTTP request pipeline.
