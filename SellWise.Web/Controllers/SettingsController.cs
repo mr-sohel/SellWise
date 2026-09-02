@@ -227,11 +227,12 @@ public class SettingsController : BaseController
                 TempData["Error"] = string.Join(" ", result.Errors.Select(e => e.Description));
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             await transaction.RollbackAsync();
+            _logger.LogError(ex, "Failed to assign user {Email} to store {StoreId}", model.Email, storeId);
             ModelState.AddModelError(string.Empty, "Failed to assign user to the store.");
-            TempData["Error"] = "Failed to assign user to the store. Please try again.";
+            TempData["Error"] = $"Failed to assign user: {ex.Message}";
         }
 
         return RedirectToAction(nameof(Staff));
