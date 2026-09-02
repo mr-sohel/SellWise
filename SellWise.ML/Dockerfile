@@ -24,6 +24,7 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 ENV PYTHONPATH=/app
+ENV MPLCONFIGDIR=/tmp/matplotlib
 
 EXPOSE 8000
 
