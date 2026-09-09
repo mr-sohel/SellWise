@@ -58,7 +58,11 @@
                         var pts = new List<(double x, double y)>();
                         for(int k=0; k<f.SparklineData.Count; k++) {
                             var px = sPadX + (f.SparklineData.Count > 1 ? k * sW / (f.SparklineData.Count - 1) : sW / 2);
-                            var normalized = (f.SparklineData[k] - sparkMin) / sRange;
+                            // When all values are equal (sRange was reset to 1.0), use 0.5 so the
+                            // line draws at mid-height rather than along the bottom edge.
+                            var normalized = (sparkMax - sparkMin) < 1e-9
+                                ? 0.5
+                                : (f.SparklineData[k] - sparkMin) / sRange;
                             var py = sPadY + sH * (1.0 - normalized);
                             pts.Add((px, py));
                         }

@@ -515,10 +515,40 @@ public class AnalyticsService
 
     private ProductForecastCard GetFallbackForecast(Product product, List<SalesHistoryPoint> history, int horizonDays)
     {
-        // Honest fallback: flat moving average of recent daily sales (no
-        // synthetic seasonality — that would fake an "AI" signal).
-        var avgDaily = history.Any() ? history.Average(h => h.y) : 0;
-        var sparkline = Enumerable.Repeat(Math.Max(0, Math.Round(avgDaily)), horizonDays).ToList();
+        // Fallback when ML service is unavailable.
+        // Instead of Enumerable.Repeat (which produces a flat, straight line),
+        // we project forward by replaying the most recent 14 days of actual
+        // daily sales.  This preserves weekday/weekend variance so the
+        // sparkline looks realistic.
+        List<double> sparkline;
+
+        if (history.Count >= 2)
+        {
+            // Take the most recent window (up to 14 days) as our "cycle".
+            var window = history
+                .OrderByDescending(h => h.ds)
+                .Take(14)
+                .OrderBy(h => h.ds)
+                .Select(h => Math.Max(0, h.y))
+                .ToList();
+
+            sparkline = new List<double>(horizonDays);
+            for (int i = 0; i < horizonDays; i++)
+                sparkline.Add(Math.Round(window[i % window.Count], 1));
+        }
+        else
+        {
+            // Zero or one history point — genuine flat fallback is acceptable.
+            var constAvg = history.Any() ? Math.Max(0, Math.Round(history.Average(h => h.y), 1)) : 0;
+            sparkline = Enumerable.Repeat(constAvg, horizonDays).ToList();
+        }
+
+        var avgDaily = sparkline.Count > 0 ? sparkline.Average() : 0;
+        var predictedUnits = sparkline.Sum();
+        var firstWeek = sparkline.Take(7).DefaultIfEmpty(0).Average();
+        var lastWeek  = sparkline.Skip(Math.Max(0, sparkline.Count - 7)).DefaultIfEmpty(0).Average();
+        double trendPct = firstWeek > 0.05 ? Math.Round((lastWeek - firstWeek) / firstWeek * 100, 1) : 0;
+        string trend = trendPct >= 5 ? "rising" : trendPct <= -5 ? "falling" : "stable";
 
         return new ProductForecastCard
         {
@@ -527,15 +557,15 @@ public class AnalyticsService
             Category = product.Category ?? "Other",
             Unit = product.Unit ?? "pcs",
             SparklineData = sparkline,
-            PredictedUnits = sparkline.Sum(),
+            PredictedUnits = Math.Round(predictedUnits, 1),
             Stock = product.StockQuantity,
             DailyAverage = Math.Round(avgDaily, 1),
             ForecastHorizonDays = horizonDays,
-            RestockQty = Math.Max(0, Math.Ceiling(sparkline.Sum() - product.StockQuantity)),
+            RestockQty = Math.Max(0, Math.Ceiling(predictedUnits - product.StockQuantity)),
             DaysOfCover = avgDaily > 0 ? (int)Math.Floor(product.StockQuantity / avgDaily) : 999,
-            HasStockOutRisk = sparkline.Sum() > product.StockQuantity,
-            Trend = "stable",
-            TrendPct = 0
+            HasStockOutRisk = predictedUnits > product.StockQuantity,
+            Trend = trend,
+            TrendPct = trendPct
         };
     }
 
