@@ -5,6 +5,8 @@ using SellWise.Web.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -24,7 +26,9 @@ builder.Services.AddScoped<SellWise.Web.Services.IProductService, SellWise.Web.S
 builder.Services.AddScoped<SellWise.Web.Services.ICustomerService, SellWise.Web.Services.CustomerService>();
 builder.Services.AddHttpClient<SellWise.Web.Services.ForecastService>(client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(15);
+    client.BaseAddress = new Uri(builder.Configuration["MlServiceUrl"] ?? "http://localhost:8000/");
+    // Prophet usually answers in 1-3s; give up early so a down ML service doesn't stall the dashboard.
+    client.Timeout = TimeSpan.FromSeconds(10);
 });
 
 builder.Services.ConfigureApplicationCookie(options => {

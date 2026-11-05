@@ -1,56 +1,54 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SellWise.Web.Authorization;
-using SellWise.Web.Data;
-using SellWise.Web.ViewModels.Report;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SellWise.Web.Authorization;
+using SellWise.Web.Data;
+using SellWise.Web.ViewModels.Report;
 
 namespace SellWise.Web.Controllers;
 
 [OwnerOnly]
 public class ReportController : BaseController
 {
+    private static readonly int[] AllowedPeriods = { 7, 30, 90, 365 };
+    private const int MaxRowsInPdf = 50;
+
     public ReportController(AppDbContext db) : base(db)
     {
-        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     public async Task<IActionResult> Index()
     {
-        var storeId = StoreId;
+        var since = DateTime.UtcNow.AddDays(-30);
+        var sales = Db.Orders.Where(o => o.StoreId == StoreId && o.OrderDate >= since
+            && o.Status != "cancelled" && o.Status != "returned");
 
-        var totalOrders = await Db.Orders.Where(o => o.StoreId == storeId).CountAsync();
-        var totalRevenue = await Db.Orders.Where(o => o.StoreId == storeId).SumAsync(o => o.Total);
-
-        var vm = new ReportViewModel
+        return View(new ReportViewModel
         {
-            TotalOrders = totalOrders,
-            TotalRevenue = totalRevenue
-        };
-
-        return View(vm);
+            TotalOrders = await sales.CountAsync(),
+            TotalRevenue = await sales.SumAsync(o => o.Total)
+        });
     }
 
     [HttpPost]
     public async Task<IActionResult> ExportPdf(int days = 30)
     {
-        var storeId = StoreId;
+        if (!AllowedPeriods.Contains(days))
+            days = 30;
 
         var startDate = DateTime.UtcNow.AddDays(-days);
+        var sales = Db.Orders.Where(o => o.StoreId == StoreId && o.OrderDate >= startDate
+            && o.Status != "cancelled" && o.Status != "returned");
 
-        var orders = await Db.Orders
+        var totalOrders = await sales.CountAsync();
+        var totalRevenue = await sales.SumAsync(o => o.Total);
+        var orders = await sales
             .Include(o => o.Customer)
-            .Where(o => o.StoreId == storeId && o.OrderDate >= startDate)
             .OrderByDescending(o => o.OrderDate)
+            .Take(MaxRowsInPdf)
             .ToListAsync();
-
-        var totalOrders = orders.Count;
-        var totalRevenue = orders.Sum(o => o.Total);
 
         var document = Document.Create(container =>
         {
@@ -74,7 +72,7 @@ public class ReportController : BaseController
                             column.Item().Text($"SellWise Sales Report").FontSize(20).SemiBold().FontColor(Colors.Blue.Darken2);
                             column.Item().Text($"Period: Last {days} Days ({startDate:MMM dd, yyyy} - {DateTime.UtcNow:MMM dd, yyyy})");
                         });
-                        row.ConstantItem(100).AlignRight().Text($"Generated: {DateTime.Now:d}");
+                        row.ConstantItem(100).AlignRight().Text($"Generated: {DateTime.UtcNow:yyyy-MM-dd} (UTC)");
                     });
                 }
 
@@ -113,18 +111,18 @@ public class ReportController : BaseController
                                     .PaddingTop(5).BorderBottom(1).BorderColor(Colors.Black);
                             });
 
-                            foreach (var order in orders.Take(50)) // Show up to 50 recent orders
+                            foreach (var order in orders)
                             {
-                                table.Cell().PaddingVertical(5).Text(order.OrderDate.ToLocalTime().ToString("MMM dd, yyyy HH:mm"));
+                                table.Cell().PaddingVertical(5).Text(order.OrderDate.ToString("MMM dd, yyyy HH:mm"));
                                 table.Cell().PaddingVertical(5).Text(order.Customer?.Name ?? "Walk-in");
                                 table.Cell().PaddingVertical(5).Text(order.Status);
                                 table.Cell().PaddingVertical(5).AlignRight().Text($"৳{order.Total:N0}");
                             }
                         });
 
-                        if (totalOrders > 50)
+                        if (totalOrders > MaxRowsInPdf)
                         {
-                            column.Item().Text($"* Showing top 50 recent orders out of {totalOrders}.").FontSize(9).FontColor(Colors.Grey.Medium);
+                            column.Item().Text($"* Showing the {MaxRowsInPdf} most recent orders out of {totalOrders}.").FontSize(9).FontColor(Colors.Grey.Medium);
                         }
                     });
                 }
