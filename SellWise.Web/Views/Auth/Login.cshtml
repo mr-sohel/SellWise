@@ -6,13 +6,8 @@
 }
 
 <div class="auth-form-wrap">
-    <span class="auth-mobile-brand">
-        <partial name="_Logo" model="34" />
-        <span class="brand-text">SellWise</span>
-    </span>
-
-    <h1 class="auth-title">Welcome back</h1>
-    <p class="auth-sub">Sign in to run your store.</p>
+    <h1 class="auth-title">Sign in</h1>
+    <p class="auth-sub">Enter your email and password.</p>
 
     <form asp-action="Login" method="post">
         <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" role="alert"></div>

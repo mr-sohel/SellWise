@@ -16,7 +16,7 @@
 }
 .product-card {
     background: #fff;
-    border: 1.5px solid #dce3e0;
+    border: 1.5px solid #dde1e7;
     border-radius: 10px;
     padding: .85rem .85rem .7rem;
     cursor: pointer; transition: all .12s ease;
@@ -25,48 +25,48 @@
     font: inherit; text-align: left; width: 100%;
 }
 .product-card:hover {
-    border-color: #0f6b5c;
+    border-color: #1f4f8f;
     box-shadow: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.04);
     transform: translateY(-2px);
 }
 .product-card:active { transform: scale(.97); }
-.product-card.in-cart { border-color: #0f6b5c; background: #edf1ef; }
+.product-card.in-cart { border-color: #1f4f8f; background: #eceef1; }
 .product-card.oos { opacity: .5; cursor: not-allowed; }
-.product-card.oos:hover { border-color: #dce3e0; box-shadow: none; transform: none; }
+.product-card.oos:hover { border-color: #dde1e7; box-shadow: none; transform: none; }
 .prod-cat {
     font-size: .72rem; font-weight: 600; padding: .15rem .5rem; border-radius: 50px;
-    background: #edf1ef; color: #0f6b5c;
+    background: #eceef1; color: #1f4f8f;
     align-self: flex-start; margin-bottom: .4rem;
 }
-.prod-name { font-size: .85rem; font-weight: 700; color: #1d2e29; line-height: 1.35; margin-bottom: .2rem; flex: 1; }
+.prod-name { font-size: .85rem; font-weight: 700; color: #1e2736; line-height: 1.35; margin-bottom: .2rem; flex: 1; }
 .prod-sku  { font-size: .67rem; color: var(--text-muted); margin-bottom: .4rem; }
 .prod-footer {
     display: flex; justify-content: space-between; align-items: flex-end;
-    margin-top: auto; padding-top: .4rem; border-top: 1px solid #e8edeb;
+    margin-top: auto; padding-top: .4rem; border-top: 1px solid #e8ebef;
 }
-.prod-price { font-size: 1rem; font-weight: 800; color: #0f6b5c; }
+.prod-price { font-size: 1rem; font-weight: 800; color: #1f4f8f; }
 .prod-stock { font-size: .67rem; font-weight: 600; color: var(--text-muted); }
 .prod-stock.oos-label { color: #ef4444; }
 .prod-qty-badge {
     position: absolute; top: 6px; right: 6px;
-    background: #0f6b5c; color: #fff; border-radius: 50px;
+    background: #1f4f8f; color: #fff; border-radius: 50px;
     font-size: .63rem; font-weight: 800; padding: .1rem .42rem;
     min-width: 18px; text-align: center;
 }
 .cart-item {
-    background: #fff; border: 1.5px solid #dce3e0;
+    background: #fff; border: 1.5px solid #dde1e7;
     border-radius: 10px; padding: .6rem .75rem;
     margin-bottom: .4rem; display: flex; align-items: center; gap: .6rem;
     transition: border-color .12s;
 }
-.cart-item:hover { border-color: #0f6b5c; }
+.cart-item:hover { border-color: #1f4f8f; }
 .ci-info { flex: 1; min-width: 0; }
-.ci-name { font-size: .8rem; font-weight: 700; color: #1d2e29; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-name { font-size: .8rem; font-weight: 700; color: #1e2736; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ci-price { font-size: .7rem; color: var(--text-muted); margin-top: 1px; }
 .ci-right { display: flex; align-items: center; gap: .5rem; flex-shrink: 0; }
 .qty-ctrl { display: flex; align-items: center; gap: .3rem; }
-.qty-val { font-size: .85rem; font-weight: 800; color: #1d2e29; min-width: 20px; text-align: center; }
-.ci-total { font-size: .85rem; font-weight: 800; color: #1d2e29; min-width: 56px; text-align: right; }
+.qty-val { font-size: .85rem; font-weight: 800; color: #1e2736; min-width: 20px; text-align: center; }
+.ci-total { font-size: .85rem; font-weight: 800; color: #1e2736; min-width: 56px; text-align: right; }
 .qty-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 32px; height: 32px; padding: 0;
@@ -92,7 +92,7 @@
 }
 .autocomplete-list {
     position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-    background: #fff; border: 1.5px solid #dce3e0;
+    background: #fff; border: 1.5px solid #dde1e7;
     border-radius: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.08);
     z-index: 200; display: none; max-height: 170px; overflow-y: auto;
 }
@@ -100,17 +100,17 @@
     padding: .5rem .75rem; cursor: pointer; font-size: .8rem;
     border: none; background: #fff; width: 100%;
     display: block; text-align: left; font: inherit;
-    border-bottom: 1px solid #e8edeb; transition: background .1s;
+    border-bottom: 1px solid #e8ebef; transition: background .1s;
 }
 .autocomplete-row:last-child { border-bottom: none; }
-.autocomplete-row:hover { background: #edf1ef; }
-.autocomplete-row .row-phone { font-weight: 700; color: #1d2e29; }
+.autocomplete-row:hover { background: #eceef1; }
+.autocomplete-row .row-phone { font-weight: 700; color: #1e2736; }
 .autocomplete-row .row-name { color: var(--text-muted); font-size: .73rem; }
 .cat-chip {
     border:1.5px solid var(--border-color); background:#fff; color:var(--text-primary);
     font-weight:600; font-size:.78rem; cursor:pointer; user-select:none;
 }
-.cat-chip.active { background:#0f6b5c; color:#fff; border-color:#0f6b5c; }
+.cat-chip.active { background:#1f4f8f; color:#fff; border-color:#1f4f8f; }
 </style>
 
 <div class="d-flex align-items-center gap-3 mb-3">
@@ -149,7 +149,7 @@
         <div class="card shadow-sm w-100 d-flex flex-column pos-cart-card">
             <div class="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
                 <span class="fw-bold d-flex align-items-center gap-2">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0f6b5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1f4f8f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                     Cart
                     <span class="badge bg-primary rounded-pill" id="cartCountBadge" style="display:none; font-size:.6rem;">0</span>
                 </span>
@@ -208,7 +208,7 @@
 
             <div class="flex-grow-1 overflow-auto p-3 bg-light" id="cartItems" style="min-height:200px;">
                 <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted text-center py-4" id="cartEmpty">
-                    <div class="d-flex align-items-center justify-content-center mb-2" style="width:44px;height:44px;border-radius:10px;background:#edf1ef;">
+                    <div class="d-flex align-items-center justify-content-center mb-2" style="width:44px;height:44px;border-radius:10px;background:#eceef1;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                     </div>
                     <p class="fw-bold text-dark mb-1" style="font-size:.875rem;">Cart is empty</p>
@@ -234,7 +234,7 @@
 
                 <div class="d-flex justify-content-between align-items-center border-top pt-2 mb-2">
                     <span class="fw-bold text-dark">Total</span>
-                    <span class="fs-4 fw-bold" style="color:#0f6b5c;" id="cartTotal">৳0</span>
+                    <span class="fs-4 fw-bold" style="color:#1f4f8f;" id="cartTotal">৳0</span>
                 </div>
 
                 <div class="mb-2">

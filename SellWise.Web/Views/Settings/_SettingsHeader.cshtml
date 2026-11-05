@@ -1,0 +1,36 @@
+@* Shared top of every settings page: heading, flash messages and the section links. *@
+@{
+    var action = (ViewContext.RouteData.Values["action"] as string) ?? "Index";
+    var onTeam = string.Equals(action, "Staff", StringComparison.OrdinalIgnoreCase);
+    var isOwner = (ViewData["CurrentStoreRole"] as string) == SellWise.Web.Authorization.StoreRoles.Owner;
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Settings</h1>
+        <p class="page-sub">Your account@(isOwner ? " and your team" : "").</p>
+    </div>
+</div>
+
+<nav class="settings-nav" aria-label="Settings sections">
+    <a asp-controller="Settings" asp-action="Index" class="@(onTeam ? "" : "active")" aria-current="@(onTeam ? null : "page")">Account</a>
+    @if (isOwner)
+    {
+        <a asp-controller="Settings" asp-action="Staff" class="@(onTeam ? "active" : "")" aria-current="@(onTeam ? "page" : null)">Team</a>
+    }
+</nav>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

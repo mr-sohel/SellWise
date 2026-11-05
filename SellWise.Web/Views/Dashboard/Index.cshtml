@@ -85,11 +85,11 @@
                 {
                     var cat = Model.CategorySales[i];
                     var catColor = (i % 5) switch {
-                        0 => "#0f6b5c",
-                        1 => "#c9962e",
-                        2 => "#3e6fa3",
-                        3 => "#d2674a",
-                        _ => "#7a8f87"
+                        0 => "#1f4f8f",
+                        1 => "#d08a1c",
+                        2 => "#2a9d8f",
+                        3 => "#c4572f",
+                        _ => "#7c8798"
                     };
                     <div class="col-6 d-flex align-items-center gap-2">
                         <span class="legend-dot" style="background-color: @catColor;"></span>
@@ -219,7 +219,7 @@
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
 <script>
-    Chart.defaults.font.family = "'Instrument Sans', sans-serif";
+    Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
 
     // Revenue Trend Chart (Line Chart)
     const revLabels = @Html.Raw(Json.Serialize(Model.RevenueTrend.Select(r => r.Date)));
@@ -227,9 +227,6 @@
 
     if (document.getElementById('revenueChart')) {
         var revCtx = document.getElementById('revenueChart').getContext('2d');
-        var revGradient = revCtx.createLinearGradient(0, 0, 0, 260);
-        revGradient.addColorStop(0, 'rgba(15, 107, 92, 0.14)');
-        revGradient.addColorStop(1, 'rgba(15, 107, 92, 0.0)');
 
         new Chart(revCtx, {
             type: 'line',
@@ -238,14 +235,14 @@
                 datasets: [{
                     label: 'Revenue (৳)',
                     data: revData,
-                    borderColor: '#0f6b5c',
-                    backgroundColor: revGradient,
+                    borderColor: '#1f4f8f',
+                    backgroundColor: 'rgba(31, 79, 143, 0.07)',
                     borderWidth: 2,
-                    tension: 0.35,
+                    tension: 0.15,
                     fill: true,
                     pointRadius: 0,
                     pointHoverRadius: 5,
-                    pointBackgroundColor: '#0f6b5c',
+                    pointBackgroundColor: '#1f4f8f',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
                     pointHoverBorderWidth: 2
@@ -265,8 +262,8 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#0a211d',
-                        titleColor: '#a9bbb4',
+                        backgroundColor: '#141b27',
+                        titleColor: '#aab3c2',
                         bodyColor: '#ffffff',
                         padding: { top: 8, bottom: 8, left: 12, right: 12 },
                         cornerRadius: 6,
@@ -290,9 +287,9 @@
                     y: {
                         beginAtZero: true,
                         border: { display: false },
-                        grid: { color: '#e8edeb' },
+                        grid: { color: '#e8ebef' },
                         ticks: {
-                            color: '#62726c',
+                            color: '#667085',
                             font: { size: 10 },
                             callback: function(value) {
                                 if (value >= 1000000) return '৳' + (value / 1000000).toFixed(0) + 'M';
@@ -304,7 +301,7 @@
                         border: { display: false },
                         grid: { display: false },
                         ticks: {
-                            color: '#62726c',
+                            color: '#667085',
                             font: { size: 10 },
                             maxRotation: -30,
                             autoSkip: true,
@@ -327,7 +324,7 @@
                 labels: catLabels,
                 datasets: [{
                     data: catPercentages,
-                    backgroundColor: ['#0f6b5c', '#c9962e', '#3e6fa3', '#d2674a', '#7a8f87'],
+                    backgroundColor: ['#1f4f8f', '#d08a1c', '#2a9d8f', '#c4572f', '#7c8798'],
                     borderWidth: 3,
                     borderColor: '#ffffff',
                     hoverOffset: 8,
@@ -347,8 +344,8 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#0a211d',
-                        titleColor: '#a9bbb4',
+                        backgroundColor: '#141b27',
+                        titleColor: '#aab3c2',
                         bodyColor: '#ffffff',
                         padding: { top: 8, bottom: 8, left: 12, right: 12 },
                         cornerRadius: 6,

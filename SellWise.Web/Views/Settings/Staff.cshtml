@@ -1,145 +1,108 @@
 @model List<SellWise.Web.ViewModels.Settings.StaffMemberViewModel>
 @{
-    ViewData["Title"] = "Settings";
+    ViewData["Title"] = "Team";
 }
 
-<div class="d-flex align-items-center gap-2 mb-4">
-    <h1 class="page-heading">Settings</h1>
-    <span class="text-muted mx-1">&rsaquo;</span>
-    <span class="text-muted">Staff Management</span>
-</div>
-<p class="text-muted mb-0">Manage the staff who can use this store.</p>
+<partial name="_SettingsHeader" />
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show mt-3" role="alert" style="max-width: 900px;">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert" style="max-width: 900px;">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+<div class="row g-4 align-items-start">
 
-<!-- Navigation Tabs -->
-<ul class="nav nav-tabs mb-4 mt-4 flex-nowrap overflow-auto scroll-shadow" style="border-bottom: 1px solid #dce3e0; white-space: nowrap;">
-    <li class="nav-item">
-        <a class="nav-link text-muted px-4 py-2 border-0" asp-controller="Settings" asp-action="Index">
-            <span class="d-flex align-items-center gap-2">
-                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Profile
-            </span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-muted px-4 py-2 border-0" href="/Settings#security">
-            <span class="d-flex align-items-center gap-2">
-                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                Account Security
-            </span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active fw-bold px-4 py-2" href="#staff" style="color: #12201c; background-color: #ffffff; border: 1px solid #dce3e0; border-bottom: 1px solid #ffffff; border-radius: var(--radius-md) var(--radius-md) 0 0;">
-            <span class="d-flex align-items-center gap-2">
-                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                Staff Management
-            </span>
-        </a>
-    </li>
-</ul>
-
-<div class="row g-4" style="max-width: 1000px;">
-    <!-- Staff List -->
-    <div class="col-lg-7">
-        <div class="card p-3 p-sm-4 border-1 shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-dark mb-0">Team Members</h5>
-                <span class="badge" style="background-color: #dce3e0; color: #475569;">@Model.Count members</span>
+    <!-- Members -->
+    <div class="col-xl-8">
+        <section class="card settings-card" aria-labelledby="membersHeading">
+            <div class="settings-card-head d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <h2 class="h5 mb-1" id="membersHeading">Team members</h2>
+                    <p class="text-muted small mb-0">People who can sign in to this store.</p>
+                </div>
+                <span class="text-muted small text-nowrap pt-1">@Model.Count @(Model.Count == 1 ? "member" : "members")</span>
             </div>
-            <p class="text-muted small mb-3">People who have access to this store.</p>
-            <hr style="border-color: #dce3e0;">
 
             @if (!Model.Any())
             {
-                <div class="text-center py-4 text-muted">
-                    <p>No team members found.</p>
-                </div>
+                <div class="settings-card-body text-center text-muted">No team members yet.</div>
             }
             else
             {
-                @foreach (var emp in Model)
-                {
-                    var nameParts = (emp.FullName ?? "?").Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    var empInitials = (nameParts.Length > 1
-                        ? nameParts[0].Substring(0, 1) + nameParts[1].Substring(0, 1)
-                        : nameParts[0].Length > 1 ? nameParts[0].Substring(0, 2) : nameParts[0]).ToUpperInvariant();
-                    <div class="d-flex align-items-center justify-content-between py-3 gap-2 @(emp != Model.Last() ? "border-bottom" : "")" style="border-color: #e8edeb !important;">
-                        <div class="d-flex align-items-center gap-3 min-w-0" style="min-width: 0; overflow: hidden;">
-                            <span class="topbar-avatar flex-shrink-0" style="width: 40px; height: 40px; background-color: #dce3e0; color: #12201c;" aria-hidden="true">@empInitials</span>
-                            <div class="min-w-0" style="min-width: 0; overflow: hidden;">
-                                <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;" title="@emp.FullName">@emp.FullName</div>
-                                <div class="text-muted small text-truncate" style="font-size: 0.8rem;" title="@emp.Email">@emp.Email</div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-2">
-                            <span class="badge @(emp.Role == "owner" ? "bg-primary" : "bg-secondary")" style="border-radius: 12px; font-size: 0.75rem; padding: 4px 8px;">
-                                @emp.Role
-                            </span>
-                            @if (emp.Role != "owner")
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col" class="d-none d-sm-table-cell">Role</th>
+                                <th scope="col" class="d-none d-md-table-cell">Joined</th>
+                                <th scope="col" class="text-end"><span class="visually-hidden">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var member in Model)
                             {
-                                <form asp-controller="Settings" asp-action="RemoveStaff" method="post" class="m-0" onsubmit="return confirm('Remove this staff member from the store?');">
-                                    <input type="hidden" name="userId" value="@emp.UserId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger text-nowrap" style="border-radius: 12px; font-size: 0.8rem; padding: 3px 10px; white-space: nowrap;">
-                                        Remove
-                                    </button>
-                                </form>
+                                var parts = (member.FullName ?? "?").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                var initials = parts.Length == 0 ? "?"
+                                    : (parts.Length > 1 ? parts[0][..1] + parts[1][..1]
+                                    : parts[0].Length > 1 ? parts[0][..2] : parts[0]).ToUpperInvariant();
+                                var memberIsOwner = member.Role == SellWise.Web.Authorization.StoreRoles.Owner;
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3 min-w-0">
+                                            <span class="avatar flex-shrink-0" aria-hidden="true">@initials</span>
+                                            <div class="min-w-0">
+                                                <div class="fw-semibold text-dark text-truncate" title="@member.FullName">@member.FullName</div>
+                                                <div class="text-muted small text-truncate" title="@member.Email">@member.Email</div>
+                                                <span class="role-chip d-sm-none mt-1 @(memberIsOwner ? "is-owner" : "")">@(memberIsOwner ? "Owner" : "Staff")</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="d-none d-sm-table-cell"><span class="role-chip @(memberIsOwner ? "is-owner" : "")">@(memberIsOwner ? "Owner" : "Staff")</span></td>
+                                    <td class="text-muted text-nowrap d-none d-md-table-cell">@member.JoinedAt.ToString("d MMM yyyy")</td>
+                                    <td class="text-end">
+                                        @if (!memberIsOwner)
+                                        {
+                                            <form asp-controller="Settings" asp-action="RemoveStaff" method="post" class="d-inline m-0"
+                                                  onsubmit="return confirm('Remove @member.FullName from this store?');">
+                                                <input type="hidden" name="userId" value="@member.UserId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
                             }
-                        </div>
-                    </div>
-                }
+                        </tbody>
+                    </table>
+                </div>
             }
-        </div>
+        </section>
     </div>
 
-    <!-- Invite Form -->
-    <div class="col-lg-5">
-        <div class="card p-4 border-1 shadow-sm">
-            <h5 class="fw-bold text-dark mb-1">Add Staff Member</h5>
-            <p class="text-muted small mb-3">Staff can use the POS, orders and customers. If the email already has an account, the password is ignored.</p>
-            <hr style="border-color: #dce3e0;">
-
+    <!-- Add staff -->
+    <div class="col-xl-4">
+        <section class="card settings-card" aria-labelledby="addHeading">
             <form asp-controller="Settings" asp-action="AddStaff" method="post">
-                <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Full Name</label>
-                    <input type="text" name="FullName" class="form-control px-3 py-2" placeholder="e.g. Rahim Uddin" required style="border-radius: var(--radius-md); border-color: #dce3e0;">
-                    <span class="text-danger field-validation-valid" data-valmsg-for="FullName" data-valmsg-replace="true"></span>
+                <div class="settings-card-head">
+                    <h2 class="h5 mb-1" id="addHeading">Add a staff member</h2>
+                    <p class="text-muted small mb-0">Staff can use the POS, orders and customers.</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Email Address</label>
-                    <input type="email" name="Email" class="form-control px-3 py-2" placeholder="e.g. rahim@example.com" required style="border-radius: var(--radius-md); border-color: #dce3e0;">
-                    <span class="text-danger field-validation-valid" data-valmsg-for="Email" data-valmsg-replace="true"></span>
+                <div class="settings-card-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="staffName">Full name</label>
+                        <input type="text" id="staffName" name="FullName" class="form-control" placeholder="e.g. Rahim Uddin" required autocomplete="off" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="staffEmail">Email</label>
+                        <input type="email" id="staffEmail" name="Email" class="form-control" placeholder="rahim@example.com" required autocomplete="off" />
+                    </div>
+                    <div>
+                        <label class="form-label" for="staffPassword">Password</label>
+                        <input type="password" id="staffPassword" name="Password" class="form-control" minlength="8" autocomplete="new-password" />
+                        <div class="form-text">Needed for new accounts only. If the email already has an account, its password is kept.</div>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-dark mb-2" style="font-size: 0.85rem;">Password</label>
-                    <input type="password" name="Password" class="form-control px-3 py-2" placeholder="Min 8 characters (new accounts only)" style="border-radius: var(--radius-md); border-color: #dce3e0;">
-                    <span class="text-danger field-validation-valid" data-valmsg-for="Password" data-valmsg-replace="true"></span>
+                <div class="settings-card-foot">
+                    <button type="submit" class="btn btn-primary">Add staff member</button>
                 </div>
-
-
-                <button type="submit" class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" style="background-color: #6366f1; color: white; border: none; border-radius: 20px;">
-                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                    Add Staff
-                </button>
             </form>
-        </div>
+        </section>
     </div>
 </div>
