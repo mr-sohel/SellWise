@@ -20,7 +20,7 @@ appsettings.Development.json
 **/venv/
 **/.venv/
 **/env/
-**/pytest_cache/
+**/.pytest_cache/
 **/coverage
 **/htmlcov/
 **/pip-log.txt
