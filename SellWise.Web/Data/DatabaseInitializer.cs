@@ -21,20 +21,32 @@ public static class DatabaseInitializer
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(DatabaseInitializer));
         var db = services.GetRequiredService<AppDbContext>();
 
-        // SQL Server in Docker can take a while to accept connections, so retry.
+        // SQL Server in Docker can take a while to accept connections, so retry *connecting*.
+        // Migration errors are not retried: they won't fix themselves.
         for (var attempt = 1; ; attempt++)
         {
             try
             {
                 await EnsureDatabaseExistsAsync(db.Database.GetConnectionString()!);
-                await db.Database.MigrateAsync();
                 break;
             }
             catch (SqlException ex) when (attempt < MaxAttempts)
             {
-                logger.LogWarning("Database not ready (attempt {Attempt}/{Max}): {Message}", attempt, MaxAttempts, ex.Message);
+                logger.LogWarning("SQL Server not reachable yet (attempt {Attempt}/{Max}): {Message}", attempt, MaxAttempts, ex.Message);
                 await Task.Delay(RetryDelay);
             }
+        }
+
+        try
+        {
+            await db.Database.MigrateAsync();
+        }
+        catch (SqlException ex)
+        {
+            logger.LogCritical(ex,
+                "Applying migrations failed. If the database was created from different migrations " +
+                "(e.g. 'There is already an object named ...'), reset it with reset-db.ps1 / reset-db.sh.");
+            throw;
         }
 
         if (demo.Enabled)

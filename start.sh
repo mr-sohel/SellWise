@@ -20,7 +20,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-echo "[1/4] Starting SQL Server..."
+echo "[1/3] Starting SQL Server..."
 
 if docker ps -a --format '{{.Names}}' | grep -q "^sellwise-sql$"; then
     # Container exists — just start it
@@ -51,7 +51,7 @@ if [ $waited -ge $max_wait ]; then
     exit 1
 fi
 
-echo "[2/4] Starting ML Service..."
+echo "[2/3] Starting ML Service..."
 if [ -d "SellWise.ML" ]; then
     cd SellWise.ML
     if [ ! -d ".venv" ]; then
@@ -67,17 +67,13 @@ else
     echo "[SKIP] SellWise.ML not found."
 fi
 
-echo "[3/4] Checking database..."
-if [ -d "SellWise.Web" ]; then
-    cd SellWise.Web
-    dotnet ef database update --no-build > /dev/null 2>&1 || dotnet ef database update > /dev/null 2>&1 || true
-    echo "[OK] Database ready."
-else
+if [ ! -d "SellWise.Web" ]; then
     echo "[ERROR] SellWise.Web not found!"
     exit 1
 fi
+cd SellWise.Web
 
-echo "[4/4] Starting web app..."
+echo "[3/3] Starting web app (applies migrations on startup)..."
 echo "================================================="
 echo "[OK] http://localhost:5000"
 echo "Press Ctrl+C to stop all services."
