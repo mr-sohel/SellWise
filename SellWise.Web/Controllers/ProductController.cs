@@ -179,38 +179,6 @@ public class ProductController : BaseController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [RequestSizeLimit(5 * 1024 * 1024)]
-    public async Task<IActionResult> BulkImport(IFormFile file)
-    {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to import products.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        if (file == null || file.Length == 0)
-        {
-            TempData["ErrorMessage"] = "Please select a valid CSV file.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        var result = await _productService.BulkImportAsync(storeId, file);
-        if (result.Error != null)
-        {
-            TempData["ErrorMessage"] = result.Error;
-        }
-        else if (result.Count > 0)
-        {
-            TempData["SuccessMessage"] = $"Successfully imported {result.Count} products.";
-        }
-
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Restock(Guid productId, int quantity)
     {
         var storeId = GetCurrentStoreId();

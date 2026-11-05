@@ -217,7 +217,7 @@ public class AnalyticsService
             TotalOrders = orderCount,
             AvgOrderValue = avgOrderValue,
             RevenueGrowth = await CalculateRevenueGrowth(storeId, totalRevenue, startDate, now),
-            HealthScore = CalculateHealthScore(orderCount, topProducts),
+            LowStockCount = await _db.Products.CountAsync(p => p.StoreId == storeId && p.IsActive && p.StockQuantity <= p.LowStockThreshold),
             RevenueTrend = revenueTrend,
             DemandForecast = demandForecast,
             CategorySales = categorySales,
@@ -499,18 +499,6 @@ public class AnalyticsService
         if (previousOrders == 0) return currentTotal > 0 ? 100 : 0;
 
         return Math.Round(((currentTotal - previousOrders) / previousOrders) * 100, 1);
-    }
-
-    private int CalculateHealthScore(int orderCount, List<Product> products)
-    {
-        int score = 50;
-        if (orderCount > 100) score += 20;
-        else if (orderCount > 50) score += 10;
-
-        var lowStockCount = products.Count(p => p.StockQuantity <= p.LowStockThreshold);
-        score -= lowStockCount * 5;
-
-        return Math.Clamp(score, 0, 100);
     }
 
     private ProductForecastCard GetFallbackForecast(Product product, List<SalesHistoryPoint> history, int horizonDays)

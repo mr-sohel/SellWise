@@ -8,7 +8,7 @@ public class DashboardViewModel
     public int TotalOrders { get; set; }
     public decimal AvgOrderValue { get; set; }
     public decimal RevenueGrowth { get; set; }
-    public int HealthScore { get; set; }
+    public int LowStockCount { get; set; }
     
     public List<RevenuePoint> RevenueTrend { get; set; } = new List<RevenuePoint>();
     public List<ForecastPoint> DemandForecast { get; set; } = new List<ForecastPoint>();
