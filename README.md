@@ -1,50 +1,100 @@
+<div align="center">
+
 # SellWise
 
+**Point of sale, inventory and sales analytics for small retail shops.**
+
 [![CI](https://github.com/mr-sohel/SellWise/actions/workflows/ci.yml/badge.svg)](https://github.com/mr-sohel/SellWise/actions/workflows/ci.yml)
+![.NET 10](https://img.shields.io/badge/.NET-10-512bd4)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-A point-of-sale and inventory web app for small retail shops, with sales analytics and
-30-day demand forecasting from a separate Python service.
+</div>
 
-**Stack:** ASP.NET Core 10 MVC · Entity Framework Core 10 · SQL Server · ASP.NET Core Identity ·
-Python FastAPI + Prophet · Bootstrap 5 + Chart.js · xUnit + pytest · Docker Compose + Caddy · GitHub Actions
+![SellWise dashboard](docs/screenshots/dashboard.png)
 
----
+SellWise lets a shop ring up sales, keep stock accurate and see how the business is doing.
+One account can run several stores, and each store's data is kept separate.
 
 ## Features
 
-- **POS checkout:** sell products, attach or create a customer, walk-in or online orders, printable invoices.
-- **Inventory:** products, restocking, and low-stock alerts generated from current stock levels.
-- **Multiple stores per account:** an owner can run several stores and switch between them; data is isolated per store.
-- **Two roles:** the *owner* sees everything; *staff* can only use the POS, orders and customers.
-- **Dashboard:** revenue, orders, average order value, revenue trend, category split, top products.
-- **Demand forecasting:** per-product 30-day forecast from Prophet, with restock suggestions.
-- **Customer segmentation:** RFM (Recency, Frequency, Monetary) scoring into segments such as *Champion* or *At Risk*.
-- **PDF sales report** generated with QuestPDF.
+- **Point of sale.** Tap products to build an order, attach or create a customer, and choose walk-in or online.
+  Every order has a printable invoice.
+- **Inventory.** Manage products, restock with one click, and get low-stock alerts from current stock levels.
+- **Dashboard.** Revenue (with the change since the last period), orders, average order value, a revenue trend,
+  sales by category, top products, and the products closest to running out.
+- **Customers.** Profiles with order count, total spent and last order date.
+- **Reports.** A downloadable PDF sales report.
+- **Multiple stores.** An owner can run several stores and switch between them.
+- **Two roles.** Owners see everything. Staff can use the POS, orders and customers only.
 
-## Architecture
+## Screenshots
+
+| Point of sale | Products |
+|---|---|
+| ![New order screen](docs/screenshots/new-order.png) | ![Products screen](docs/screenshots/products.png) |
+
+## Quick start
+
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Docker](https://www.docker.com/).
+
+```bash
+./scripts/start.ps1      # Windows
+./scripts/start.sh       # macOS / Linux
+```
+
+This starts SQL Server in Docker and the app at **http://localhost:5000**. On the first run it creates the
+database and fills it with two demo stores and 180 days of orders.
+
+| Demo login | |
+|---|---|
+| Email | `admin@sellwise.com` |
+| Password | `Admin123!` |
+
+To wipe the database and reseed the demo data, run `./scripts/reset-db.ps1` or `./scripts/reset-db.sh`.
+
+<details>
+<summary>Run the parts by hand</summary>
+
+```bash
+docker run -d --name sellwise-sql -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=YourPass123!" \
+  -p 1433:1433 -v sellwise-data:/var/opt/mssql mcr.microsoft.com/mssql/server:2022-latest
+
+cd SellWise.Web
+dotnet run
+```
+
+</details>
+
+## Built with
+
+| | |
+|---|---|
+| **Backend** | ASP.NET Core 10 MVC, Entity Framework Core 10, ASP.NET Core Identity |
+| **Database** | SQL Server |
+| **Frontend** | Razor views, Bootstrap 5, Chart.js |
+| **PDFs** | QuestPDF |
+| **Tests** | xUnit, SQLite (unit), Testcontainers with SQL Server (integration) |
+| **Delivery** | Docker Compose, Caddy (automatic HTTPS), GitHub Actions |
+
+## How it works
 
 ```text
 Browser ──HTTP──▶ SellWise.Web (ASP.NET Core MVC) ──EF Core──▶ SQL Server
-                          │
-                          └──HTTP/JSON──▶ SellWise.ML (FastAPI + Prophet)
 ```
 
-- **SellWise.Web**: controllers stay thin. Business rules live in `Services/` (orders, products, analytics, RFM, alerts).
-- **SellWise.ML**: a stateless forecasting API. It gets 90 days of daily sales for a product and returns a 30-day forecast.
-- **SellWise.Tests**: xUnit unit tests, plus integration tests that run the whole app against a real SQL Server.
+Controllers stay thin. The business rules live in `Services/`. The decisions below are the ones I'd point to in
+a code review.
 
-## Design decisions
+### Every store's data stays separate
 
-These are the parts I'd point to in a code review.
+Every row belongs to a store (`StoreId`). Before each action, `BaseController` loads the user's membership for
+the active store and exposes `StoreId` and `IsOwner`. Every query filters by `StoreId`, including lookups by id,
+so nobody can open another store's order by guessing its id. Owner-only pages carry an `[OwnerOnly]` attribute,
+and `BaseController` enforces it, so actions don't repeat role checks.
 
-**Store isolation.** Every row belongs to a store (`StoreId`). Before each action, `BaseController` loads the
-user's membership for the active store (kept in session) and exposes `StoreId` and `IsOwner`. Every query
-filters by `StoreId`, including lookups by id, so a user can't open another store's order by guessing its id.
+### Stock can't be oversold
 
-**Authorization in one place.** Owner-only pages are marked with `[OwnerOnly]` (see `Authorization/`).
-`BaseController` enforces it, so the actions don't repeat role checks.
-
-**Stock can't be oversold.** Checkout decrements stock with one conditional `UPDATE`:
+Checkout lowers stock with a single conditional `UPDATE`:
 
 ```csharp
 _db.Products
@@ -52,19 +102,19 @@ _db.Products
     .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockQuantity, p => p.StockQuantity - quantity));
 ```
 
-If it updates 0 rows, there wasn't enough stock. The database runs the check and the decrement together,
-so two cashiers selling the last item at the same moment can't both succeed. A read-then-write version can't
-give that guarantee. The order, the stock changes and the customer totals are saved in one transaction.
+If it changes 0 rows, there wasn't enough stock. The database does the check and the decrement together, so two
+cashiers selling the last item at the same moment can't both succeed. Reading the stock first and writing it back
+can't give that guarantee. The order, the stock changes and the customer totals are saved in one transaction.
 
-**Other concurrent changes are safe too.** Everything two people can do at the same moment is protected the same way:
+### Two people acting at once is safe
 
-| Race | Protection |
+| Situation | Protection |
 |---|---|
-| Two people cancel the same order, and the stock comes back twice | Compare-and-swap: `UPDATE ... WHERE Status = @statusWeRead`; the second request matches 0 rows |
-| A double click or network retry places the same order twice | Idempotency key in the POS form, with a unique index on `(StoreId, IdempotencyKey)` |
-| Two orders for one customer at once lose an update to their totals | Atomic `SET TotalOrders = TotalOrders + 1` instead of load, add, save |
-| Two owners edit the same product, and the last save silently wins | Optimistic concurrency: a `Version` token, and a conflict message for the stale edit |
-| Two alert scans insert the same alert | Unique index; the duplicate insert is ignored |
+| Two people cancel the same order, and the stock comes back twice | Compare-and-swap: `UPDATE ... WHERE Status = @statusWeRead`. The second request matches 0 rows. |
+| A double click or retry places the same order twice | An idempotency key in the POS form, with a unique index on `(StoreId, IdempotencyKey)` |
+| Two orders for one customer at once lose an update to their totals | An atomic `SET TotalOrders = TotalOrders + 1` instead of load, add, save |
+| Two owners edit the same product, and the last save silently wins | Optimistic concurrency with a `Version` token, and a conflict message for the stale edit |
+| Two alert scans insert the same alert | A unique index. The duplicate insert is ignored. |
 
 `Product.Version` is a plain counter rather than a SQL `rowversion` on purpose. Every sale updates the product
 row, so with a `rowversion` an owner editing a price would get a false conflict whenever something sold.
@@ -72,86 +122,37 @@ row, so with a `rowversion` an owner editing a price would get a false conflict 
 Order statuses follow a small state machine (`Models/OrderStatus.cs`). For example, a completed sale can be
 returned but not moved back to "pending".
 
-The integration tests send 12 requests at the same moment for each of these races. I checked each test by
-putting the bug back. Without the atomic increment, for example, 12 simultaneous orders for one customer were
-counted as 1.
+### Other choices
 
-**Rate limiting.** ASP.NET Core's built-in rate limiter sets three limits:
-- **Every user:** a token bucket per user, which allows short bursts but caps sustained traffic.
-- **Login and signup:** limited per IP. Account lockout stops one account's password being guessed; this stops
-  one IP trying passwords against many accounts.
-- **Dashboard:** a tighter per-user limit, because it can trigger ML forecasts.
-
-Rejected requests get `429 Too Many Requests` with a `Retry-After` header.
-
-**Forecasts degrade gracefully.** Results are cached in the `Forecasts` table for 24 hours, so Prophet doesn't
-run on every dashboard load. If the ML service is down or slow (10-second timeout), the dashboard falls back
-to repeating the last 14 days of sales instead of failing.
-
-**RFM scoring is a pure function.** `RfmScoring` has no database access, which makes the segment rules easy
-to unit-test.
-
-**Soft delete for products.** Deleted products are hidden (`IsActive = false`), not removed, so past orders and
-reports stay correct.
-
-## Running locally
-
-**Prerequisites:** .NET 10 SDK, Docker, Python 3.11 and [uv](https://github.com/astral-sh/uv).
-
-```bash
-./start.ps1      # Windows
-./start.sh       # macOS / Linux
-```
-
-The script starts SQL Server in Docker, the ML service on `:8000` and the web app on **http://localhost:5000**.
-In Development, the database is migrated and seeded on first run with two demo stores and 180 days of orders.
-
-| Demo login | |
-|---|---|
-| Email | `admin@sellwise.com` |
-| Password | `Admin123!` |
-
-To start the demo data again from scratch, run `./reset-db.ps1` or `./reset-db.sh`.
-
-<details>
-<summary>Running the parts by hand</summary>
-
-```bash
-docker run -d --name sellwise-sql -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=YourPass123!" \
-  -p 1433:1433 -v sellwise-data:/var/opt/mssql mcr.microsoft.com/mssql/server:2022-latest
-
-cd SellWise.ML && uv venv && uv pip install -r requirements.txt
-uv run uvicorn app.main:app --port 8000          # API docs: http://localhost:8000/docs
-
-cd ../SellWise.Web && dotnet run                  # http://localhost:5000
-```
-</details>
+- **Rate limiting.** ASP.NET Core's built-in limiter caps each user's traffic, limits login and signup attempts
+  per IP, and applies a tighter limit to the dashboard. Rejected requests get `429` with a `Retry-After` header.
+- **Soft delete for products.** Deleted products are hidden (`IsActive = false`), not removed, so past orders and
+  reports stay correct.
 
 ## Tests
 
 ```bash
-dotnet test SellWise.slnx                                   # .NET unit + integration tests (needs Docker)
-cd SellWise.ML && pip install -r requirements-dev.txt && pytest   # ML service tests
+dotnet test SellWise.slnx      # needs Docker for the integration tests
 ```
 
-- **Unit tests** (`SellWise.Tests/Unit`): checkout and cancellation rules against in-memory SQLite, RFM
-  scoring, and the forecast helpers.
-- **Integration tests** (`SellWise.Tests/Integration`): run the real app in memory with `WebApplicationFactory`,
-  against a throwaway SQL Server container from Testcontainers, and act like a browser (cookies, forms,
-  anti-forgery tokens). They check that:
+- **Unit tests** check the checkout and cancellation rules against in-memory SQLite.
+- **Integration tests** run the real app against a throwaway SQL Server container and act like a browser
+  (cookies, forms, anti-forgery tokens). They check that:
   - the owner of one store can't read or change another store's orders, products or customers by guessing ids
   - staff are kept out of owner pages
   - requests without an anti-forgery token are rejected
-  - the dashboard still works when the ML service is down
   - parallel requests can't oversell, double-cancel, double-submit or lose customer updates
   - rate limits return `429` once exceeded
 
-GitHub Actions runs both suites on every push and pull request.
+The concurrency tests send 12 requests at the same moment for each race above. I checked each one by putting the
+bug back. Without the atomic increment, for example, 12 simultaneous orders for one customer were counted as 1.
+
+GitHub Actions runs the tests on every push and pull request.
 
 ## Deployment
 
-`docker-compose.yml` runs SQL Server, the ML service and the web app on a private network, behind Caddy
-(automatic HTTPS). Only Caddy is exposed.
+`docker-compose.yml` runs SQL Server and the app on a private network behind Caddy, which handles HTTPS. Only
+Caddy is exposed to the internet.
 
 ```bash
 cp .env.example .env    # set SA_PASSWORD and DOMAIN (and optionally a demo account)
@@ -162,21 +163,26 @@ docker compose up -d --build
 
 ```text
 SellWise.Web/
-  Authorization/   StoreRoles, [OwnerOnly]
-  Controllers/     thin MVC controllers; BaseController resolves store + role
-  Data/            AppDbContext, startup migration/seeding
+  Authorization/   roles and the [OwnerOnly] attribute
+  Controllers/     thin MVC controllers; BaseController resolves the store and role
+  Data/            AppDbContext, startup migration and demo data
+  Infrastructure/  rate limiting
   Migrations/      EF Core migrations
   Models/          entities
-  Services/        business logic (orders, analytics, forecasting client, RFM, alerts)
-  ViewModels/      form/view models (entities are never bound directly)
+  Services/        business logic (orders, products, customers, analytics, alerts)
+  ViewModels/      form and view models (entities are never bound directly)
   Views/           Razor views
-SellWise.ML/       FastAPI + Prophet forecasting service and its tests
 SellWise.Tests/    Unit/ (fast, SQLite) and Integration/ (real app + SQL Server container)
-docs/              original project report (describes an earlier, larger version)
+scripts/           start and reset-db scripts for PowerShell and bash
+docs/              screenshots, plus the original project report (describes an earlier, larger version)
 ```
 
 ## Known limitations
 
 - Dates are stored and grouped in UTC, so "today" follows UTC rather than the store's time zone.
-- Staff accounts are created by the owner with a password; there are no email invitations.
-- The forecast assumes demand is driven by past sales only (no promotions, price changes or holidays).
+- The owner creates staff accounts with a password. There are no email invitations.
+- Low-stock alerts use a fixed threshold per product. There is no demand forecasting.
+
+## License
+
+[MIT](LICENSE)
