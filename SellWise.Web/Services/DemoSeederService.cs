@@ -30,8 +30,6 @@ public class DemoSeederService
         await _db.SaveChangesAsync();
 
         await SeedOrders(storeId, customers, products, rnd, historyDays: 180, startOrderNum: 17000);
-        await SeedExpenses(storeId, rnd, months: 6);
-        SeedAlerts(storeId, products, rnd);
 
         await _db.SaveChangesAsync();
     }
@@ -54,8 +52,6 @@ public class DemoSeederService
         await _db.SaveChangesAsync();
 
         await SeedOrders(storeId, customers, products, rnd, historyDays: 180, startOrderNum: 55000);
-        await SeedExpenses(storeId, rnd, months: 6);
-        SeedAlerts(storeId, products, rnd);
 
         await _db.SaveChangesAsync();
     }
@@ -230,7 +226,7 @@ public class DemoSeederService
     }
 
     // -----------------------------------------------------------------------
-    // Shared order/expense/alert generators
+    // Order history generator
     // -----------------------------------------------------------------------
 
     private async Task SeedOrders(Guid storeId, List<Customer> customers, List<Product> products, Random rnd, int historyDays, int startOrderNum)
@@ -280,7 +276,7 @@ public class DemoSeederService
                     Status = status,
                     OrderType = isDelivery ? "online" : "offline",
                     SalespersonName = isDelivery ? "Online Store" : (rnd.Next(2) == 0 ? "Sales Staff" : "Admin User"),
-                    Total = product.SellingPrice * qty,
+                    Total = product.SellingPrice * qty + (isDelivery ? 60 : 0),
                     DeliveryCharge = isDelivery ? 60 : 0,
                     Discount = 0,
                     Notes = null,
@@ -314,66 +310,5 @@ public class DemoSeederService
 
         await _db.SaveChangesAsync();
         _db.ChangeTracker.AutoDetectChangesEnabled = true;
-    }
-
-    private async Task SeedExpenses(Guid storeId, Random rnd, int months)
-    {
-        var expenseCategories = new[] { "Rent", "Salary", "Utilities", "Marketing", "Packaging", "Supplies", "Other" };
-        var expenseNotes = new Dictionary<string, string[]>
-        {
-            ["Rent"]      = new[] { "Monthly office/warehouse rent" },
-            ["Salary"]    = new[] { "Staff salaries - monthly payroll", "Sales team incentives", "Security staff payment" },
-            ["Utilities"] = new[] { "Electricity, internet, water bill", "Internet service provider" },
-            ["Marketing"] = new[] { "Facebook/Instagram ads", "Google Ads campaign", "Flyer printing and distribution" },
-            ["Packaging"] = new[] { "Boxes, tape, bubble wrap", "Branded packaging materials" },
-            ["Supplies"]  = new[] { "Office supplies restocking", "Printer ink and paper" },
-            ["Other"]     = new[] { "Miscellaneous business expenses", "Delivery logistics" }
-        };
-
-        int totalExpenses = months * 15;
-        for (int i = 0; i < totalExpenses; i++)
-        {
-            var cat = expenseCategories[rnd.Next(expenseCategories.Length)];
-            var amount = cat switch
-            {
-                "Rent"      => 25000m,
-                "Salary"    => 30000m + rnd.Next(5000, 15000),
-                "Utilities" => 3000m + rnd.Next(1000, 5000),
-                "Marketing" => 5000m + rnd.Next(3000, 15000),
-                "Packaging" => 2000m + rnd.Next(1000, 5000),
-                "Supplies"  => 500m + rnd.Next(500, 2000),
-                _           => 1000m + rnd.Next(500, 5000)
-            };
-
-            _db.Expenses.Add(new Expense
-            {
-                StoreId = storeId,
-                Category = cat,
-                Amount = amount,
-                ExpenseDate = DateTime.UtcNow.AddDays(-rnd.Next(0, months * 30)),
-                Notes = expenseNotes[cat][rnd.Next(expenseNotes[cat].Length)],
-                CreatedAt = DateTime.UtcNow
-            });
-        }
-
-        await _db.SaveChangesAsync();
-    }
-
-    private void SeedAlerts(Guid storeId, List<Product> products, Random rnd)
-    {
-        var lowStock = products.Where(p => p.StockQuantity <= p.LowStockThreshold * 2).Take(15);
-        foreach (var p in lowStock)
-        {
-            _db.Alerts.Add(new InventoryAlert
-            {
-                StoreId = storeId,
-                ProductId = p.Id,
-                Type = "Low Stock",
-                Message = $"Only {p.StockQuantity} unit{(p.StockQuantity == 1 ? "" : "s")} left — predicted demand: {rnd.Next(10, 50)} in 30 days. Recommend ordering {rnd.Next(5, 20)} units.",
-                Severity = p.StockQuantity <= p.LowStockThreshold ? "critical" : "warning",
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
-            });
-        }
     }
 }

@@ -16,5 +16,4 @@ public class Store
     public ICollection<Product> Products { get; set; } = new List<Product>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
     public ICollection<Customer> Customers { get; set; } = new List<Customer>();
-    public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
 }

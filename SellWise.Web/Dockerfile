@@ -1,27 +1,26 @@
-# ── Stage 1: Build ──────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+# ── Build ────────────────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy project file and restore dependencies (cached layer)
 COPY SellWise.Web.csproj .
 RUN dotnet restore
 
-# Copy rest of source and publish
 COPY . .
 RUN dotnet publish -c Release -o /app/publish --no-restore
 
-# ── Stage 2: Runtime ─────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
+# ── Runtime ──────────────────────────────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-
-# Copy published output
 COPY --from=build /app/publish .
 
-# .NET 8+ images already come with a built-in non-root user ($APP_UID)
+# Folder for the Data Protection key ring (mounted as a volume in docker-compose).
+RUN mkdir -p /keys && chown $APP_UID /keys
+
+# Run as the image's built-in non-root user.
 USER $APP_UID
 
 EXPOSE 8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Railway injects $PORT at runtime; fall back to 8080 locally (using JSON array format)
+# Hosting platforms like Railway inject $PORT; default to 8080.
 ENTRYPOINT ["sh", "-c", "ASPNETCORE_URLS=http://+:${PORT:-8080} dotnet SellWise.Web.dll"]

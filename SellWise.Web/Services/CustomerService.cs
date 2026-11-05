@@ -36,17 +36,18 @@ public class CustomerService : ICustomerService
         return customer;
     }
 
-    public async Task UpdateCustomerAsync(Guid storeId, Guid id, CustomerEditViewModel model)
+    public async Task<bool> UpdateCustomerAsync(Guid storeId, Guid id, CustomerEditViewModel model)
     {
         var customer = await _db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StoreId == storeId);
-        if (customer == null) throw new InvalidOperationException("Customer not found.");
+        if (customer == null) return false;
 
-        customer.Name = model.Name;
-        customer.Phone = model.Phone;
-        customer.Email = model.Email;
-        customer.Address = model.Address;
+        customer.Name = model.Name.Trim();
+        customer.Phone = model.Phone?.Trim();
+        customer.Email = model.Email?.Trim();
+        customer.Address = model.Address?.Trim();
         customer.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+        return true;
     }
 }

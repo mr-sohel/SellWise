@@ -281,39 +281,6 @@ namespace SellWise.Web.Migrations
                     b.ToTable("Customers");
                 });
 
-            modelBuilder.Entity("SellWise.Web.Models.Expense", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("ExpenseDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("StoreId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StoreId", "ExpenseDate");
-
-                    b.ToTable("Expenses");
-                });
-
             modelBuilder.Entity("SellWise.Web.Models.Forecast", b =>
                 {
                     b.Property<Guid>("Id")
@@ -661,17 +628,6 @@ namespace SellWise.Web.Migrations
                     b.Navigation("Store");
                 });
 
-            modelBuilder.Entity("SellWise.Web.Models.Expense", b =>
-                {
-                    b.HasOne("SellWise.Web.Models.Store", "Store")
-                        .WithMany("Expenses")
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Store");
-                });
-
             modelBuilder.Entity("SellWise.Web.Models.Forecast", b =>
                 {
                     b.HasOne("SellWise.Web.Models.Product", "Product")
@@ -787,8 +743,6 @@ namespace SellWise.Web.Migrations
             modelBuilder.Entity("SellWise.Web.Models.Store", b =>
                 {
                     b.Navigation("Customers");
-
-                    b.Navigation("Expenses");
 
                     b.Navigation("Members");
 

@@ -6,7 +6,7 @@ Write-Host "[INFO] Starting SellWise" -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 
 # 1. Start SQL Server Container (persistent volume)
-Write-Host "[1/4] Starting SQL Server..." -ForegroundColor Yellow
+Write-Host "[1/3] Starting SQL Server..." -ForegroundColor Yellow
 
 $containerExists = docker ps -a --format '{{.Names}}' | Select-String -Pattern "^sellwise-sql$"
 if ($containerExists) {
@@ -42,7 +42,7 @@ if ($waited -ge $maxWait) {
 $mlProcess = $null
 try {
     # 2. Start ML Service
-    Write-Host "[2/4] Starting ML Service..." -ForegroundColor Yellow
+    Write-Host "[2/3] Starting ML Service..." -ForegroundColor Yellow
     if (Test-Path "SellWise.ML") {
         if (-not (Test-Path "SellWise.ML/.venv")) {
             Write-Host "Setting up ML virtual environment..." -ForegroundColor Yellow
@@ -57,23 +57,8 @@ try {
         Write-Host "[SKIP] SellWise.ML not found." -ForegroundColor DarkYellow
     }
 
-    # 3. Apply Migrations (only if needed)
-    Write-Host "[3/4] Checking database..." -ForegroundColor Yellow
-    if (Test-Path "SellWise.Web") {
-        Push-Location SellWise.Web
-        dotnet ef database update --no-build 2>$null | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            dotnet ef database update 2>$null | Out-Null
-        }
-        Pop-Location
-        Write-Host "[OK] Database ready." -ForegroundColor Green
-    } else {
-        Write-Host "[ERROR] SellWise.Web not found!" -ForegroundColor Red
-        exit 1
-    }
-
-    # 4. Start ASP.NET Core MVC Application
-    Write-Host "[4/4] Starting web app..." -ForegroundColor Yellow
+    # 3. Start the web app (it applies pending migrations itself on startup)
+    Write-Host "[3/3] Starting web app (applies migrations on startup)..." -ForegroundColor Yellow
     Write-Host "=================================================" -ForegroundColor Cyan
     Write-Host "[OK] http://localhost:5000" -ForegroundColor Green
     Write-Host "Press Ctrl+C to stop all services." -ForegroundColor Gray

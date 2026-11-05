@@ -1,14 +1,19 @@
+import logging
+
 import pandas as pd
 from prophet import Prophet
 from typing import List
 from ..models.schemas import SalesHistoryPoint, ForecastResultPoint
+
+logger = logging.getLogger(__name__)
 
 def generate_forecast(
     history: List[SalesHistoryPoint],
     periods: int = 30
 ) -> List[ForecastResultPoint]:
     """
-    Generates a demand forecast using Facebook Prophet.
+    Fits Prophet on daily unit sales and predicts the next `periods` days.
+    Returns an empty list if there is too little data or the model can't be fitted.
     """
     if len(history) < 2:
         return []
@@ -33,9 +38,9 @@ def generate_forecast(
     # Fit model
     try:
         model.fit(df)
-    except Exception as e:
-        # In case prophet fails to fit (e.g. not enough data points with variance)
-        print(f"Prophet fitting failed: {e}")
+    except Exception:
+        # e.g. not enough variance in the data; the web app falls back to its own forecast.
+        logger.exception("Prophet fitting failed")
         return []
 
     # Create future dataframe and predict

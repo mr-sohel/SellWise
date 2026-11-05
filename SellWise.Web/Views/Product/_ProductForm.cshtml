@@ -64,8 +64,17 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label asp-for="StockQuantity" class="form-label fw-semibold">Stock Quantity <span class="text-danger">*</span></label>
-                        <input asp-for="StockQuantity" type="number" class="form-control" placeholder="0" />
-                        <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                        @if (Model.Id is null || Model.Id == Guid.Empty)
+                        {
+                            <input asp-for="StockQuantity" type="number" class="form-control" placeholder="0" />
+                            <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                        }
+                        else
+                        {
+                            @* Stock only changes through sales and restocks, so concurrent sales are never overwritten. *@
+                            <input asp-for="StockQuantity" type="number" class="form-control" readonly />
+                            <div class="form-text">Use Restock to add inventory.</div>
+                        }
                     </div>
                     <div class="col-md-4">
                         <label asp-for="LowStockThreshold" class="form-label fw-semibold">Low Stock Alert</label>

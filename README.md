@@ -1,366 +1,153 @@
-# SellWise: AI Sales Analytics & Inventory SaaS
+# SellWise
 
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![EF Core 10](https://img.shields.io/badge/EF%20Core-10.0-512BD4?logo=dotnet&logoColor=white)](https://learn.microsoft.com/ef/core/)
-[![SQL Server 2022](https://img.shields.io/badge/SQL%20Server-2022-CC292B?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Meta Prophet](https://img.shields.io/badge/Meta-Prophet-0081FB?logo=meta&logoColor=white)](https://facebook.github.io/prophet/)
-[![Bootstrap 5.3](https://img.shields.io/badge/Bootstrap-5.3.3-7952B3?logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
-[![QuestPDF](https://img.shields.io/badge/QuestPDF-2026.7-brightgreen)](https://www.questpdf.com/)
+[![CI](https://github.com/mr-sohel/SellWise/actions/workflows/ci.yml/badge.svg)](https://github.com/mr-sohel/SellWise/actions/workflows/ci.yml)
 
-**SellWise** is an enterprise-grade Software-as-a-Service (SaaS) platform built for small-to-medium retail businesses. It combines transactional point-of-sale (POS) operations, multi-tenant inventory tracking, financial analytics, salesperson attribution, printable invoices, and machine learning to deliver predictive demand forecasting and automated customer segmentation.
+A point-of-sale and inventory web app for small retail shops, with sales analytics and
+30-day demand forecasting from a separate Python service.
+
+**Stack:** ASP.NET Core 10 MVC · Entity Framework Core 10 · SQL Server · ASP.NET Core Identity ·
+Python FastAPI + Prophet · Bootstrap 5 + Chart.js · xUnit + pytest · Docker Compose + Caddy · GitHub Actions
 
 ---
 
-## ⚡ Quick Start & Credentials
+## Features
 
-Run the automated startup script to launch SQL Server (Docker), the Python ML service, run EF Core migrations, and start the ASP.NET Core web app:
+- **POS checkout:** sell products, attach or create a customer, walk-in or online orders, printable invoices.
+- **Inventory:** products, restocking, and low-stock alerts generated from current stock levels.
+- **Multiple stores per account:** an owner can run several stores and switch between them; data is isolated per store.
+- **Two roles:** the *owner* sees everything; *staff* can only use the POS, orders and customers.
+- **Dashboard:** revenue, orders, average order value, revenue trend, category split, top products.
+- **Demand forecasting:** per-product 30-day forecast from Prophet, with restock suggestions.
+- **Customer segmentation:** RFM (Recency, Frequency, Monetary) scoring into segments such as *Champion* or *At Risk*.
+- **PDF sales report** generated with QuestPDF.
 
-```bash
-# Windows
-.\start.ps1
-
-# macOS / Linux
-./start.sh
-```
-
-| Service | URL | Credentials / Notes |
-|---|---|---|
-| **Web Application** | [http://localhost:5000](http://localhost:5000) | **Email:** `admin@sellwise.com` <br> **Password:** `Admin123!` |
-| **ML Microservice (FastAPI)** | [http://localhost:8000](http://localhost:8000) | Interactive API docs at `/docs` |
-| **SQL Server (Docker)** | `localhost:1433` | **User:** `sa` <br> **Password:** `YourPass123!` |
-| **Pre-seeded Demo Stores** | `SellWise Tech BD` (Electronics) <br> `StyleHub BD` (Fashion) | Switch active store via top navigation |
-
----
-
-## 🏗️ System Architecture
-
-SellWise decouples high-throughput web traffic and transactional data management from CPU-intensive machine learning workloads.
+## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                             Client Browser                              │
-│              (Razor Views + Bootstrap 5.3 + Chart.js)                   │
-└────────────────────────────────────┬────────────────────────────────────┘
-                                     │ HTTP / HTTPS (Port 5000)
-┌────────────────────────────────────▼────────────────────────────────────┐
-│                    SellWise.Web (ASP.NET Core 10)                       │
-│                                                                         │
-│  - ASP.NET Core Identity (Cookie Auth, Lockout Policy & RBAC)           │
-│  - Multi-Tenant Store Isolation (EF Core Session-Scoped Query Filters)  │
-│  - Role Hierarchy (Owner, Store Manager, Salesman / Employee)           │
-│  - Transactional POS & Order Types (Walk-In, Online, Delivery, Phone)   │
-│  - Salesperson Tracking & Printable Invoices                            │
-│  - Customer Management & RFM Scoring Cohorts                            │
-│  - Proactive Inventory Alerts & Automated Resolution                    │
-│  - QuestPDF Automated Document & Audit Export Engine                    │
-└─────────────────┬───────────────────────────────────────┬───────────────┘
-                  │ TDS (Port 1433)                       │ REST JSON (Port 8000)
-┌─────────────────▼───────────────┐       ┌───────────────▼───────────────┐
-│     SQL Server 2022 Docker      │       │     SellWise.ML (FastAPI)     │
-│   (Named Volume: sellwise-data  │       │                               │
-│    - Orders, Products, RFM)     │       │  - Meta Prophet Engine        │
-│                                 │       │  - 30-Day Time Series         │
-└─────────────────────────────────┘       └───────────────────────────────┘
+Browser ──HTTP──▶ SellWise.Web (ASP.NET Core MVC) ──EF Core──▶ SQL Server
+                          │
+                          └──HTTP/JSON──▶ SellWise.ML (FastAPI + Prophet)
 ```
 
----
+- **SellWise.Web**: controllers stay thin. Business rules live in `Services/` (orders, products, analytics, RFM, alerts).
+- **SellWise.ML**: a stateless forecasting API. It gets 90 days of daily sales for a product and returns a 30-day forecast.
+- **SellWise.Tests**: xUnit unit tests, plus integration tests that run the whole app against a real SQL Server.
 
-## ✨ Key Features & Capabilities
+## Design decisions
 
-### 1. 📈 AI-Powered Demand Forecasting
-- **Time-Series Modeling:** Ingests 90 days of sales history per product, zero-pads missing dates, and submits data to the Python microservice running **Meta Prophet** (accounting for weekly and yearly seasonality).
-- **30-Day Projections:** Predicts expected units with confidence intervals (`yhat_lower`, `yhat_upper`).
-- **Resilient Fallback:** 24-hour caching in the `Forecasts` table; automatically falls back to Exponentially Weighted Moving Average (EWMA) if the ML service is unreachable.
+These are the parts I'd point to in a code review.
 
-### 2. 🛒 Point of Sale (POS) & Multi-Channel Orders
-- **ACID Transactions:** Encapsulates order creation, stock validation, customer assignment, and inventory deduction within EF Core transactions (`BeginTransactionAsync`).
-- **Multi-Channel Order Types:** Classifies orders across `Walk-In` (Offline POS), `Online`, `Delivery`, and `Phone`.
-- **Salesperson Tracking:** Records the active salesperson (`SalespersonName`) on every order for commission tracking and staff accountability.
-- **Atomic Rollbacks:** Prevents partial writes or negative inventory states during concurrent checkouts.
+**Store isolation.** Every row belongs to a store (`StoreId`). Before each action, `BaseController` loads the
+user's membership for the active store (kept in session) and exposes `StoreId` and `IsOwner`. Every query
+filters by `StoreId`, including lookups by id, so a user can't open another store's order by guessing its id.
 
-### 3. 🧾 Printable Invoices & Receipts
-- **Interactive Invoice View:** Built-in invoice generator (`/Order/Invoice/{id}`) formatted for standard paper and thermal POS receipt printing (`window.print()`).
-- **Complete Transaction Metadata:** Itemized products, quantity, unit prices, subtotal, discount, delivery charges, customer address, payment status, and order tracking numbers (`ORD-YYYYMMDD-XXXXXX`).
+**Authorization in one place.** Owner-only pages are marked with `[OwnerOnly]` (see `Authorization/`).
+`BaseController` enforces it, so the actions don't repeat role checks.
 
-### 4. 👥 Customer Management & RFM Segmentation
-- **Quick-Create Modal:** Add new customer profiles directly from the POS checkout flow or customer directory with automated phone deduplication.
-- **Behavioral Scoring:** Calculates Recency, Frequency, and Monetary scores across entire purchase histories.
-- **Dynamic Cohorts:** Classifies buyers into 8 actionable segments (*Champions, Loyal, Potential Loyalists, At Risk, Can't Lose Them, Hibernating, Lost, New Customers*).
+**Stock can't be oversold.** Checkout decrements stock with one conditional `UPDATE`:
 
-### 5. ⚠️ Proactive Inventory Alerts & Restock Workflow
-- Continuously tracks stock thresholds and reorder points.
-- Categorizes inventory status into **Critical** (out of stock) and **Warning** (low stock) alerts.
-- **Automated Resolution:** Alerts automatically resolve and mark as read when inventory is restocked above the threshold.
+```csharp
+_db.Products
+    .Where(p => p.Id == productId && p.StockQuantity >= quantity)
+    .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockQuantity, p => p.StockQuantity - quantity));
+```
 
-### 6. 💰 Expense Tracking & Net Profitability
-- Categorizes and logs operational overhead (Rent, Utilities, Salaries, Marketing, Maintenance).
-- Computes true net margins by deducting overhead expenses and Cost of Goods Sold (COGS) from gross revenue.
+If it updates 0 rows, there wasn't enough stock. The database runs the check and the decrement together,
+so two cashiers selling the last item at the same moment can't both succeed. A read-then-write version can't
+give that guarantee. The order, the stock changes and the customer totals are saved in one transaction.
+Cancelling an order puts the stock back.
 
-### 7. 📄 Automated PDF Reporting Engine
-- Generates publication-ready PDF reports on-demand using **QuestPDF**.
-- Exports periodic sales summaries, inventory valuations, and financial audits.
+**Forecasts degrade gracefully.** Results are cached in the `Forecasts` table for 24 hours, so Prophet doesn't
+run on every dashboard load. If the ML service is down or slow (10-second timeout), the dashboard falls back
+to repeating the last 14 days of sales instead of failing.
 
-### 8. 🏢 Multi-Tenant Store & Role-Based Access Control (RBAC)
-- Supports multiple store profiles per administrative account with instant store switching.
-- **Role Permissions:**
-  - **Owner:** Full system access, store creation, staff management, analytics, expenses, and reports.
-  - **Manager:** POS operations, product catalog, inventory alerts, customer directory, and expenses.
-  - **Salesman / Employee:** Fast POS checkout, order management, customer creation, and product catalog lookup (restricted from financial analytics, staff settings, and reports).
+**RFM scoring is a pure function.** `RfmScoring` has no database access, which makes the segment rules easy
+to unit-test.
 
----
+**Soft delete for products.** Deleted products are hidden (`IsActive = false`), not removed, so past orders and
+reports stay correct.
 
-## 🐳 Docker Container Setup & Terminal Commands
+## Running locally
 
-SellWise uses Microsoft SQL Server 2022 running in a Docker container with persistent named volumes to maintain data between restarts.
-
-### 1. Create and Run Container via Terminal
-
-Execute the following commands in your terminal:
+**Prerequisites:** .NET 10 SDK, Docker, Python 3.11 and [uv](https://github.com/astral-sh/uv).
 
 ```bash
-# 1. Pull the official SQL Server 2022 Linux image
-docker pull mcr.microsoft.com/mssql/server:2022-latest
-
-# 2. Create a persistent Docker volume for database files
-docker volume create sellwise-data
-
-# 3. Create and start the SQL Server container
-docker run -d \
-  --name sellwise-sql \
-  -p 1433:1433 \
-  -e "ACCEPT_EULA=Y" \
-  -e "MSSQL_SA_PASSWORD=YourPass123!" \
-  -v sellwise-data:/var/opt/mssql \
-  --restart unless-stopped \
-  mcr.microsoft.com/mssql/server:2022-latest
+./start.ps1      # Windows
+./start.sh       # macOS / Linux
 ```
 
-### 2. Verify Container Status & Health
+The script starts SQL Server in Docker, the ML service on `:8000` and the web app on **http://localhost:5000**.
+In Development, the database is migrated and seeded on first run with two demo stores and 180 days of orders.
 
-```bash
-# Check if the container is running
-docker ps -f name=sellwise-sql
-
-# Inspect container startup logs
-docker logs sellwise-sql
-
-# Test connectivity and query SQL Server version inside container
-docker exec -it sellwise-sql /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P "YourPass123!" -C \
-  -Q "SELECT @@VERSION AS [SQL Server Version];"
-```
-
-### 3. Container Management Commands
-
-| Action | Terminal Command |
+| Demo login | |
 |---|---|
-| **Start container** | `docker start sellwise-sql` |
-| **Stop container** | `docker stop sellwise-sql` |
-| **Restart container** | `docker restart sellwise-sql` |
-| **View live logs** | `docker logs -f sellwise-sql` |
-| **Open Bash shell** | `docker exec -it sellwise-sql /bin/bash` |
-| **Remove container (keeps data)** | `docker rm -f sellwise-sql` *(Volume `sellwise-data` preserves all tables)* |
+| Email | `admin@sellwise.com` |
+| Password | `Admin123!` |
 
----
+To start the demo data again from scratch, run `./reset-db.ps1` or `./reset-db.sh`.
 
-## 🗄️ Database Connection & EF Core Configuration
-
-The ASP.NET Core web application connects to SQL Server via Entity Framework Core 10 using the connection string defined in `SellWise.Web/appsettings.json`.
-
-### 1. Connection String Configuration
-
-File: `SellWise.Web/appsettings.json`
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=SellWise;User Id=sa;Password=YourPass123!;TrustServerCertificate=True;Encrypt=False;"
-  },
-  "MlServiceUrl": "http://localhost:8000"
-}
-```
-
-#### Parameter Breakdown:
-- `Server=localhost,1433` — Host and port mapped by Docker.
-- `Database=SellWise` — Target relational database name.
-- `User Id=sa` — Default System Administrator account.
-- `Password=YourPass123!` — Strong password matching the Docker container environment variable.
-- `TrustServerCertificate=True` — Bypasses TLS certificate chain validation for local development.
-- `Encrypt=False` — Disables SSL encryption requirement for local container connectivity.
-
-### 2. Connecting with Database GUI Tools (SSMS, Azure Data Studio, DBeaver)
-
-To connect from external database management software:
-
-- **Server Name / Host:** `localhost,1433` (or `127.0.0.1,1433`)
-- **Authentication:** `SQL Server Authentication`
-- **Username / Login:** `sa`
-- **Password:** `YourPass123!`
-- **Database:** `SellWise`
-- **Trust Server Certificate:** `True` (Checked)
-- **Encryption:** `Optional` / `False`
-
-### 3. Applying Migrations & Seeding via Terminal
+<details>
+<summary>Running the parts by hand</summary>
 
 ```bash
-# Navigate to web project directory
-cd SellWise.Web
+docker run -d --name sellwise-sql -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=YourPass123!" \
+  -p 1433:1433 -v sellwise-data:/var/opt/mssql mcr.microsoft.com/mssql/server:2022-latest
 
-# Apply all EF Core migrations to create tables
-dotnet ef database update
+cd SellWise.ML && uv venv && uv pip install -r requirements.txt
+uv run uvicorn app.main:app --port 8000          # API docs: http://localhost:8000/docs
 
-# Seed realistic demo data (Electronics & Fashion stores with 180 days of history)
-dotnet run --seed
+cd ../SellWise.Web && dotnet run                  # http://localhost:5000
+```
+</details>
+
+## Tests
+
+```bash
+dotnet test SellWise.slnx                                   # .NET unit + integration tests (needs Docker)
+cd SellWise.ML && pip install -r requirements-dev.txt && pytest   # ML service tests
 ```
 
----
+- **Unit tests** (`SellWise.Tests/Unit`): checkout and cancellation rules against in-memory SQLite, RFM
+  scoring, and the forecast helpers.
+- **Integration tests** (`SellWise.Tests/Integration`): run the real app in memory with `WebApplicationFactory`,
+  against a throwaway SQL Server container from Testcontainers, and act like a browser (cookies, forms,
+  anti-forgery tokens). They check that:
+  - the owner of one store can't read or change another store's orders, products or customers by guessing ids
+  - staff are kept out of owner pages
+  - requests without an anti-forgery token are rejected
+  - the dashboard still works when the ML service is down
 
-## 🛠️ Technology Stack
+GitHub Actions runs both suites on every push and pull request.
 
-| Layer | Technology | Details |
-|---|---|---|
-| **Web Framework** | ASP.NET Core 10 MVC (`net10.0`) | Strongly typed, high-performance web framework |
-| **ORM & Database** | Entity Framework Core 10 + SQL Server 2022 | Relational schema, ACID transactions, LINQ queries |
-| **Authentication** | ASP.NET Core Identity | Cookie sessions, BCrypt password hashing, RBAC |
-| **Frontend UI** | Razor Views, Bootstrap 5.3.3, Chart.js 4.4.7 | Responsive layout, CDN-delivered assets, custom CSS variables |
-| **PDF Generation** | QuestPDF 2026.7.1 | Code-first programmatic PDF generation engine |
-| **ML Microservice** | Python 3.11+, FastAPI, Uvicorn | High-performance asynchronous REST API |
-| **Forecasting Engine** | Meta Prophet, Pandas, NumPy, Scikit-Learn | Additive regression model for time-series forecasting |
-| **Containerization** | Docker & Named Volumes | MSSQL 2022 container with persistent volume `sellwise-data` |
+## Deployment
 
----
+`docker-compose.yml` runs SQL Server, the ML service and the web app on a private network, behind Caddy
+(automatic HTTPS). Only Caddy is exposed.
 
-## 📁 Project Structure
+```bash
+cp .env.example .env    # set SA_PASSWORD and DOMAIN (and optionally a demo account)
+docker compose up -d --build
+```
+
+## Project structure
 
 ```text
-SellWise/
-├── Diagrams/                      # Architecture, UML & DFD diagram assets
-│   ├── Use_Case_diagram.png       # Role & Use Case specifications
-│   ├── activity_diagram.svg       # POS checkout transaction flow
-│   ├── class_diagram.svg          # Core domain models & controllers
-│   ├── dfd_level0.svg             # Context-level Data Flow Diagram
-│   ├── dfd_level1.svg             # Functional-level Data Flow Diagram
-│   ├── er_diagram.svg             # Entity-Relationship schema
-│   ├── gantt_chart.svg            # Project timeline & milestone phases
-│   └── sequence_diagram.svg       # Dashboard & ML forecast sequence
-│
-├── SellWise.Web/                  # ASP.NET Core 10 Web Application
-│   ├── Controllers/               # Thin HTTP controllers (Auth, Order, Product, Dashboard, etc.)
-│   ├── Data/                      # AppDbContext, Seed configurations, Migrations
-│   ├── Models/                    # POCO database entities (Product, Order, Customer, Expense, etc.)
-│   ├── Services/                  # Core business logic (Analytics, Forecast, Order, RFM, Alerts)
-│   ├── ViewModels/                # Strongly typed view models preventing over-posting
-│   ├── Views/                     # Razor views (.cshtml) styled with Bootstrap 5.3
-│   └── wwwroot/                   # Static assets (site.css, images, JavaScript)
-│
-├── SellWise.ML/                   # Standalone Python ML Microservice
-│   ├── app/
-│   │   ├── routers/               # FastAPI endpoints (/forecast, /health)
-│   │   ├── services/              # Prophet model training & prediction logic
-│   │   └── models/                # Pydantic schemas for request/response validation
-│   └── requirements.txt           # Python dependencies (Prophet, FastAPI, Pandas)
-│
-├── start.ps1 / start.sh           # Automated full-stack startup scripts
-├── reset-db.ps1 / reset-db.sh     # DB drop, re-migration & multi-store seed scripts
-└── SellWise.slnx                  # Visual Studio solution file
+SellWise.Web/
+  Authorization/   StoreRoles, [OwnerOnly]
+  Controllers/     thin MVC controllers; BaseController resolves store + role
+  Data/            AppDbContext, startup migration/seeding
+  Migrations/      EF Core migrations
+  Models/          entities
+  Services/        business logic (orders, analytics, forecasting client, RFM, alerts)
+  ViewModels/      form/view models (entities are never bound directly)
+  Views/           Razor views
+SellWise.ML/       FastAPI + Prophet forecasting service and its tests
+SellWise.Tests/    Unit/ (fast, SQLite) and Integration/ (real app + SQL Server container)
+docs/              original project report (describes an earlier, larger version)
 ```
 
----
+## Known limitations
 
-## 🤖 Machine Learning Pipeline
-
-```text
-Dashboard Request
-  │
-  ▼
-AnalyticsService.GetOverview()
-  │
-  ├─► Select top 6 products by quantity sold
-  │
-  ├─► Check 'Forecasts' table (cached < 24 hrs?)
-  │     ├── [YES] ──► Return cached predictions
-  │     └── [NO]  ──► Query 90-day daily sales history from OrderItems
-  │                     │
-  │                     ▼
-  │                   Pad missing days with zeros
-  │                     │
-  │                     ▼
-  │                   ForecastService.GetForecastAsync()
-  │                     │
-  │                     ▼
-  │                   POST http://localhost:8000/api/v1/ml/forecast
-  │                     │
-  │                     ▼
-  │                   Prophet runs time-series regression
-  │                     │
-  │                     ▼
-  │                   Return 30-day predicted demand (yhat, yhat_lower, yhat_upper)
-  │                     │
-  │                     ▼
-  │                   Save results to 'Forecasts' table & rank cards on Dashboard
-```
-
-*Note: If the Python service is offline or cold-start times exceed the 5-second timeout, the system automatically falls back to an Exponentially Weighted Moving Average (EWMA).*
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for SQL Server container)
-- [Python 3.11+](https://www.python.org/) and [`uv`](https://github.com/astral-sh/uv) (or standard `pip`)
-
-### 1. Automated Setup (Recommended)
-Clone the repository and run the startup script:
-
-```bash
-# Windows
-.\start.ps1
-
-# macOS / Linux
-./start.sh
-```
-
-### 2. Full Database Reset & Multi-Store Seeding
-To drop the database, re-run all migrations, and seed ~180 days of realistic sales data for both demo stores:
-
-```bash
-# Windows
-.\reset-db.ps1
-
-# macOS / Linux
-./reset-db.sh
-```
-
-### 3. Manual Component Execution
-If you prefer running services independently:
-
-```bash
-# Step 1: Start SQL Server in Docker
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourPass123!" -p 1433:1433 --name sellwise-sql -v sellwise-data:/var/opt/mssql -d mcr.microsoft.com/mssql/server:2022-latest
-
-# Step 2: Apply Migrations & Seed Demo Data
-cd SellWise.Web
-dotnet ef database update
-dotnet run --seed
-
-# Step 3: Start Python ML Microservice
-cd ../SellWise.ML
-uv run uvicorn app.main:app --port 8000 --reload
-
-# Step 4: Start ASP.NET Core Web App
-cd ../SellWise.Web
-dotnet run --urls "http://localhost:5000"
-```
-
----
-
-## 🛡️ Security & Reliability Best Practices
-
-- **Anti-Forgery:** All state-modifying requests require valid anti-forgery tokens via `[AutoValidateAntiforgeryToken]`.
-- **Over-Posting Protection:** Controllers accept only strictly defined ViewModels rather than binding database entities directly.
-- **SQL Injection Prevention:** All database communication flows through Entity Framework Core parameterized queries.
-- **Soft Deletes:** Key business entities implement soft deletion to maintain historical auditability and report referential integrity.
-- **Brute-Force Protection:** ASP.NET Core Identity Lockout enforces 5 maximum failed login attempts with a 15-minute lockout period.
+- Dates are stored and grouped in UTC, so "today" follows UTC rather than the store's time zone.
+- Staff accounts are created by the owner with a password; there are no email invitations.
+- The forecast assumes demand is driven by past sales only (no promotions, price changes or holidays).

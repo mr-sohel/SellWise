@@ -25,6 +25,7 @@ public class ProductFormViewModel
     [Range(0, 1000000)]
     public int StockQuantity { get; set; }
     
+    [Range(0, 1000000)]
     public int LowStockThreshold { get; set; } = 10;
     public string? Unit { get; set; } = "pcs";
 }

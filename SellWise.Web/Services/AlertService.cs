@@ -9,6 +9,8 @@ namespace SellWise.Web.Services;
 
 public class AlertService : IAlertService
 {
+    public const string LowStockType = "Low Stock";
+
     private readonly AppDbContext _db;
 
     public AlertService(AppDbContext db)
@@ -40,7 +42,7 @@ public class AlertService : IAlertService
             .ToListAsync();
 
         var existingAlerts = await _db.Alerts
-            .Where(a => a.StoreId == storeId && a.Type == "Low Stock")
+            .Where(a => a.StoreId == storeId && a.Type == LowStockType)
             .ToListAsync();
 
         var existingAlertProductIds = existingAlerts.Select(a => a.ProductId).ToHashSet();
@@ -68,7 +70,7 @@ public class AlertService : IAlertService
             {
                 StoreId = storeId,
                 ProductId = product.Id,
-                Type = "Low Stock",
+                Type = LowStockType,
                 Message = expectedMsg,
                 Severity = expectedSeverity,
                 IsRead = false,
