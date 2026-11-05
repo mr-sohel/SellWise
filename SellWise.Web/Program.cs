@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Data;
+using SellWise.Web.Infrastructure;
 using SellWise.Web.Models;
 using SellWise.Web.Services;
 
@@ -42,6 +43,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
+builder.Services.AddSellWiseRateLimiting(builder.Configuration);
 builder.Services.AddSession();
 builder.Services.AddControllersWithViews();
 
@@ -96,6 +98,7 @@ else
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
+app.UseRateLimiter();   // after authentication, so limits can be per signed-in user
 app.UseAuthorization();
 
 app.MapStaticAssets();

@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Authorization;
 using SellWise.Web.Data;
+using SellWise.Web.Infrastructure;
 using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Auth;
 
@@ -36,7 +38,7 @@ public class AuthController : Controller
         return redirect ?? View();
     }
 
-    [HttpPost]
+    [HttpPost, EnableRateLimiting(RateLimiting.AuthPolicy)]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
         if (!ModelState.IsValid)
@@ -72,7 +74,7 @@ public class AuthController : Controller
     }
 
     /// <summary>Creates a user and their first store in one transaction; the user becomes its owner.</summary>
-    [HttpPost]
+    [HttpPost, EnableRateLimiting(RateLimiting.AuthPolicy)]
     public async Task<IActionResult> Signup(SignupViewModel model)
     {
         if (!ModelState.IsValid)

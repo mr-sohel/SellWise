@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SellWise.Web.Authorization;
 using SellWise.Web.Data;
+using SellWise.Web.Infrastructure;
 using SellWise.Web.Services;
 
 namespace SellWise.Web.Controllers;
 
 [OwnerOnly]
+[EnableRateLimiting(RateLimiting.ExpensivePolicy)]
 public class DashboardController : BaseController
 {
     private const int ForecastPageSize = 8;
