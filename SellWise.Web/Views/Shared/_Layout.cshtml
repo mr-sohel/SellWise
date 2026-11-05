@@ -236,6 +236,13 @@
 
         let currentRestockCallback = null;
 
+        // Restock buttons carry product data in data-* attributes (HTML-encoded by Razor) rather than
+        // inline JS strings, so a product name containing quotes can't break out and run script.
+        function openRestockFromButton(btn, callback) {
+            const d = btn.dataset;
+            openRestockModal(d.productId, d.productName, Number(d.stock), Number(d.qty), d.unit, callback);
+        }
+
         function openRestockModal(productId, productName, currentStock, suggestedQty, unit, callback) {
             document.getElementById('restockProductId').value = productId;
             document.getElementById('restockProductName').textContent = productName || 'Product';

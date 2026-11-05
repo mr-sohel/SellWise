@@ -42,7 +42,13 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, isPersistent: true, lockoutOnFailure: false);
+        // lockoutOnFailure: 5 wrong passwords lock the account for 15 minutes (see Program.cs).
+        var result = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, isPersistent: true, lockoutOnFailure: true);
+        if (result.IsLockedOut)
+        {
+            ModelState.AddModelError(string.Empty, "Too many failed attempts. Try again in 15 minutes.");
+            return View(model);
+        }
         if (!result.Succeeded)
         {
             ModelState.AddModelError(string.Empty, "Invalid email or password.");
