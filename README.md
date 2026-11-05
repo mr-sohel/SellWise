@@ -55,7 +55,34 @@ _db.Products
 If it updates 0 rows, there wasn't enough stock. The database runs the check and the decrement together,
 so two cashiers selling the last item at the same moment can't both succeed. A read-then-write version can't
 give that guarantee. The order, the stock changes and the customer totals are saved in one transaction.
-Cancelling an order puts the stock back.
+
+**Other concurrent changes are safe too.** Everything two people can do at the same moment is protected the same way:
+
+| Race | Protection |
+|---|---|
+| Two people cancel the same order, and the stock comes back twice | Compare-and-swap: `UPDATE ... WHERE Status = @statusWeRead`; the second request matches 0 rows |
+| A double click or network retry places the same order twice | Idempotency key in the POS form, with a unique index on `(StoreId, IdempotencyKey)` |
+| Two orders for one customer at once lose an update to their totals | Atomic `SET TotalOrders = TotalOrders + 1` instead of load, add, save |
+| Two owners edit the same product, and the last save silently wins | Optimistic concurrency: a `Version` token, and a conflict message for the stale edit |
+| Two alert scans insert the same alert | Unique index; the duplicate insert is ignored |
+
+`Product.Version` is a plain counter rather than a SQL `rowversion` on purpose. Every sale updates the product
+row, so with a `rowversion` an owner editing a price would get a false conflict whenever something sold.
+
+Order statuses follow a small state machine (`Models/OrderStatus.cs`). For example, a completed sale can be
+returned but not moved back to "pending".
+
+The integration tests send 12 requests at the same moment for each of these races. I checked each test by
+putting the bug back. Without the atomic increment, for example, 12 simultaneous orders for one customer were
+counted as 1.
+
+**Rate limiting.** ASP.NET Core's built-in rate limiter sets three limits:
+- **Every user:** a token bucket per user, which allows short bursts but caps sustained traffic.
+- **Login and signup:** limited per IP. Account lockout stops one account's password being guessed; this stops
+  one IP trying passwords against many accounts.
+- **Dashboard:** a tighter per-user limit, because it can trigger ML forecasts.
+
+Rejected requests get `429 Too Many Requests` with a `Retry-After` header.
 
 **Forecasts degrade gracefully.** Results are cached in the `Forecasts` table for 24 hours, so Prophet doesn't
 run on every dashboard load. If the ML service is down or slow (10-second timeout), the dashboard falls back
@@ -116,6 +143,8 @@ cd SellWise.ML && pip install -r requirements-dev.txt && pytest   # ML service t
   - staff are kept out of owner pages
   - requests without an anti-forgery token are rejected
   - the dashboard still works when the ML service is down
+  - parallel requests can't oversell, double-cancel, double-submit or lose customer updates
+  - rate limits return `429` once exceeded
 
 GitHub Actions runs both suites on every push and pull request.
 
