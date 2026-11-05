@@ -12,7 +12,7 @@ namespace SellWise.Web.Infrastructure;
 ///   but caps sustained traffic. Protects the app from scripts and runaway clients.
 /// - "auth": login/signup POSTs per IP. Account lockout already stops guessing one account's
 ///   password; this also stops one IP from trying passwords against many accounts.
-/// - "expensive": dashboard pages per user, because they can trigger ML forecasts.
+/// - "expensive": dashboard pages per user, because they run several aggregate queries.
 ///
 /// Behind Caddy the client IP comes from X-Forwarded-For (UseForwardedHeaders runs first).
 /// </summary>

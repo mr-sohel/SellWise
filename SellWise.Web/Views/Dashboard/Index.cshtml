@@ -104,20 +104,6 @@
     </div>
 </div>
 
-<!-- Demand forecast -->
-<div class="card p-4 mb-4" id="forecastGridContainer" style="position: relative;">
-    @{
-                var currentRange = (string)ViewData["Range"]!;
-                var forecastVm = new SellWise.Web.ViewModels.Dashboard.ForecastPagedViewModel {
-                    ProductForecasts = Model.ProductForecasts,
-                    CurrentPage = (int)(ViewData["ForecastPage"] ?? 1),
-                    TotalPages = (int)(ViewData["ForecastTotalPages"] ?? 1),
-                    Range = currentRange
-                };
-            }
-            <partial name="_ForecastGrid" model="forecastVm" />
-</div>
-
 <!-- Performers Lists section (Top Performers & Needs Attention) -->
 <div class="row g-4">
     <!-- Top Performers List -->
@@ -233,85 +219,6 @@
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
 <script>
-    window.currentForecastRange = '@ViewData["Range"]';
-    window.currentForecastPage = 1;
-
-    function loadForecastPage(range, page) {
-        window.currentForecastRange = range;
-        window.currentForecastPage = page;
-        const container = document.getElementById('forecastGridContainer');
-        container.style.opacity = '0.5';
-        container.style.pointerEvents = 'none';
-
-        fetch(`/Dashboard/ForecastGrid?range=${range}&page=${page}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.text();
-            })
-            .then(html => {
-                container.innerHTML = html;
-                container.style.opacity = '1';
-                container.style.pointerEvents = 'auto';
-                initSparklineInteractions();
-            })
-            .catch(error => {
-                console.error('Error loading forecast page:', error);
-                container.style.opacity = '1';
-                container.style.pointerEvents = 'auto';
-            });
-    }
-
-    function initSparklineInteractions() {
-        document.querySelectorAll('.forecast-sparkline').forEach(function(el) {
-            // Unbind existing to avoid duplicates if re-inited
-            const newEl = el.cloneNode(true);
-            el.parentNode.replaceChild(newEl, el);
-
-            var svg = newEl.querySelector('svg');
-            var dot = newEl.querySelector('.spark-dot');
-            var tooltip = newEl.querySelector('.spark-hover-tooltip');
-            var values = (newEl.getAttribute('data-values') || '').split(',').map(Number);
-            var sMin = parseFloat(newEl.getAttribute('data-min')) || 0;
-            var sMax = parseFloat(newEl.getAttribute('data-max')) || 1;
-            if (!values.length || !svg || !dot) return;
-
-            var sPadX = 2, sPadY = 2, sW = 96, sH = 26;
-            var sRange = sMax - sMin;
-            if (sRange < 1e-9) sRange = 1;
-
-            newEl.addEventListener('mousemove', function(e) {
-                var rect = svg.getBoundingClientRect();
-                var mouseX = e.clientX - rect.left;
-                var ratio = mouseX / rect.width;
-                var idx = Math.round(ratio * (values.length - 1));
-                idx = Math.max(0, Math.min(values.length - 1, idx));
-
-                var ptX = sPadX + (values.length > 1 ? idx * sW / (values.length - 1) : sW / 2);
-                var normalized = (values[idx] - sMin) / sRange;
-                var ptY = sPadY + sH * (1.0 - normalized);
-
-                dot.setAttribute('cx', ptX);
-                dot.setAttribute('cy', ptY);
-                dot.setAttribute('opacity', '1');
-
-                var ctm = svg.getScreenCTM();
-                if (!ctm) return;
-                var screenX = ptX * ctm.a + ctm.e;
-                var screenY = ptY * ctm.d + ctm.f;
-
-                tooltip.textContent = Math.round(values[idx]) + ' units';
-                tooltip.style.left = (screenX - rect.left) + 'px';
-                tooltip.style.top = (screenY - rect.top) + 'px';
-                tooltip.style.opacity = '1';
-            });
-
-            newEl.addEventListener('mouseleave', function() {
-                dot.setAttribute('opacity', '0');
-                tooltip.style.opacity = '0';
-            });
-        });
-    }
-
     Chart.defaults.font.family = "'Instrument Sans', sans-serif";
 
     // Revenue Trend Chart (Line Chart)
@@ -460,9 +367,6 @@
             }
         });
     }
-
-    // Sparkline hover interaction
-    initSparklineInteractions();
 
     // Top Performers & Needs Attention Pagination
     let currentTopPerformersPage = 1;

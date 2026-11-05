@@ -2,7 +2,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  SellWise -- Full Database Reset" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-Set-Location -Path "$PSScriptRoot\SellWise.Web"
+Set-Location -Path "$PSScriptRoot\..\SellWise.Web"
 
 Write-Host ""
 Write-Host "[1/3] Dropping existing database..." -ForegroundColor Yellow

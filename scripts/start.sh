@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Run from the repository root no matter where the script is started from.
+cd "$(dirname "$0")/.." || exit 1
+
 echo "================================================="
 echo "[INFO] Starting SellWise"
 echo "================================================="
@@ -8,10 +11,6 @@ echo "================================================="
 cleanup() {
     echo ""
     echo "[STOP] Shutting down..."
-    if [ -n "$ML_PID" ]; then
-        kill $ML_PID 2>/dev/null || true
-        echo "[OK] ML Service stopped."
-    fi
     # Stop container but do NOT remove — data persists in volume
     docker stop sellwise-sql 2>/dev/null || true
     echo "[OK] SQL Server stopped (data preserved)."
@@ -20,7 +19,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-echo "[1/3] Starting SQL Server..."
+echo "[1/2] Starting SQL Server..."
 
 if docker ps -a --format '{{.Names}}' | grep -q "^sellwise-sql$"; then
     # Container exists — just start it
@@ -51,29 +50,13 @@ if [ $waited -ge $max_wait ]; then
     exit 1
 fi
 
-echo "[2/3] Starting ML Service..."
-if [ -d "SellWise.ML" ]; then
-    cd SellWise.ML
-    if [ ! -d ".venv" ]; then
-        echo "Setting up ML virtual environment..."
-        uv venv > /dev/null 2>&1
-        uv pip install -r requirements.txt > /dev/null 2>&1
-    fi
-    uv run uvicorn app.main:app --port 8000 --reload > /dev/null 2>&1 &
-    ML_PID=$!
-    cd ..
-    echo "[OK] ML Service on port 8000."
-else
-    echo "[SKIP] SellWise.ML not found."
-fi
-
 if [ ! -d "SellWise.Web" ]; then
     echo "[ERROR] SellWise.Web not found!"
     exit 1
 fi
 cd SellWise.Web
 
-echo "[3/3] Starting web app (applies migrations on startup)..."
+echo "[2/2] Starting web app (applies migrations on startup)..."
 echo "================================================="
 echo "[OK] http://localhost:5000"
 echo "Press Ctrl+C to stop all services."

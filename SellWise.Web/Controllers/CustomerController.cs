@@ -10,16 +10,14 @@ namespace SellWise.Web.Controllers;
 public class CustomerController : BaseController
 {
     private const int PageSize = 20;
-    private readonly IRfmService _rfmService;
     private readonly ICustomerService _customerService;
 
-    public CustomerController(AppDbContext db, IRfmService rfmService, ICustomerService customerService) : base(db)
+    public CustomerController(AppDbContext db, ICustomerService customerService) : base(db)
     {
-        _rfmService = rfmService;
         _customerService = customerService;
     }
 
-    public async Task<IActionResult> Index(string search, string segment, string sort, int page = 1)
+    public async Task<IActionResult> Index(string search, string sort, int page = 1)
     {
         page = Math.Max(1, page);
         var query = Db.Customers.Where(c => c.StoreId == StoreId);
@@ -31,10 +29,6 @@ public class CustomerController : BaseController
                 || (c.Email != null && c.Email.Contains(search)));
         }
 
-        var segmentFilter = RfmSegments.FromQueryValue(segment);
-        if (segmentFilter != null)
-            query = query.Where(c => c.RfmSegment == segmentFilter);
-
         query = sort?.ToLower() switch
         {
             "name_asc" => query.OrderBy(c => c.Name),
@@ -43,8 +37,6 @@ public class CustomerController : BaseController
             "spent_asc" => query.OrderBy(c => c.TotalSpent),
             "orders_desc" => query.OrderByDescending(c => c.TotalOrders),
             "orders_asc" => query.OrderBy(c => c.TotalOrders),
-            "rfm_desc" => query.OrderByDescending(c => c.RecencyScore * 100 + c.FrequencyScore * 10 + c.MonetaryScore),
-            "rfm_asc" => query.OrderBy(c => c.RecencyScore * 100 + c.FrequencyScore * 10 + c.MonetaryScore),
             "recent_desc" => query.OrderByDescending(c => c.LastOrderDate),
             "recent_asc" => query.OrderBy(c => c.LastOrderDate),
             _ => query.OrderByDescending(c => c.CreatedAt)
@@ -63,29 +55,17 @@ public class CustomerController : BaseController
                 Email = c.Email,
                 TotalOrders = c.TotalOrders,
                 TotalSpent = c.TotalSpent,
-                RecencyScore = c.RecencyScore,
-                FrequencyScore = c.FrequencyScore,
-                MonetaryScore = c.MonetaryScore,
-                RfmSegment = c.RfmSegment
+                LastOrderDate = c.LastOrderDate
             })
             .ToListAsync();
 
         ViewData["CurrentPage"] = page;
         ViewData["TotalPages"] = (int)Math.Ceiling(totalItems / (double)PageSize);
         ViewData["Search"] = search;
-        ViewData["Segment"] = segment;
         ViewData["Sort"] = sort;
         ViewData["TotalItems"] = totalItems;
 
         return View(customers);
-    }
-
-    [HttpPost, OwnerOnly]
-    public async Task<IActionResult> RecalculateRfm()
-    {
-        await _rfmService.RecalculateAllAsync(StoreId);
-        TempData["SuccessMessage"] = "RFM scores recalculated successfully.";
-        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]

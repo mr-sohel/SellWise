@@ -3,7 +3,6 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Authorization;
 using SellWise.Web.Models;
-using SellWise.Web.Services;
 
 namespace SellWise.Web.Data;
 
@@ -45,7 +44,7 @@ public static class DatabaseInitializer
         {
             logger.LogCritical(ex,
                 "Applying migrations failed. If the database was created from different migrations " +
-                "(e.g. 'There is already an object named ...'), reset it with reset-db.ps1 / reset-db.sh.");
+                "(e.g. 'There is already an object named ...'), reset it with scripts/reset-db.ps1 / scripts/reset-db.sh.");
             throw;
         }
 
@@ -96,15 +95,12 @@ public static class DatabaseInitializer
 
         var db = services.GetRequiredService<AppDbContext>();
         var seeder = services.GetRequiredService<DemoSeederService>();
-        var rfm = services.GetRequiredService<IRfmService>();
 
         var techStore = await CreateOwnedStoreAsync(db, admin.Id, "SellWise Tech BD");
         await seeder.SeedStoreAsync(techStore.Id, randomSeed: 42);
-        await rfm.RecalculateAllAsync(techStore.Id);
 
         var fashionStore = await CreateOwnedStoreAsync(db, admin.Id, "StyleHub BD");
         await seeder.SeedSecondStoreAsync(fashionStore.Id, randomSeed: 99);
-        await rfm.RecalculateAllAsync(fashionStore.Id);
 
         logger.LogInformation("Seeded demo account {Email} with two stores", demo.AdminEmail);
     }

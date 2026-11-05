@@ -238,27 +238,14 @@ namespace SellWise.Web.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("FrequencyScore")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("LastOrderDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("MonetaryScore")
-                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecencyScore")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RfmSegment")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("StoreId")
@@ -279,49 +266,6 @@ namespace SellWise.Web.Migrations
                     b.HasIndex("StoreId");
 
                     b.ToTable("Customers");
-                });
-
-            modelBuilder.Entity("SellWise.Web.Models.Forecast", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("LowerBound")
-                        .HasColumnType("float");
-
-                    b.Property<string>("ModelUsed")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("PredictedDemand")
-                        .HasColumnType("float");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("StoreId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("TargetDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("UpperBound")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("StoreId");
-
-                    b.HasIndex("StoreId", "ProductId", "TargetDate")
-                        .IsUnique();
-
-                    b.ToTable("Forecasts");
                 });
 
             modelBuilder.Entity("SellWise.Web.Models.InventoryAlert", b =>
@@ -643,25 +587,6 @@ namespace SellWise.Web.Migrations
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("SellWise.Web.Models.Forecast", b =>
-                {
-                    b.HasOne("SellWise.Web.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SellWise.Web.Models.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
 
                     b.Navigation("Store");
                 });

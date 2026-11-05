@@ -12,27 +12,6 @@
 appsettings.Development.json
 
 # =========================
-# Python & Machine Learning
-# =========================
-**/__pycache__/
-**/*.py[cod]
-*$py.class
-**/venv/
-**/.venv/
-**/env/
-**/.pytest_cache/
-**/coverage
-**/htmlcov/
-**/pip-log.txt
-**/ipynb_checkpoints/
-*.pkl
-*.joblib
-
-# Ignore ML Service virtual environments and heavy model files
-SellWise.ML/.venv/
-SellWise.ML/data/models/
-
-# =========================
 # OS & IDEs
 # =========================
 **/.DS_Store
@@ -51,13 +30,6 @@ SellWise.ML/data/models/
 **/logs/
 **/*.log
 **/*.pid
-
-# =========================
-# Legacy Node.js (Just in case)
-# =========================
-**/node_modules/
-**/dist/
-**/.npm/
 
 **/Screen/
 

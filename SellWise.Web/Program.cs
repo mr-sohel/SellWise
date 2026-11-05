@@ -51,15 +51,8 @@ builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<DemoSeederService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAlertService, AlertService>();
-builder.Services.AddScoped<IRfmService, RfmService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddHttpClient<ForecastService>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["MlServiceUrl"] ?? "http://localhost:8000/");
-    // Prophet usually answers in 1-3s; give up early so a down ML service doesn't stall the dashboard.
-    client.Timeout = TimeSpan.FromSeconds(10);
-});
 
 var app = builder.Build();
 

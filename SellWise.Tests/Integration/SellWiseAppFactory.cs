@@ -11,7 +11,6 @@ namespace SellWise.Tests.Integration;
 
 /// <summary>
 /// Runs the real web app in memory against a throwaway SQL Server container (requires Docker).
-/// The ML service URL points at a closed port, so forecasting always uses the fallback.
 /// </summary>
 public sealed class SellWiseAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -35,7 +34,6 @@ public sealed class SellWiseAppFactory : WebApplicationFactory<Program>, IAsyncL
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:DefaultConnection", _sql.GetConnectionString() + ";Database=SellWiseTests");
-        builder.UseSetting("MlServiceUrl", "http://127.0.0.1:9/");
         builder.UseSetting("DemoData:Enabled", "false");
 
         // Tests send many requests from one "IP"; real limits are covered in RateLimitingTests.

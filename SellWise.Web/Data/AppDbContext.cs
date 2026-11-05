@@ -15,7 +15,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<InventoryAlert> Alerts => Set<InventoryAlert>();
-    public DbSet<Forecast> Forecasts => Set<Forecast>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -55,18 +54,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(a => a.StoreId)
             .OnDelete(DeleteBehavior.Restrict);
             
-        builder.Entity<Forecast>()
-            .HasOne(f => f.Store)
-            .WithMany()
-            .HasForeignKey(f => f.StoreId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         // Multi-tenancy performance indexes
         builder.Entity<Product>().HasIndex(p => new { p.StoreId, p.IsActive });
         builder.Entity<Order>().HasIndex(o => new { o.StoreId, o.OrderDate });
         builder.Entity<Customer>().HasIndex(c => c.StoreId);
         builder.Entity<InventoryAlert>().HasIndex(a => new { a.StoreId, a.IsRead });
-        builder.Entity<Forecast>().HasIndex(f => f.StoreId);
 
         // Concurrency and integrity guarantees enforced by the database itself.
         builder.Entity<Product>().Property(p => p.Version).IsConcurrencyToken();
@@ -78,11 +70,5 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             .IsUnique()
             .HasFilter("[IdempotencyKey] IS NOT NULL");
         builder.Entity<InventoryAlert>().HasIndex(a => new { a.StoreId, a.ProductId, a.Type }).IsUnique();
-
-        // Prevents duplicate cache rows (concurrent dashboard requests) from
-        // double-counting PredictedUnits when the cache is summed.
-        builder.Entity<Forecast>()
-            .HasIndex(f => new { f.StoreId, f.ProductId, f.TargetDate })
-            .IsUnique();
     }
 }

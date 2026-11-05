@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SellWise.Web.Models;
+using SellWise.Web.ViewModels;
 
 namespace SellWise.Web.Controllers;
 

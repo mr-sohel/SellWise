@@ -1,12 +1,15 @@
 # Windows PowerShell Startup Script for SellWise
 $ErrorActionPreference = "Stop"
 
+# Run from the repository root no matter where the script is started from.
+Set-Location -Path (Join-Path $PSScriptRoot "..")
+
 Write-Host "=================================================" -ForegroundColor Cyan
 Write-Host "[INFO] Starting SellWise" -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 
 # 1. Start SQL Server Container (persistent volume)
-Write-Host "[1/3] Starting SQL Server..." -ForegroundColor Yellow
+Write-Host "[1/2] Starting SQL Server..." -ForegroundColor Yellow
 
 $containerExists = docker ps -a --format '{{.Names}}' | Select-String -Pattern "^sellwise-sql$"
 if ($containerExists) {
@@ -39,26 +42,9 @@ if ($waited -ge $maxWait) {
     exit 1
 }
 
-$mlProcess = $null
 try {
-    # 2. Start ML Service
-    Write-Host "[2/3] Starting ML Service..." -ForegroundColor Yellow
-    if (Test-Path "SellWise.ML") {
-        if (-not (Test-Path "SellWise.ML/.venv")) {
-            Write-Host "Setting up ML virtual environment..." -ForegroundColor Yellow
-            Push-Location SellWise.ML
-            uv venv | Out-Null
-            uv pip install -r requirements.txt | Out-Null
-            Pop-Location
-        }
-        $mlProcess = Start-Process -FilePath "uv" -ArgumentList "run", "uvicorn", "app.main:app", "--port", "8000", "--reload" -WorkingDirectory "SellWise.ML" -WindowStyle Hidden -PassThru
-        Write-Host "[OK] ML Service on port 8000." -ForegroundColor Green
-    } else {
-        Write-Host "[SKIP] SellWise.ML not found." -ForegroundColor DarkYellow
-    }
-
-    # 3. Start the web app (it applies pending migrations itself on startup)
-    Write-Host "[3/3] Starting web app (applies migrations on startup)..." -ForegroundColor Yellow
+    # 2. Start the web app (it applies pending migrations itself on startup)
+    Write-Host "[2/2] Starting web app (applies migrations on startup)..." -ForegroundColor Yellow
     Write-Host "=================================================" -ForegroundColor Cyan
     Write-Host "[OK] http://localhost:5000" -ForegroundColor Green
     Write-Host "Press Ctrl+C to stop all services." -ForegroundColor Gray
@@ -69,11 +55,6 @@ try {
 }
 finally {
     Write-Host "`n[STOP] Shutting down..." -ForegroundColor Yellow
-    if ($mlProcess -ne $null) {
-        Stop-Process -Id $mlProcess.Id -Force -ErrorAction SilentlyContinue
-        Write-Host "[OK] ML Service stopped." -ForegroundColor Green
-    }
-    
     # Stop container but do NOT remove — data persists in volume
     docker stop sellwise-sql 2>$null
     Write-Host "[OK] SQL Server stopped (data preserved)." -ForegroundColor Green

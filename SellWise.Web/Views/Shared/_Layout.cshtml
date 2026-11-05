@@ -343,11 +343,6 @@
                 if (typeof currentRestockCallback === 'function') {
                     currentRestockCallback(data);
                 } else {
-                    if (typeof loadForecastPage === 'function') {
-                        const range = window.currentForecastRange || '30d';
-                        const page = window.currentForecastPage || 1;
-                        loadForecastPage(range, page);
-                    }
                     if (window.location.pathname.toLowerCase().includes('/alert')) {
                         window.location.reload();
                     }

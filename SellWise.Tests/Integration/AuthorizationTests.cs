@@ -80,11 +80,10 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task Owner_CanOpenOwnerPages_EvenWhenTheMlServiceIsDown()
+    public async Task Owner_CanOpenOwnerPages()
     {
         var owner = await LoggedInAsync(SellWiseAppFactory.OwnerA);
 
-        // The ML URL points at a closed port, so the dashboard must use the fallback forecast.
         var dashboard = await owner.GetAsync("/Dashboard");
 
         Assert.Equal(HttpStatusCode.OK, dashboard.StatusCode);

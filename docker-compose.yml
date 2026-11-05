@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# SellWise production stack: SQL Server + ML service + web app behind Caddy.
+# SellWise production stack: SQL Server + web app behind Caddy.
 # Only Caddy is reachable from the internet (80/443); the other services talk
 # over the private 'sellwise-net' network.
 #
@@ -28,28 +28,11 @@ services:
       retries: 5
       start_period: 30s
 
-  sellwise-ml:
-    build: ./SellWise.ML
-    container_name: sellwise-ml
-    environment:
-      CORS_ORIGINS: "https://${DOMAIN}"
-    networks:
-      - sellwise-net
-    restart: unless-stopped
-    healthcheck:
-      # The slim Python image has no curl, so use Python itself.
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/ml/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
   sellwise-web:
     build: ./SellWise.Web
     container_name: sellwise-web
     environment:
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=SellWise;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;Encrypt=False;"
-      MlServiceUrl: "http://sellwise-ml:8000"
       DataProtection__KeysPath: "/keys"
       DemoData__Enabled: "${DEMO_ENABLED:-false}"
       DemoData__AdminEmail: "${DEMO_EMAIL:-admin@sellwise.com}"
@@ -60,8 +43,6 @@ services:
       - sellwise-net
     depends_on:
       sqlserver:
-        condition: service_healthy
-      sellwise-ml:
         condition: service_healthy
     restart: unless-stopped
     # No published ports: only Caddy can reach the app.

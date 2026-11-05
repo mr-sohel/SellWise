@@ -1,7 +1,7 @@
-using SellWise.Web.Data;
+using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Models;
 
-namespace SellWise.Web.Services;
+namespace SellWise.Web.Data;
 
 public class DemoSeederService
 {
@@ -296,8 +296,6 @@ public class DemoSeederService
                 });
 
                 _db.Orders.Add(order);
-                customer.TotalOrders++;
-                customer.TotalSpent += order.Total;
                 orderCount++;
 
                 if (orderCount % 1000 == 0)
@@ -310,5 +308,32 @@ public class DemoSeederService
 
         await _db.SaveChangesAsync();
         _db.ChangeTracker.AutoDetectChangesEnabled = true;
+
+        await UpdateCustomerTotalsAsync(storeId);
+    }
+
+    /// <summary>
+    /// Fills each customer's order count, total spent and last order date from the seeded orders.
+    /// (The change tracker is cleared during seeding, so these can't be tracked while orders are generated.)
+    /// </summary>
+    private async Task UpdateCustomerTotalsAsync(Guid storeId)
+    {
+        var stats = await _db.Orders
+            .Where(o => o.StoreId == storeId && o.CustomerId != null
+                && o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Returned)
+            .GroupBy(o => o.CustomerId!.Value)
+            .Select(g => new { CustomerId = g.Key, Orders = g.Count(), Spent = g.Sum(o => o.Total), Last = g.Max(o => o.OrderDate) })
+            .ToDictionaryAsync(x => x.CustomerId);
+
+        var customers = await _db.Customers.Where(c => c.StoreId == storeId).ToListAsync();
+        foreach (var customer in customers)
+        {
+            if (!stats.TryGetValue(customer.Id, out var s)) continue;
+            customer.TotalOrders = s.Orders;
+            customer.TotalSpent = s.Spent;
+            customer.LastOrderDate = s.Last;
+        }
+
+        await _db.SaveChangesAsync();
     }
 }

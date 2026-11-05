@@ -1,4 +1,4 @@
-namespace SellWise.Web.Models;
+namespace SellWise.Web.ViewModels;
 
 public class ErrorViewModel
 {

@@ -5,7 +5,7 @@ echo -e "\033[1;36m========================================\033[0m"
 echo -e "\033[1;36m  SellWise — Full Database Reset\033[0m"
 echo -e "\033[1;36m========================================\033[0m"
 
-cd "$(dirname "$0")/SellWise.Web" || exit 1
+cd "$(dirname "$0")/../SellWise.Web" || exit 1
 
 echo ""
 echo -e "\033[1;33m[1/3] Dropping existing database...\033[0m"
