@@ -1047,7 +1047,6 @@ a.pagination-btn:hover { background-color: var(--brand-lighter); border-color: v
   gap: 0.25rem;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
-  overflow-x: auto;
 }
 .settings-nav a {
   padding: 0.6rem 0.9rem;
@@ -1060,8 +1059,6 @@ a.pagination-btn:hover { background-color: var(--brand-lighter); border-color: v
 }
 .settings-nav a:hover { color: var(--text-primary); }
 .settings-nav a.active { color: var(--brand-hover); border-bottom-color: var(--brand); font-weight: 600; }
-
-.settings-stack { max-width: 760px; display: grid; gap: 1.25rem; }
 
 .settings-card { padding: 0; overflow: hidden; }
 .settings-card-head { padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border-light); }

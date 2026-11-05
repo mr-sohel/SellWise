@@ -8,9 +8,10 @@
 
 <partial name="_SettingsHeader" />
 
-<div class="settings-stack">
+<div class="row g-4 align-items-start">
 
     <!-- Profile -->
+    <div class="col-xl-8">
     <section class="card settings-card" aria-labelledby="profileHeading">
         <form asp-controller="Settings" asp-action="UpdateProfile" method="post">
             <div class="settings-card-head">
@@ -55,35 +56,34 @@
             </div>
         </form>
     </section>
+    </div>
 
     <!-- Password -->
+    <div class="col-xl-4">
     <section class="card settings-card" id="password" aria-labelledby="passwordHeading">
         <form asp-controller="Settings" asp-action="ChangePassword" method="post">
             <div class="settings-card-head">
                 <h2 class="h5 mb-1" id="passwordHeading">Password</h2>
-                <p class="text-muted small mb-0">Use at least 8 characters. You stay signed in on this device.</p>
+                <p class="text-muted small mb-0">At least 8 characters. You stay signed in on this device.</p>
             </div>
 
             <div class="settings-card-body">
                 <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
 
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" for="currentPassword">Current password</label>
-                        <input type="password" name="CurrentPassword" id="currentPassword" class="form-control" required autocomplete="current-password" />
-                        <span class="field-validation-valid" data-valmsg-for="CurrentPassword" data-valmsg-replace="true"></span>
-                    </div>
-                    <div class="w-100"></div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" for="newPassword">New password</label>
-                        <input type="password" name="NewPassword" id="newPassword" class="form-control" required minlength="8" autocomplete="new-password" />
-                        <span class="field-validation-valid" data-valmsg-for="NewPassword" data-valmsg-replace="true"></span>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" for="confirmNewPassword">Confirm new password</label>
-                        <input type="password" name="ConfirmNewPassword" id="confirmNewPassword" class="form-control" required autocomplete="new-password" />
-                        <span class="field-validation-valid" data-valmsg-for="ConfirmNewPassword" data-valmsg-replace="true"></span>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label" for="currentPassword">Current password</label>
+                    <input type="password" name="CurrentPassword" id="currentPassword" class="form-control" required autocomplete="current-password" />
+                    <span class="field-validation-valid" data-valmsg-for="CurrentPassword" data-valmsg-replace="true"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="newPassword">New password</label>
+                    <input type="password" name="NewPassword" id="newPassword" class="form-control" required minlength="8" autocomplete="new-password" />
+                    <span class="field-validation-valid" data-valmsg-for="NewPassword" data-valmsg-replace="true"></span>
+                </div>
+                <div>
+                    <label class="form-label" for="confirmNewPassword">Confirm new password</label>
+                    <input type="password" name="ConfirmNewPassword" id="confirmNewPassword" class="form-control" required autocomplete="new-password" />
+                    <span class="field-validation-valid" data-valmsg-for="ConfirmNewPassword" data-valmsg-replace="true"></span>
                 </div>
             </div>
 
@@ -92,6 +92,7 @@
             </div>
         </form>
     </section>
+    </div>
 </div>
 
 @section Scripts {
