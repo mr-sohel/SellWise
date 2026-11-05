@@ -8,6 +8,9 @@ namespace SellWise.Web.ViewModels.Order;
 public class OrderFormViewModel
 {
     public Guid? CustomerId { get; set; }
+
+    /// <summary>Generated when the POS page loads; makes checkout safe to submit twice.</summary>
+    public Guid? IdempotencyKey { get; set; }
     public string OrderType { get; set; } = "offline";
 
     // Optional fields to create a new customer on the fly

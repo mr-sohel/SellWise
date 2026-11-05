@@ -114,7 +114,7 @@ public class OrderController : BaseController
     [HttpGet]
     public async Task<IActionResult> Create()
     {
-        return View(await PopulateOrderFormAsync(new OrderFormViewModel()));
+        return View(await PopulateOrderFormAsync(new OrderFormViewModel { IdempotencyKey = Guid.NewGuid() }));
     }
 
     [HttpPost]

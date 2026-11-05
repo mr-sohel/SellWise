@@ -18,6 +18,12 @@ public class Product
     public int LowStockThreshold { get; set; } = 10;
     public string Unit { get; set; } = "pcs";
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Optimistic concurrency token for the edit form, bumped on every edit. Not a SQL rowversion on
+    /// purpose: stock changes on every sale, and a rowversion would make every edit conflict.
+    /// </summary>
+    public int Version { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

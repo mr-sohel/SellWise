@@ -80,9 +80,17 @@ public class AlertService : IAlertService
             hasChanges = true;
         }
 
-        if (hasChanges)
+        if (!hasChanges) return;
+
+        try
         {
             await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Two scans ran at once (e.g. two open tabs) and the other one already inserted the
+            // same alert; the unique index (StoreId, ProductId, Type) rejected the duplicate.
+            _db.ChangeTracker.Clear();
         }
     }
 }

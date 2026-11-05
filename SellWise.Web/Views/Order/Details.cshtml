@@ -3,7 +3,11 @@
     ViewData["Title"] = "Order Details";
     var currency = Model.Currency ?? "৳";
 
-    var allStatuses = new[] { "pending", "processing", "delivered", "completed", "cancelled", "returned" };
+    // Only offer the transitions the server allows (see Models/OrderStatus.cs).
+    var nextStatuses = SellWise.Web.Models.OrderStatus.NextStatuses(Model.Status?.ToLower() ?? "pending")
+        .Where(s => s != SellWise.Web.Models.OrderStatus.Cancelled)
+        .ToList();
+    var canCancel = SellWise.Web.Models.OrderStatus.CanChange(Model.Status?.ToLower() ?? "pending", SellWise.Web.Models.OrderStatus.Cancelled);
     var statusCssClass = Model.Status?.ToLower() switch {
         "completed"  => "status-completed",
         "delivered"  => "status-delivered",
@@ -582,21 +586,18 @@ else
                 </a>
 
                 <!-- Status Change -->
-                @if (!isCancelled)
+                @if (nextStatuses.Any())
                 {
                     <div class="status-change-section">
                         <div class="status-change-label">Change Status</div>
                         <div class="status-grid">
-                            @foreach (var s in allStatuses)
+                            @foreach (var s in nextStatuses)
                             {
-                                var isCurrent2 = currentStatusLower == s;
                                 <form asp-action="ChangeStatus" asp-route-id="@Model.Id" method="post" class="m-0 p-0">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="status" value="@s" />
-                                    <button type="submit"
-                                            class="status-change-btn w-100 @(isCurrent2 ? "current-status" : "")"
-                                            @(isCurrent2 ? "disabled" : "")>
-                                        @s.Replace("_", " ")
+                                    <button type="submit" class="status-change-btn w-100">
+                                        @(s == SellWise.Web.Models.OrderStatus.Pending && isCancelled ? "re-open" : s)
                                     </button>
                                 </form>
                             }
@@ -605,11 +606,11 @@ else
                 }
 
                 <!-- Cancel -->
-                @if (currentStatusLower != "cancelled" && currentStatusLower != "returned" && currentStatusLower != "completed")
+                @if (canCancel)
                 {
                     <div style="margin-top:0.75rem;">
                         <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="m-0 p-0"
-                              onsubmit="return confirm('Cancel order @Model.OrderNumber? This cannot be undone.');">
+                              onsubmit="return confirm('Cancel this order? Its stock will be returned to inventory.');">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="action-btn-danger">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>

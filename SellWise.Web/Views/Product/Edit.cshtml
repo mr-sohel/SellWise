@@ -22,6 +22,8 @@
     <div class="col-12 col-lg-8">
         <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Version" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
 
             <partial name="_ProductForm" model="Model" />
 

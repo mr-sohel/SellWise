@@ -68,6 +68,17 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<InventoryAlert>().HasIndex(a => new { a.StoreId, a.IsRead });
         builder.Entity<Forecast>().HasIndex(f => f.StoreId);
 
+        // Concurrency and integrity guarantees enforced by the database itself.
+        builder.Entity<Product>().Property(p => p.Version).IsConcurrencyToken();
+        builder.Entity<Order>().Property(o => o.OrderNumber).HasMaxLength(50);
+        builder.Entity<InventoryAlert>().Property(a => a.Type).HasMaxLength(50);
+        builder.Entity<Order>().HasIndex(o => new { o.StoreId, o.OrderNumber }).IsUnique();
+        builder.Entity<Order>()
+            .HasIndex(o => new { o.StoreId, o.IdempotencyKey })
+            .IsUnique()
+            .HasFilter("[IdempotencyKey] IS NOT NULL");
+        builder.Entity<InventoryAlert>().HasIndex(a => new { a.StoreId, a.ProductId, a.Type }).IsUnique();
+
         // Prevents duplicate cache rows (concurrent dashboard requests) from
         // double-counting PredictedUnits when the cache is summed.
         builder.Entity<Forecast>()

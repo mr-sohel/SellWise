@@ -352,13 +352,17 @@ namespace SellWise.Web.Migrations
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
                     b.HasIndex("StoreId", "IsRead");
+
+                    b.HasIndex("StoreId", "ProductId", "Type")
+                        .IsUnique();
 
                     b.ToTable("Alerts");
                 });
@@ -383,6 +387,9 @@ namespace SellWise.Web.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<Guid?>("IdempotencyKey")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -391,7 +398,8 @@ namespace SellWise.Web.Migrations
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("OrderType")
                         .IsRequired()
@@ -418,7 +426,14 @@ namespace SellWise.Web.Migrations
 
                     b.HasIndex("CustomerId");
 
+                    b.HasIndex("StoreId", "IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("[IdempotencyKey] IS NOT NULL");
+
                     b.HasIndex("StoreId", "OrderDate");
+
+                    b.HasIndex("StoreId", "OrderNumber")
+                        .IsUnique();
 
                     b.ToTable("Orders");
                 });
@@ -507,6 +522,10 @@ namespace SellWise.Web.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

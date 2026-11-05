@@ -150,6 +150,7 @@ public class OrderServiceTests : IDisposable
         var customer = _db.AddCustomer(store.Id);
         var model = Order((product.Id, 2));
         model.CustomerId = customer.Id;
+        model.OrderType = "online";   // starts as pending, so it can be cancelled
         await CreateService().CreateOrderAsync(store.Id, model);
         Guid orderId;
         using (var ctx = _db.CreateContext())
@@ -170,26 +171,80 @@ public class OrderServiceTests : IDisposable
     {
         var store = _db.AddStore();
         var product = _db.AddProduct(store.Id, stock: 2);
-        await CreateService().CreateOrderAsync(store.Id, Order((product.Id, 2)));
+        var online = Order((product.Id, 2));
+        online.OrderType = "online";
+        await CreateService().CreateOrderAsync(store.Id, online);
         Guid orderId;
         using (var ctx = _db.CreateContext())
             orderId = (await ctx.Orders.SingleAsync()).Id;
-        await CreateService().ChangeOrderStatusAsync(orderId, store.Id, "cancelled");
+        Assert.Null(await CreateService().ChangeOrderStatusAsync(orderId, store.Id, "cancelled"));
+        Assert.Equal(2, _db.StockOf(product.Id));
         await CreateService().CreateOrderAsync(store.Id, Order((product.Id, 2)));  // sells the restored stock
 
-        var error = await CreateService().ChangeOrderStatusAsync(orderId, store.Id, "completed");
+        var error = await CreateService().ChangeOrderStatusAsync(orderId, store.Id, "pending");  // re-open
 
         Assert.NotNull(error);
         Assert.Equal(0, _db.StockOf(product.Id));
     }
 
-    [Fact]
-    public async Task ChangeStatus_RejectsUnknownStatus()
+    [Theory]
+    [InlineData("shipped-to-mars")]
+    [InlineData("pending")]      // a completed walk-in sale can't go back to pending
+    [InlineData("cancelled")]    // completed sales are returned, not cancelled
+    public async Task ChangeStatus_RejectsTransitionsTheStateMachineDoesNotAllow(string target)
     {
         var store = _db.AddStore();
+        var product = _db.AddProduct(store.Id, stock: 5);
+        await CreateService().CreateOrderAsync(store.Id, Order((product.Id, 1)));   // walk-in → completed
+        Guid orderId;
+        using (var ctx = _db.CreateContext())
+            orderId = (await ctx.Orders.SingleAsync()).Id;
 
-        var error = await CreateService().ChangeOrderStatusAsync(Guid.NewGuid(), store.Id, "shipped-to-mars");
+        var error = await CreateService().ChangeOrderStatusAsync(orderId, store.Id, target);
 
-        Assert.Equal("Invalid status.", error);
+        Assert.NotNull(error);
+        Assert.Equal(4, _db.StockOf(product.Id));
+    }
+
+    [Fact]
+    public async Task CreateOrder_WithSameIdempotencyKeyTwice_CreatesOneOrder()
+    {
+        var store = _db.AddStore();
+        var product = _db.AddProduct(store.Id, stock: 5);
+        var key = Guid.NewGuid();
+
+        var first = Order((product.Id, 2));
+        first.IdempotencyKey = key;
+        var resubmit = Order((product.Id, 2));
+        resubmit.IdempotencyKey = key;
+
+        Assert.Null(await CreateService().CreateOrderAsync(store.Id, first));
+        Assert.Null(await CreateService().CreateOrderAsync(store.Id, resubmit));   // reported as success
+
+        Assert.Equal(3, _db.StockOf(product.Id));
+        using var ctx = _db.CreateContext();
+        Assert.Single(ctx.Orders);
+    }
+
+    [Fact]
+    public async Task CreateOrder_NewCustomerWithKnownPhone_ReusesTheExistingCustomer()
+    {
+        var store = _db.AddStore();
+        var product = _db.AddProduct(store.Id, stock: 5, price: 100m);
+        using (var ctx = _db.CreateContext())
+        {
+            ctx.Customers.Add(new SellWise.Web.Models.Customer { StoreId = store.Id, Name = "Rahim", Phone = "01711000000" });
+            await ctx.SaveChangesAsync();
+        }
+        var model = Order((product.Id, 1));
+        model.NewCustomerName = "Rahim Uddin";
+        model.NewCustomerPhone = " 01711000000 ";
+
+        await CreateService().CreateOrderAsync(store.Id, model);
+
+        using var check = _db.CreateContext();
+        var customer = await check.Customers.SingleAsync();
+        Assert.Equal(1, customer.TotalOrders);
+        Assert.Equal(100m, customer.TotalSpent);
     }
 }
