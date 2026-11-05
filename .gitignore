@@ -87,3 +87,6 @@ SellWise.ML/data/models/
 **/.claude
 **/.agents
 **/graphify-out.env
+
+# Local AI assistant notes (kept out of the repo)
+CLAUDE.md
