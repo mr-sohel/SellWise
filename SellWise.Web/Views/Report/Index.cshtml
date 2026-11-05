@@ -4,7 +4,7 @@
 }
 
 <div class="mb-4">
-    <h2 class="fw-bold text-dark">Reports</h2>
+    <h1 class="page-heading">Reports</h1>
 </div>
 
 @if (TempData["ErrorMessage"] != null)
@@ -16,7 +16,7 @@
 }
 
 <div class="card p-3 p-md-5 border-1 shadow-sm mx-auto" style="max-width: 800px; margin-top: 2rem;">
-    <h2 class="fw-bold text-dark mb-2">Generate PDF Report</h2>
+    <h2 class="fw-bold text-dark mb-2">Generate PDF report</h2>
     <p class="text-muted mb-4">Download a comprehensive summary of your store's performance, including revenue, growth metrics, and top products.</p>
 
     <div class="p-4 bg-light rounded-3 mb-4" style="border: 1px solid var(--border-color);">
@@ -28,8 +28,8 @@
                         Reporting Period
                     </label>
                     <select class="form-select" name="days" style="background-color: #ffffff; border-color: #cbd5e1;">
-                        <option value="30">Last 30 Days</option>
-                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="7">Last 7 days</option>
                         <option value="90">Last 90 Days</option>
                         <option value="365">Last 365 Days</option>
                     </select>

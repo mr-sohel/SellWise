@@ -10,8 +10,8 @@
 }
 
 <!-- ── Header ── -->
-<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
-    <h2 class="fw-bold text-dark mb-0">Orders</h2>
+<div class="page-header">
+    <h1 class="page-heading">Orders</h1>
     <div class="d-flex gap-2 no-print">
         <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-2" onclick="window.print()" title="Print list">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -19,7 +19,7 @@
         </button>
         <a asp-action="Create" class="btn btn-primary d-flex align-items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New Order
+            New order
         </a>
     </div>
 </div>
@@ -40,59 +40,23 @@
     </div>
 }
 
-<!-- ── KPI Strip ── -->
-<div class="row g-3 mb-4 no-print">
-    <div class="col-6 col-md-3">
-        <div class="card border-1 shadow-sm p-3 h-100">
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--success-bg); flex-shrink: 0;">
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                </div>
-                <div>
-                    <div style="font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: .2rem;">Today's Revenue</div>
-                    <div class="kpi-value">৳@(ViewBag.TodayRevenue?.ToString("N0") ?? "0")</div>
-                </div>
-            </div>
-        </div>
+<!-- ── Key figures ── -->
+<div class="stat-strip mb-4 no-print">
+    <div class="stat">
+        <span class="stat-label">Today's revenue</span>
+        <div class="stat-value text-truncate">৳@(ViewBag.TodayRevenue?.ToString("N0") ?? "0")</div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-1 shadow-sm p-3 h-100">
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--brand-light); flex-shrink: 0;">
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                </div>
-                <div>
-                    <div style="font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: .2rem;">Orders Today</div>
-                    <div class="kpi-value">@(ViewBag.TodayOrdersCount ?? 0)</div>
-                </div>
-            </div>
-        </div>
+    <div class="stat">
+        <span class="stat-label">Orders today</span>
+        <div class="stat-value">@(((int)(ViewBag.TodayOrdersCount ?? 0)).ToString("N0"))</div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-1 shadow-sm p-3 h-100">
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--warning-bg); flex-shrink: 0;">
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </div>
-                <div>
-                    <div style="font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: .2rem;">Needs Attention</div>
-                    <div class="kpi-value">@(ViewBag.PendingOrdersCount ?? 0)</div>
-                </div>
-            </div>
-        </div>
+    <div class="stat @((ViewBag.PendingOrdersCount ?? 0) > 0 ? "is-warning" : "")">
+        <span class="stat-label">Pending orders</span>
+        <div class="stat-value">@(((int)(ViewBag.PendingOrdersCount ?? 0)).ToString("N0"))</div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-1 shadow-sm p-3 h-100">
-            <div class="d-flex align-items-center gap-3">
-                <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--purple-bg); flex-shrink: 0;">
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                </div>
-                <div>
-                    <div style="font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: .2rem;">Showing</div>
-                    <div class="kpi-value">@totalItems</div>
-                </div>
-            </div>
-        </div>
+    <div class="stat">
+        <span class="stat-label">Matching your filters</span>
+        <div class="stat-value">@totalItems.ToString("N0")</div>
     </div>
 </div>
 
@@ -126,7 +90,7 @@
                         ("all",       "All Time"),
                         ("today",     "Today"),
                         ("yesterday", "Yesterday"),
-                        ("week",      "Last 7 Days"),
+                        ("week",      "Last 7 days"),
                         ("month",     "This Month"),
                     };
                 }
@@ -222,7 +186,7 @@
                                         <li>
                                             <a asp-action="Details" asp-route-id="@o.Id" class="dropdown-item d-flex align-items-center gap-2">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                View Details
+                                                View details
                                             </a>
                                         </li>
                                         <li>
@@ -254,7 +218,7 @@
                                                     <input type="hidden" name="status" value="delivered" />
                                                     <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                                                        Mark as Delivered
+                                                        Mark as delivered
                                                     </button>
                                                 </form>
                                             </li>
@@ -268,7 +232,7 @@
                                                     <input type="hidden" name="status" value="completed" />
                                                     <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                                        Mark as Completed
+                                                        Mark as completed
                                                     </button>
                                                 </form>
                                             </li>
@@ -282,7 +246,7 @@
                                                     @Html.AntiForgeryToken()
                                                     <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                                        Cancel Order
+                                                        Cancel order
                                                     </button>
                                                 </form>
                                             </li>

@@ -5,13 +5,13 @@
 
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-3">
     <div>
-        <h5 class="fw-bold mb-0">Demand Forecast</h5>
-        <p class="text-muted small mb-0">Predicted demand for all products</p>
+        <h2 class="h5 mb-0">Demand forecast</h2>
+        <p class="text-muted small mb-0">Expected sales per product, and whether your stock will cover them</p>
     </div>
     <div class="btn-group-timeframe">
-        <button type="button" onclick="loadForecastPage('7d', 1)" class="btn-timeframe @(Model.Range == "7d" ? "active" : "")">7D</button>
-        <button type="button" onclick="loadForecastPage('15d', 1)" class="btn-timeframe @(Model.Range == "15d" ? "active" : "")">15D</button>
-        <button type="button" onclick="loadForecastPage('30d', 1)" class="btn-timeframe @(Model.Range == "30d" || string.IsNullOrEmpty(Model.Range) ? "active" : "")">30D</button>
+        <button type="button" onclick="loadForecastPage('7d', 1)" class="btn-timeframe @(Model.Range == "7d" ? "active" : "")">7 days</button>
+        <button type="button" onclick="loadForecastPage('15d', 1)" class="btn-timeframe @(Model.Range == "15d" ? "active" : "")">15 days</button>
+        <button type="button" onclick="loadForecastPage('30d', 1)" class="btn-timeframe @(Model.Range == "30d" || string.IsNullOrEmpty(Model.Range) ? "active" : "")">30 days</button>
     </div>
 </div>
 
@@ -21,14 +21,13 @@
         var f = Model.ProductForecasts[i];
         var globalIndex = (Model.CurrentPage - 1) * 8 + i;
         var sparkColor = (globalIndex % 3) switch {
-            0 => "#4338ca",
-            1 => "#8b5cf6",
-            _ => "#0ea5e9"
+            0 => "#0f6b5c",
+            1 => "#c9962e",
+            _ => "#3e6fa3"
         };
 
         <div class="forecast-item-card">
             <div class="forecast-badge-number">@(globalIndex + 1)</div>
-            <span class="ai-badge">AI Forecast</span>
             <div class="product-name text-truncate mb-1" title="@f.ProductName">
                 @f.ProductName
             </div>
@@ -97,7 +96,7 @@
                 <div class="spark-hover-tooltip"></div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="font-size: 0.75rem;">
+            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small">
                 <div>
                     <span class="stat-value">@f.PredictedUnits.ToString("N0")</span>
                     <span class="stat-label">units / @(f.ForecastHorizonDays)d</span>
@@ -119,42 +118,36 @@
                                 data-stock="@f.Stock" data-qty="@((int)Math.Ceiling(f.RestockQty))" data-unit="@(f.Unit ?? "units")"
                                 onclick="openRestockFromButton(this, () => { loadForecastPage('@Model.Range', @Model.CurrentPage); })"
                                 title="Click to restock @f.RestockQty.ToString("N0") units">
-                            ⚠ Restock @f.RestockQty.ToString("N0") units
+                            Restock @f.RestockQty.ToString("N0") units
                         </button>
                     }
                     else
                     {
-                        <span title="Low stock warning (@f.RestockQty.ToString("N0") units needed)" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">
-                            ⚠ Low stock (@f.RestockQty.ToString("N0") units)
-                        </span>
+                        <span class="forecast-pill risk" title="Low stock: @f.RestockQty.ToString("N0") more units needed">Low stock, needs @f.RestockQty.ToString("N0")</span>
                     }
                 }
                 else if (f.DaysOfCover > 90)
                 {
-                    <span title="Current stock covers the predicted demand" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">
-                        ✓ Stock covers forecast
-                    </span>
+                    <span class="forecast-pill ok" title="Current stock covers the predicted demand">Stock covers forecast</span>
                 }
                 else
                 {
-                    <span title="Days until predicted demand exhausts current stock" style="font-size:0.62rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;">
-                        ✓ @f.DaysOfCover days of stock
-                    </span>
+                    <span class="forecast-pill ok" title="Days until predicted demand exhausts current stock">@f.DaysOfCover days of stock</span>
                 }
                 @if (f.Trend == "rising")
                 {
-                    <span title="Forecast trend vs last week" style="font-size:0.62rem;font-weight:700;color:#ea580c;">↗ +@f.TrendPct.ToString("0.#")%</span>
+                    <span class="forecast-trend up" title="Forecast trend vs last week">Up @f.TrendPct.ToString("0.#")%</span>
                 }
                 else if (f.Trend == "falling")
                 {
-                    <span title="Forecast trend vs last week" style="font-size:0.62rem;font-weight:700;color:#2563eb;">↘ @f.TrendPct.ToString("0.#")%</span>
+                    <span class="forecast-trend down" title="Forecast trend vs last week">Down @f.TrendPct.ToString("0.#")%</span>
                 }
                 else
                 {
-                    <span title="Forecast trend vs last week" style="font-size:0.62rem;font-weight:600;color:#a8a29e;">→ steady</span>
+                    <span class="forecast-trend flat" title="Forecast trend vs last week">Steady</span>
                 }
             </div>
-            <div class="text-muted mt-1" style="font-size: 0.65rem;">
+            <div class="text-muted mt-1 small">
                 ~@f.DailyAverage units/day
             </div>
         </div>
@@ -168,11 +161,11 @@
         <div class="d-flex gap-2">
             @if (Model.CurrentPage > 1)
             {
-                <button type="button" onclick="loadForecastPage('@Model.Range', @(Model.CurrentPage - 1))" class="btn btn-sm btn-outline-secondary px-3">← Previous</button>
+                <button type="button" onclick="loadForecastPage('@Model.Range', @(Model.CurrentPage - 1))" class="btn btn-sm btn-outline-secondary px-3">Previous</button>
             }
             @if (Model.CurrentPage < Model.TotalPages)
             {
-                <button type="button" onclick="loadForecastPage('@Model.Range', @(Model.CurrentPage + 1))" class="btn btn-sm btn-outline-primary px-3">Next →</button>
+                <button type="button" onclick="loadForecastPage('@Model.Range', @(Model.CurrentPage + 1))" class="btn btn-sm btn-outline-secondary px-3">Next</button>
             }
         </div>
     </div>
