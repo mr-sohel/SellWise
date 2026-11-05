@@ -258,6 +258,7 @@
 </div>
 
 <form asp-action="Create" method="post" id="hiddenPosForm" style="display:none;">
+    <input type="hidden" name="IdempotencyKey"     value="@Model.IdempotencyKey" />
     <input type="hidden" name="OrderType"          id="hfOrderType" value="offline" />
     <input type="hidden" name="CustomerId"         id="hfCustomerId" />
     <input type="hidden" name="NewCustomerName"    id="hfCustName" />

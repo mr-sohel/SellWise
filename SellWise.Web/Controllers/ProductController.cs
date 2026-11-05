@@ -81,7 +81,8 @@ public class ProductController : BaseController
             SellingPrice = product.SellingPrice,
             StockQuantity = product.StockQuantity,
             LowStockThreshold = product.LowStockThreshold,
-            Unit = product.Unit
+            Unit = product.Unit,
+            Version = product.Version
         });
     }
 
@@ -94,8 +95,17 @@ public class ProductController : BaseController
         if (!ModelState.IsValid)
             return View(model);
 
-        var updated = await _productService.UpdateProductAsync(StoreId, id, model);
-        return updated ? RedirectToAction(nameof(Index)) : NotFound();
+        switch (await _productService.UpdateProductAsync(StoreId, id, model))
+        {
+            case UpdateResult.NotFound:
+                return NotFound();
+            case UpdateResult.Conflict:
+                ModelState.AddModelError(string.Empty,
+                    "Someone else saved this product while you were editing. Reload the page to see their changes, then edit again.");
+                return View(model);
+            default:
+                return RedirectToAction(nameof(Index));
+        }
     }
 
     [HttpPost, OwnerOnly]

@@ -13,6 +13,9 @@ public class Order
     public Customer? Customer { get; set; }
 
     public string OrderNumber { get; set; } = string.Empty;
+
+    /// <summary>One-time key sent by the POS form so a repeated submit can't create a second order.</summary>
+    public Guid? IdempotencyKey { get; set; }
     public string Status { get; set; } = "pending";
     public string OrderType { get; set; } = "offline";
     public string? SalespersonName { get; set; }

@@ -1,14 +1,18 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Order;
 
 namespace SellWise.Web.Services;
 
+/// <summary>
+/// Order rules. Everything that two cashiers could do at the same moment (sell the same stock,
+/// update the same customer, change the same order) is done with single atomic UPDATE
+/// statements instead of read-modify-write, so concurrent requests can't overwrite each other.
+/// </summary>
 public class OrderService : IOrderService
 {
-    public static readonly string[] AllowedStatuses = { "pending", "processing", "delivered", "completed", "cancelled", "returned" };
-
     private readonly AppDbContext _db;
     private readonly ILogger<OrderService> _logger;
 
@@ -18,9 +22,6 @@ public class OrderService : IOrderService
         _logger = logger;
     }
 
-    /// <summary>Cancelled and returned orders don't count towards revenue, stock or customer totals.</summary>
-    public static bool CountsAsSale(string status) => status != "cancelled" && status != "returned";
-
     public async Task<(decimal TodayRevenue, int TodayOrdersCount, int PendingOrdersCount)> GetDashboardKpisAsync(Guid storeId)
     {
         var today = DateTime.UtcNow.Date;
@@ -29,9 +30,9 @@ public class OrderService : IOrderService
             .GroupBy(o => 1)
             .Select(g => new
             {
-                TodayRevenue = g.Where(o => o.OrderDate >= today && o.Status != "cancelled" && o.Status != "returned").Sum(o => o.Total),
+                TodayRevenue = g.Where(o => o.OrderDate >= today && o.Status != OrderStatus.Cancelled && o.Status != OrderStatus.Returned).Sum(o => o.Total),
                 TodayOrdersCount = g.Count(o => o.OrderDate >= today),
-                PendingOrdersCount = g.Count(o => o.Status == "pending" || o.Status == "processing")
+                PendingOrdersCount = g.Count(o => o.Status == OrderStatus.Pending || o.Status == OrderStatus.Processing)
             })
             .FirstOrDefaultAsync();
 
@@ -42,6 +43,11 @@ public class OrderService : IOrderService
     /// Creates an order, decrements stock and updates the customer's totals in one transaction.
     /// Returns an error message, or <c>null</c> on success.
     /// </summary>
+    /// <remarks>
+    /// Checkout is idempotent: the POS form carries a one-time <see cref="OrderFormViewModel.IdempotencyKey"/>.
+    /// If the same submission arrives twice (double click, network retry), only one order is created
+    /// and the repeat is reported as success.
+    /// </remarks>
     public async Task<string?> CreateOrderAsync(Guid storeId, OrderFormViewModel model, string? salespersonName = null)
     {
         // The same product may appear on several lines; treat it as one line with the combined quantity
@@ -54,6 +60,9 @@ public class OrderService : IOrderService
 
         if (lines.Count == 0)
             return "Please add at least one product to the order.";
+
+        if (await IsAlreadyPlacedAsync(storeId, model.IdempotencyKey))
+            return null;
 
         var isWalkIn = string.IsNullOrEmpty(model.OrderType) || model.OrderType.Equals("offline", StringComparison.OrdinalIgnoreCase);
         var deliveryCharge = isWalkIn ? 0m : model.DeliveryCharge;
@@ -70,8 +79,9 @@ public class OrderService : IOrderService
             var order = new Order
             {
                 StoreId = storeId,
+                IdempotencyKey = model.IdempotencyKey,
                 OrderType = isWalkIn ? "offline" : "online",
-                Status = isWalkIn ? "completed" : "pending",
+                Status = isWalkIn ? OrderStatus.Completed : OrderStatus.Pending,
                 DeliveryCharge = deliveryCharge,
                 Discount = model.Discount,
                 Notes = model.Notes,
@@ -112,23 +122,27 @@ public class OrderService : IOrderService
 
             order.Total = subtotal + deliveryCharge - model.Discount;
 
-            var customer = await ResolveCustomerAsync(storeId, model);
-            if (model.CustomerId.HasValue && customer == null)
-                return await FailAsync(transaction, "Customer not found in your store.");
-
-            if (customer != null)
-            {
-                order.Customer = customer;
-                customer.TotalOrders++;
-                customer.TotalSpent += order.Total;
-                customer.LastOrderDate = order.OrderDate;
-                customer.UpdatedAt = DateTime.UtcNow;
-            }
+            var customerError = await AttachCustomerAsync(storeId, model, order);
+            if (customerError != null)
+                return await FailAsync(transaction, customerError);
 
             _db.Orders.Add(order);
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
             return null;
+        }
+        catch (DbUpdateException ex)
+        {
+            await transaction.RollbackAsync();
+            _db.ChangeTracker.Clear();
+
+            // Two identical submissions raced past the check above; the unique index on
+            // (StoreId, IdempotencyKey) let only one of them in. The other one is not an error.
+            if (await IsAlreadyPlacedAsync(storeId, model.IdempotencyKey))
+                return null;
+
+            _logger.LogError(ex, "Failed to save order for store {StoreId}", storeId);
+            return "The order could not be saved. Please try again.";
         }
         catch (Exception ex)
         {
@@ -139,29 +153,41 @@ public class OrderService : IOrderService
     }
 
     /// <summary>
-    /// Changes an order's status. Moving into cancelled/returned puts the stock back and
-    /// reverses the customer's totals; moving out of it does the opposite.
+    /// Changes an order's status if the transition is allowed. Moving into cancelled/returned puts
+    /// the stock back and reverses the customer's totals; re-opening a cancelled order does the opposite.
     /// </summary>
     public async Task<string?> ChangeOrderStatusAsync(Guid orderId, Guid storeId, string newStatus)
     {
-        var status = newStatus?.Trim().ToLowerInvariant();
-        if (string.IsNullOrEmpty(status) || !AllowedStatuses.Contains(status))
-            return "Invalid status.";
+        var status = newStatus?.Trim().ToLowerInvariant() ?? "";
 
         var order = await _db.Orders
+            .AsNoTracking()
             .Include(o => o.Items)
-            .Include(o => o.Customer)
             .FirstOrDefaultAsync(o => o.Id == orderId && o.StoreId == storeId);
 
         if (order == null) return "Order not found.";
         if (order.Status == status) return null;
-
-        var wasSale = CountsAsSale(order.Status);
-        var isSale = CountsAsSale(status);
+        if (!OrderStatus.CanChange(order.Status, status))
+            return $"An order that is {order.Status} can't be changed to {status}.";
 
         await using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
+            // Compare-and-swap: only update if the status is still what we read above. If two
+            // people cancel the same order at once, the second UPDATE waits for the first to
+            // commit, then matches 0 rows - so stock is restored exactly once.
+            var claimed = await _db.Orders
+                .Where(o => o.Id == orderId && o.Status == order.Status)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(o => o.Status, status)
+                    .SetProperty(o => o.UpdatedAt, DateTime.UtcNow));
+
+            if (claimed == 0)
+                return await FailAsync(transaction, "This order was just changed by someone else. Refresh and try again.");
+
+            var wasSale = OrderStatus.CountsAsSale(order.Status);
+            var isSale = OrderStatus.CountsAsSale(status);
+
             if (wasSale && !isSale)
             {
                 foreach (var item in order.Items.Where(i => i.ProductId.HasValue))
@@ -170,7 +196,7 @@ public class OrderService : IOrderService
                         .Where(p => p.Id == item.ProductId && p.StoreId == storeId)
                         .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockQuantity, p => p.StockQuantity + item.Quantity));
                 }
-                AdjustCustomerTotals(order, direction: -1);
+                await AdjustCustomerTotalsAsync(order.CustomerId, orders: -1, spent: -order.Total);
             }
             else if (!wasSale && isSale)
             {
@@ -181,14 +207,11 @@ public class OrderService : IOrderService
                         .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockQuantity, p => p.StockQuantity - item.Quantity));
 
                     if (updatedRows == 0)
-                        return await FailAsync(transaction, $"Not enough stock for {item.ProductName} to reactivate this order.");
+                        return await FailAsync(transaction, $"Not enough stock for {item.ProductName} to re-open this order.");
                 }
-                AdjustCustomerTotals(order, direction: +1);
+                await AdjustCustomerTotalsAsync(order.CustomerId, orders: +1, spent: order.Total);
             }
 
-            order.Status = status;
-            order.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
             await transaction.CommitAsync();
             return null;
         }
@@ -200,32 +223,78 @@ public class OrderService : IOrderService
         }
     }
 
-    private async Task<Customer?> ResolveCustomerAsync(Guid storeId, OrderFormViewModel model)
+    private async Task<bool> IsAlreadyPlacedAsync(Guid storeId, Guid? idempotencyKey) =>
+        idempotencyKey.HasValue
+        && await _db.Orders.AnyAsync(o => o.StoreId == storeId && o.IdempotencyKey == idempotencyKey);
+
+    /// <summary>
+    /// Links the order to an existing customer (selected, or matched by phone) and bumps their
+    /// totals atomically, or creates a new customer with the order. Returns an error or null.
+    /// </summary>
+    private async Task<string?> AttachCustomerAsync(Guid storeId, OrderFormViewModel model, Order order)
     {
-        if (model.CustomerId.HasValue)
-            return await _db.Customers.FirstOrDefaultAsync(c => c.Id == model.CustomerId.Value && c.StoreId == storeId);
+        Guid? existingId = model.CustomerId;
 
-        if (string.IsNullOrWhiteSpace(model.NewCustomerName))
-            return null;
-
-        return new Customer
+        if (existingId.HasValue)
         {
-            StoreId = storeId,
-            Name = model.NewCustomerName.Trim(),
-            Phone = model.NewCustomerPhone?.Trim(),
-            Address = model.NewCustomerAddress?.Trim()
-        };
+            if (!await _db.Customers.AnyAsync(c => c.Id == existingId && c.StoreId == storeId))
+                return "Customer not found in your store.";
+        }
+        else if (!string.IsNullOrWhiteSpace(model.NewCustomerName))
+        {
+            // Reuse the customer if this phone number is already on file, instead of creating a duplicate.
+            var phone = model.NewCustomerPhone?.Trim();
+            if (!string.IsNullOrEmpty(phone))
+            {
+                existingId = await _db.Customers
+                    .Where(c => c.StoreId == storeId && c.Phone == phone)
+                    .Select(c => (Guid?)c.Id)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (existingId == null)
+            {
+                order.Customer = new Customer
+                {
+                    StoreId = storeId,
+                    Name = model.NewCustomerName.Trim(),
+                    Phone = phone,
+                    Address = model.NewCustomerAddress?.Trim(),
+                    TotalOrders = 1,
+                    TotalSpent = order.Total,
+                    LastOrderDate = order.OrderDate
+                };
+                return null;
+            }
+        }
+
+        if (existingId.HasValue)
+        {
+            order.CustomerId = existingId;
+            await AdjustCustomerTotalsAsync(existingId, orders: +1, spent: order.Total, lastOrderDate: order.OrderDate);
+        }
+
+        return null;
     }
 
-    private static void AdjustCustomerTotals(Order order, int direction)
+    /// <summary>
+    /// Atomic increment (UPDATE ... SET TotalOrders = TotalOrders + 1). Loading the customer,
+    /// adding 1 and saving would lose an update when two orders for the same customer overlap.
+    /// </summary>
+    private async Task AdjustCustomerTotalsAsync(Guid? customerId, int orders, decimal spent, DateTime? lastOrderDate = null)
     {
-        if (order.Customer == null) return;
-        order.Customer.TotalOrders += direction;
-        order.Customer.TotalSpent += direction * order.Total;
-        order.Customer.UpdatedAt = DateTime.UtcNow;
+        if (customerId == null) return;
+
+        await _db.Customers
+            .Where(c => c.Id == customerId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(c => c.TotalOrders, c => c.TotalOrders + orders)
+                .SetProperty(c => c.TotalSpent, c => c.TotalSpent + spent)
+                .SetProperty(c => c.LastOrderDate, c => lastOrderDate ?? c.LastOrderDate)
+                .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
     }
 
-    private static async Task<string> FailAsync(Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction, string error)
+    private static async Task<string> FailAsync(IDbContextTransaction transaction, string error)
     {
         await transaction.RollbackAsync();
         return error;

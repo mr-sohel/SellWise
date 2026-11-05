@@ -9,7 +9,7 @@ namespace SellWise.Web.Services;
 public interface IProductService
 {
     Task CreateProductAsync(Guid storeId, ProductFormViewModel model);
-    Task<bool> UpdateProductAsync(Guid storeId, Guid id, ProductFormViewModel model);
+    Task<UpdateResult> UpdateProductAsync(Guid storeId, Guid id, ProductFormViewModel model);
     Task DeleteProductAsync(Guid storeId, Guid id);
     Task<(bool Success, int NewStock, string Message)> RestockProductAsync(Guid storeId, Guid productId, int quantity);
 }

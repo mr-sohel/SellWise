@@ -6,6 +6,9 @@ namespace SellWise.Web.ViewModels.Product;
 public class ProductFormViewModel
 {
     public Guid? Id { get; set; }
+
+    /// <summary>Product.Version when the edit form was opened (optimistic concurrency).</summary>
+    public int Version { get; set; }
     
     [Required]
     public string? Name { get; set; } = string.Empty;
@@ -22,7 +25,7 @@ public class ProductFormViewModel
     public decimal SellingPrice { get; set; }
     
     [Required]
-    [Range(0, 1000000)]
+    [Range(0, SellWise.Web.Services.ProductService.MaxStock)]
     public int StockQuantity { get; set; }
     
     [Range(0, 1000000)]

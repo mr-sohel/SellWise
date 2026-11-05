@@ -29,6 +29,7 @@ public sealed class SellWiseAppFactory : WebApplicationFactory<Program>, IAsyncL
     public Guid StoreBCustomerId { get; private set; }
     public Guid StoreBOrderId { get; private set; }
     public Guid StoreBId { get; private set; }
+    public Guid StoreAId { get; private set; }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -36,6 +37,12 @@ public sealed class SellWiseAppFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("ConnectionStrings:DefaultConnection", _sql.GetConnectionString() + ";Database=SellWiseTests");
         builder.UseSetting("MlServiceUrl", "http://127.0.0.1:9/");
         builder.UseSetting("DemoData:Enabled", "false");
+
+        // Tests send many requests from one "IP"; real limits are covered in RateLimitingTests.
+        builder.UseSetting("RateLimiting:GlobalBurst", "100000");
+        builder.UseSetting("RateLimiting:GlobalPerTenSeconds", "100000");
+        builder.UseSetting("RateLimiting:AuthPerMinute", "100000");
+        builder.UseSetting("RateLimiting:ExpensivePerMinute", "100000");
     }
 
     public async Task InitializeAsync()
@@ -51,6 +58,7 @@ public sealed class SellWiseAppFactory : WebApplicationFactory<Program>, IAsyncL
         var storeB = new Store { Name = "Store B" };
         db.Stores.AddRange(storeA, storeB);
         StoreBId = storeB.Id;
+        StoreAId = storeA.Id;
 
         await AddMemberAsync(db, users, OwnerA, storeA, StoreRoles.Owner);
         await AddMemberAsync(db, users, OwnerB, storeB, StoreRoles.Owner);
@@ -87,6 +95,15 @@ public sealed class SellWiseAppFactory : WebApplicationFactory<Program>, IAsyncL
     /// <summary>A client that keeps cookies but does not follow redirects, so tests can assert on them.</summary>
     public HttpClient CreateBrowser() =>
         CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = true });
+
+    /// <summary>Adds rows to the test database (each test seeds its own data so tests stay independent).</summary>
+    public async Task SeedAsync(params object[] entities)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.AddRange(entities);
+        await db.SaveChangesAsync();
+    }
 
     public T Query<T>(Func<AppDbContext, T> query)
     {
