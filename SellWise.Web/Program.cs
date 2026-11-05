@@ -100,7 +100,7 @@ using (var scope = app.Services.CreateScope())
                         }
                         if (!db.StoreMembers.Any(m => m.StoreId == store1.Id && m.UserId == adminUser.Id))
                         {
-                            db.StoreMembers.Add(new StoreMember { StoreId = store1.Id, UserId = adminUser.Id, Role = "owner" });
+                            db.StoreMembers.Add(new StoreMember { StoreId = store1.Id, UserId = adminUser.Id, Role = SellWise.Web.Authorization.StoreRoles.Owner });
                             db.SaveChanges();
                         }
                         seeder.SeedStoreAsync(store1.Id, randomSeed: 42).GetAwaiter().GetResult();
@@ -115,7 +115,7 @@ using (var scope = app.Services.CreateScope())
                         }
                         if (!db.StoreMembers.Any(m => m.StoreId == store2.Id && m.UserId == adminUser.Id))
                         {
-                            db.StoreMembers.Add(new StoreMember { StoreId = store2.Id, UserId = adminUser.Id, Role = "owner" });
+                            db.StoreMembers.Add(new StoreMember { StoreId = store2.Id, UserId = adminUser.Id, Role = SellWise.Web.Authorization.StoreRoles.Owner });
                             db.SaveChanges();
                         }
                         seeder.SeedSecondStoreAsync(store2.Id, randomSeed: 99).GetAwaiter().GetResult();

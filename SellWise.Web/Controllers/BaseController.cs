@@ -1,19 +1,25 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
+using SellWise.Web.Authorization;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 
 namespace SellWise.Web.Controllers;
 
+/// <summary>
+/// Base class for every store-scoped controller. Before each action it resolves the
+/// user's active store and role, so actions can rely on <see cref="StoreId"/> and
+/// <see cref="IsOwner"/> instead of re-querying memberships.
+/// </summary>
 [Authorize]
 [AutoValidateAntiforgeryToken]
 public abstract class BaseController : Controller
 {
+    public const string ActiveStoreSessionKey = "ActiveStoreId";
+
     protected readonly AppDbContext Db;
 
     protected BaseController(AppDbContext db)
@@ -21,58 +27,72 @@ public abstract class BaseController : Controller
         Db = db;
     }
 
-    protected Guid GetCurrentStoreId()
-    {
-        var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
-        if (string.IsNullOrEmpty(storeIdStr))
-            return Guid.Empty;
+    /// <summary>The store the current user is working in. Every query must filter by it.</summary>
+    protected Guid StoreId { get; private set; }
 
-        return Guid.TryParse(storeIdStr, out var storeId) ? storeId : Guid.Empty;
-    }
+    protected string Role { get; private set; } = StoreRoles.Staff;
 
-    protected async Task<bool> UserBelongsToStore(Guid storeId)
-    {
-        var userId = System.Security.Claims.ClaimTypes.NameIdentifier;
-        var userIdValue = User.FindFirst(userId)?.Value;
-        if (userIdValue == null) return false;
-
-        return await Db.StoreMembers.AnyAsync(m => m.StoreId == storeId && m.UserId == userIdValue);
-    }
-
-    protected async Task<string?> GetCurrentUserRoleAsync(Guid storeId)
-    {
-        var userId = System.Security.Claims.ClaimTypes.NameIdentifier;
-        var userIdValue = User.FindFirst(userId)?.Value;
-        if (userIdValue == null) return null;
-
-        var member = await Db.StoreMembers
-            .FirstOrDefaultAsync(m => m.StoreId == storeId && m.UserId == userIdValue);
-        return member?.Role;
-    }
-
-    protected async Task<bool> IsEmployeeAsync(Guid storeId)
-    {
-        var role = await GetCurrentUserRoleAsync(storeId);
-        return string.Equals(role, "employee", StringComparison.OrdinalIgnoreCase);
-    }
+    protected bool IsOwner => Role == StoreRoles.Owner;
 
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            var storeId = GetCurrentStoreId();
-            if (storeId == Guid.Empty || !await UserBelongsToStore(storeId))
-            {
-                // Clear invalid session state if it exists
-                HttpContext.Session.Remove("ActiveStoreId");
-                context.Result = new RedirectToActionResult("Login", "Auth", null);
-                return;
-            }
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var membership = userId == null ? null : await ResolveActiveMembershipAsync(userId);
 
-            var role = await GetCurrentUserRoleAsync(storeId);
-            ViewData["CurrentStoreRole"] = role ?? "employee";
+        if (membership == null)
+        {
+            HttpContext.Session.Remove(ActiveStoreSessionKey);
+            context.Result = RedirectToAction("Login", "Auth");
+            return;
+        }
+
+        StoreId = membership.StoreId;
+        Role = membership.Role;
+        ViewData["CurrentStoreRole"] = Role;
+
+        var ownerOnly = context.ActionDescriptor.EndpointMetadata.OfType<OwnerOnlyAttribute>().Any();
+        if (ownerOnly && !IsOwner)
+        {
+            context.Result = IsAjaxRequest()
+                ? StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Only the store owner can do this." })
+                : DenyAndRedirect();
+            return;
         }
 
         await base.OnActionExecutionAsync(context, next);
+    }
+
+    /// <summary>
+    /// Returns the membership for the store saved in session. The session can expire
+    /// (20 min idle) while the login cookie is still valid, so in that case we fall back
+    /// to the user's first store instead of bouncing them to the login page.
+    /// </summary>
+    private async Task<StoreMember?> ResolveActiveMembershipAsync(string userId)
+    {
+        if (Guid.TryParse(HttpContext.Session.GetString(ActiveStoreSessionKey), out var storeId))
+        {
+            var current = await Db.StoreMembers.AsNoTracking()
+                .FirstOrDefaultAsync(m => m.StoreId == storeId && m.UserId == userId);
+            if (current != null) return current;
+        }
+
+        var fallback = await Db.StoreMembers.AsNoTracking()
+            .Where(m => m.UserId == userId)
+            .OrderBy(m => m.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (fallback != null)
+            HttpContext.Session.SetString(ActiveStoreSessionKey, fallback.StoreId.ToString());
+
+        return fallback;
+    }
+
+    private bool IsAjaxRequest() =>
+        Request.Headers.XRequestedWith == "XMLHttpRequest";
+
+    private IActionResult DenyAndRedirect()
+    {
+        TempData["ErrorMessage"] = "Only the store owner can access that page.";
+        return RedirectToAction("Index", "Order");
     }
 }

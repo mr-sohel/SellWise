@@ -10,6 +10,6 @@ public class StoreMember
     public string UserId { get; set; } = string.Empty;
     public ApplicationUser User { get; set; } = null!;
 
-    public string Role { get; set; } = "manager";
+    public string Role { get; set; } = SellWise.Web.Authorization.StoreRoles.Staff;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

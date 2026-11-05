@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SellWise.Web.Authorization;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Auth;
@@ -30,9 +32,8 @@ public class AuthController : Controller
     [HttpGet]
     public async Task<IActionResult> Login()
     {
-        var redirect = await RedirectIfAuthenticated();
-        if (redirect != null) return redirect;
-        return View();
+        var redirect = await RedirectIfAuthenticatedAsync();
+        return redirect ?? View();
     }
 
     [HttpPost]
@@ -41,91 +42,66 @@ public class AuthController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, true, false);
-
-        if (result.Succeeded)
+        var result = await _signInManager.PasswordSignInAsync(model.Email!, model.Password!, isPersistent: true, lockoutOnFailure: false);
+        if (!result.Succeeded)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email!);
-            if (user != null)
-            {
-                var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == user.Id);
-                if (member != null)
-                {
-                    HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
-                    if (string.Equals(member.Role, "employee", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return RedirectToAction("Index", "Order");
-                    }
-                }
-            }
-            return RedirectToAction("Index", "Dashboard");
+            ModelState.AddModelError(string.Empty, "Invalid email or password.");
+            return View(model);
         }
 
-        ModelState.AddModelError(string.Empty, "Invalid email or password.");
-        return View(model);
+        var user = await _userManager.FindByEmailAsync(model.Email!);
+        var member = user == null ? null : await FirstMembershipAsync(user.Id);
+        if (member == null)
+            return RedirectToAction("Index", "Dashboard");
+
+        SetActiveStore(member.StoreId);
+        return RedirectToHome(member.Role);
     }
 
     [HttpGet]
     public async Task<IActionResult> Signup()
     {
-        var redirect = await RedirectIfAuthenticated();
-        if (redirect != null) return redirect;
-        return View();
+        var redirect = await RedirectIfAuthenticatedAsync();
+        return redirect ?? View();
     }
 
+    /// <summary>Creates a user and their first store in one transaction; the user becomes its owner.</summary>
     [HttpPost]
     public async Task<IActionResult> Signup(SignupViewModel model)
     {
         if (!ModelState.IsValid)
             return View(model);
 
-        using var transaction = await _db.Database.BeginTransactionAsync();
+        await using var transaction = await _db.Database.BeginTransactionAsync();
         try
         {
-            var user = new ApplicationUser 
-            { 
-                UserName = model.Email, 
-                Email = model.Email,
-                OwnerName = model.OwnerName
-            };
-            
+            var user = new ApplicationUser { UserName = model.Email, Email = model.Email, OwnerName = model.OwnerName };
             var result = await _userManager.CreateAsync(user, model.Password!);
-
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                var store = new Store { Name = model.StoreName! };
-                _db.Stores.Add(store);
-                
-                var storeMember = new StoreMember
-                {
-                    StoreId = store.Id,
-                    UserId = user.Id,
-                    Role = "owner"
-                };
-                _db.StoreMembers.Add(storeMember);
-                
-                await _db.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                await _signInManager.SignInAsync(user, isPersistent: true);
-                HttpContext.Session.SetString("ActiveStoreId", store.Id.ToString());
-                
-                return RedirectToAction("Index", "Dashboard");
+                await transaction.RollbackAsync();
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+                return View(model);
             }
 
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
+            var store = new Store { Name = model.StoreName! };
+            _db.Stores.Add(store);
+            _db.StoreMembers.Add(new StoreMember { StoreId = store.Id, UserId = user.Id, Role = StoreRoles.Owner });
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            await _signInManager.SignInAsync(user, isPersistent: true);
+            SetActiveStore(store.Id);
+            return RedirectToAction("Index", "Dashboard");
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            _logger.LogError(ex, "An error occurred during signup.");
+            _logger.LogError(ex, "Signup failed for {Email}", model.Email);
             ModelState.AddModelError(string.Empty, "An error occurred during signup.");
+            return View(model);
         }
-
-        return View(model);
     }
 
     [HttpPost]
@@ -136,139 +112,74 @@ public class AuthController : Controller
         return RedirectToAction(nameof(Login));
     }
 
-    [HttpPost]
+    /// <summary>Only users who already own a store may create additional stores.</summary>
+    [HttpPost, Authorize]
     public async Task<IActionResult> CreateStore(CreateStoreViewModel model, string returnUrl = "/")
     {
-        var userId = _userManager.GetUserId(User);
-        if (userId == null) return RedirectToAction(nameof(Login));
+        var userId = _userManager.GetUserId(User)!;
 
-        // Enforce store creation permission: Only owners can create stores
-        var activeStoreId = HttpContext.Session.GetString("ActiveStoreId");
-        bool isOwner = false;
-
-        if (!string.IsNullOrEmpty(activeStoreId) && Guid.TryParse(activeStoreId, out var currentStoreGuid))
+        var ownsAStore = await _db.StoreMembers.AnyAsync(m => m.UserId == userId && m.Role == StoreRoles.Owner);
+        if (!ownsAStore)
         {
-            var currentMember = await _db.StoreMembers
-                .FirstOrDefaultAsync(m => m.StoreId == currentStoreGuid && m.UserId == userId);
-            isOwner = currentMember?.Role == "owner";
-        }
-        else
-        {
-            isOwner = await _db.StoreMembers.AnyAsync(m => m.UserId == userId && m.Role == "owner");
-        }
-
-        var hasMemberships = await _db.StoreMembers.AnyAsync(m => m.UserId == userId);
-        if (hasMemberships && !isOwner)
-        {
-            TempData["Error"] = "Only store owners are allowed to create new stores.";
-            return RedirectToAction("Index", "Dashboard");
+            TempData["ErrorMessage"] = "Only store owners can create new stores.";
+            return RedirectToAction("Index", "Order");
         }
 
         if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Store name is required.";
+            TempData["ErrorMessage"] = "Store name is required.";
             return RedirectToAction("Index", "Dashboard");
         }
 
-        using var transaction = await _db.Database.BeginTransactionAsync();
-        try
-        {
-            var store = new Store { Name = model.StoreName! };
-            _db.Stores.Add(store);
+        var store = new Store { Name = model.StoreName!.Trim() };
+        _db.Stores.Add(store);
+        _db.StoreMembers.Add(new StoreMember { StoreId = store.Id, UserId = userId, Role = StoreRoles.Owner });
+        await _db.SaveChangesAsync();
 
-            var storeMember = new StoreMember
-            {
-                StoreId = store.Id,
-                UserId = userId,
-                Role = "owner"
-            };
-            _db.StoreMembers.Add(storeMember);
-
-            await _db.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            HttpContext.Session.SetString("ActiveStoreId", store.Id.ToString());
-            TempData["Success"] = $"Store \"{store.Name}\" created successfully.";
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            _logger.LogError(ex, "An error occurred while creating a store.");
-            TempData["Error"] = "An error occurred while creating the store. Please try again.";
-        }
-
-        if (Url.IsLocalUrl(returnUrl))
-        {
-            return LocalRedirect(returnUrl);
-        }
-
+        SetActiveStore(store.Id);
         return RedirectToAction("Index", "Dashboard");
     }
 
-    [HttpPost]
+    [HttpPost, Authorize]
     public async Task<IActionResult> SwitchStore(Guid storeId, string returnUrl = "/")
     {
-        var userId = _userManager.GetUserId(User);
-        if (userId == null) return RedirectToAction(nameof(Login));
-
+        var userId = _userManager.GetUserId(User)!;
         var member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == userId && m.StoreId == storeId);
-        if (member != null)
-        {
-            HttpContext.Session.SetString("ActiveStoreId", storeId.ToString());
-            if (string.Equals(member.Role, "employee", StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.IsNullOrEmpty(returnUrl) || returnUrl == "/" ||
-                    returnUrl.StartsWith("/Dashboard", StringComparison.OrdinalIgnoreCase) ||
-                    returnUrl.StartsWith("/Expense", StringComparison.OrdinalIgnoreCase) ||
-                    returnUrl.StartsWith("/Report", StringComparison.OrdinalIgnoreCase))
-                {
-                    return RedirectToAction("Index", "Order");
-                }
-            }
-        }
+        if (member == null)
+            return RedirectToAction("Index", "Dashboard");
 
-        if (Url.IsLocalUrl(returnUrl))
-        {
-            return LocalRedirect(returnUrl);
-        }
+        SetActiveStore(storeId);
 
-        return RedirectToAction("Index", "Dashboard");
+        // Staff can't open owner pages, so send them to the POS instead of the page they were on.
+        if (member.Role != StoreRoles.Owner || !Url.IsLocalUrl(returnUrl))
+            return RedirectToHome(member.Role);
+
+        return LocalRedirect(returnUrl);
     }
 
-    private async Task<IActionResult?> RedirectIfAuthenticated()
+    private async Task<IActionResult?> RedirectIfAuthenticatedAsync()
     {
-        if (User.Identity?.IsAuthenticated != true) return null;
+        if (User.Identity?.IsAuthenticated != true)
+            return null;
 
         var userId = _userManager.GetUserId(User);
-        if (userId == null)
+        var member = userId == null ? null : await FirstMembershipAsync(userId);
+        if (member == null)
         {
             await _signInManager.SignOutAsync();
             return null;
         }
 
-        var storeIdStr = HttpContext.Session.GetString("ActiveStoreId");
-        StoreMember? member = null;
-        if (!string.IsNullOrEmpty(storeIdStr) && Guid.TryParse(storeIdStr, out var currentStoreGuid))
-        {
-            member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.StoreId == currentStoreGuid && m.UserId == userId);
-        }
-
-        if (member == null)
-        {
-            member = await _db.StoreMembers.FirstOrDefaultAsync(m => m.UserId == userId);
-            if (member == null)
-            {
-                await _signInManager.SignOutAsync();
-                return null;
-            }
-            HttpContext.Session.SetString("ActiveStoreId", member.StoreId.ToString());
-        }
-
-        if (string.Equals(member.Role, "employee", StringComparison.OrdinalIgnoreCase))
-        {
-            return RedirectToAction("Index", "Order");
-        }
-
-        return RedirectToAction("Index", "Dashboard");
+        SetActiveStore(member.StoreId);
+        return RedirectToHome(member.Role);
     }
+
+    private Task<StoreMember?> FirstMembershipAsync(string userId) =>
+        _db.StoreMembers.Where(m => m.UserId == userId).OrderBy(m => m.CreatedAt).FirstOrDefaultAsync();
+
+    private void SetActiveStore(Guid storeId) =>
+        HttpContext.Session.SetString(BaseController.ActiveStoreSessionKey, storeId.ToString());
+
+    private IActionResult RedirectToHome(string role) =>
+        role == StoreRoles.Owner ? RedirectToAction("Index", "Dashboard") : RedirectToAction("Index", "Order");
 }

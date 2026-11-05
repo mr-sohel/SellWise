@@ -42,10 +42,10 @@ public class ProductService : IProductService
         await _db.SaveChangesAsync();
     }
 
-    public async Task UpdateProductAsync(Guid storeId, Guid id, ProductFormViewModel model)
+    public async Task<bool> UpdateProductAsync(Guid storeId, Guid id, ProductFormViewModel model)
     {
         var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
-        if (product == null) throw new InvalidOperationException("Product not found.");
+        if (product == null) return false;
 
         product.Name = model.Name!;
         product.Sku = model.Sku;
@@ -70,6 +70,7 @@ public class ProductService : IProductService
         }
 
         await _db.SaveChangesAsync();
+        return true;
     }
 
     public async Task<(bool Success, int NewStock, string Message)> RestockProductAsync(Guid storeId, Guid productId, int quantity)

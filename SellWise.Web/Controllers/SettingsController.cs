@@ -1,18 +1,13 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-using System.Collections.Generic;
+using SellWise.Web.Authorization;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 using SellWise.Web.ViewModels.Settings;
 
 namespace SellWise.Web.Controllers;
 
-[Authorize]
 public class SettingsController : BaseController
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -32,47 +27,38 @@ public class SettingsController : BaseController
 
     public async Task<IActionResult> Index()
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Login", "Auth");
 
-        var member = await Db.StoreMembers
-            .Include(sm => sm.Store)
-            .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == user.Id);
+        var storeName = await Db.Stores
+            .Where(s => s.Id == StoreId)
+            .Select(s => s.Name)
+            .FirstAsync();
 
-        var vm = new ProfileViewModel
+        return View("Index", new ProfileViewModel
         {
             Email = user.Email ?? "",
-            StoreName = member?.Store?.Name ?? "",
+            StoreName = storeName,
             OwnerName = user.OwnerName ?? "",
-            Role = member?.Role ?? ""
-        };
-
-        return View("Index", vm);
+            Role = Role
+        });
     }
 
     [HttpPost]
     public async Task<IActionResult> UpdateProfile(ProfileViewModel model)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Login", "Auth");
 
-        var member = await Db.StoreMembers
-            .Include(sm => sm.Store)
-            .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == user.Id);
-        if (member?.Store != null && member.Role == "owner" && !string.IsNullOrWhiteSpace(model.StoreName))
+        if (IsOwner && !string.IsNullOrWhiteSpace(model.StoreName))
         {
-            member.Store.Name = model.StoreName;
+            var store = await Db.Stores.FirstAsync(s => s.Id == StoreId);
+            store.Name = model.StoreName.Trim();
+            await Db.SaveChangesAsync();
         }
 
         user.OwnerName = model.OwnerName;
         await _userManager.UpdateAsync(user);
-        await Db.SaveChangesAsync();
 
         TempData["Success"] = "Profile updated successfully.";
         return RedirectToAction(nameof(Index));
@@ -82,192 +68,111 @@ public class SettingsController : BaseController
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
     {
         if (!ModelState.IsValid)
-        {
             return await Index();
-        }
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Login", "Auth");
 
         var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword!, model.NewPassword!);
-
-        if (result.Succeeded)
-        {
-            await _signInManager.RefreshSignInAsync(user);
-            TempData["Success"] = "Password changed successfully.";
-        }
-        else
+        if (!result.Succeeded)
         {
             foreach (var error in result.Errors)
-            {
                 ModelState.AddModelError(string.Empty, error.Description);
-            }
             return await Index();
         }
 
+        await _signInManager.RefreshSignInAsync(user);
+        TempData["Success"] = "Password changed successfully.";
         return RedirectToAction(nameof(Index));
     }
 
+    [OwnerOnly]
     public async Task<IActionResult> Staff()
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser == null) return RedirectToAction("Login", "Auth");
-
-        var currentMember = await Db.StoreMembers
-            .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == currentUser.Id);
-        if (currentMember?.Role != "owner")
-        {
-            TempData["Error"] = "Only the store owner can manage staff.";
-            return RedirectToAction(nameof(Index));
-        }
-
         var members = await Db.StoreMembers
-            .Include(sm => sm.User)
-            .Where(sm => sm.StoreId == storeId)
+            .Where(m => m.StoreId == StoreId)
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => new StaffMemberViewModel
+            {
+                UserId = m.UserId,
+                Email = m.User.Email ?? "",
+                FullName = m.User.OwnerName ?? m.User.UserName ?? "",
+                Role = m.Role,
+                JoinedAt = m.CreatedAt
+            })
             .ToListAsync();
 
-        var employees = members.Select(m => new EmployeeViewModel
-        {
-            UserId = m.UserId,
-            Email = m.User?.Email ?? "",
-            FullName = m.User?.UserName ?? "",
-            Role = m.Role,
-            JoinedAt = m.CreatedAt
-        }).ToList();
-
-        return View("Staff", employees);
+        return View("Staff", members);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> InviteEmployee(InviteEmployeeViewModel model)
+    /// <summary>
+    /// Adds a staff member to the active store. If the email already has an account it is
+    /// linked to this store; otherwise a new account is created with the given password.
+    /// </summary>
+    [HttpPost, OwnerOnly]
+    public async Task<IActionResult> AddStaff(AddStaffViewModel model)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser == null) return RedirectToAction("Login", "Auth");
-
-        var currentMember = await Db.StoreMembers
-            .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == currentUser.Id);
-        if (currentMember?.Role != "owner")
-        {
-            TempData["Error"] = "Only the store owner can invite employees.";
-            return RedirectToAction(nameof(Index));
-        }
-
         if (!ModelState.IsValid)
-            return RedirectToAction(nameof(Staff));
-
-        if (model.Role != "employee" && model.Role != "manager")
         {
-            TempData["Error"] = "Invalid role. Must be 'employee' or 'manager'.";
+            TempData["Error"] = "Please fill in all required fields.";
             return RedirectToAction(nameof(Staff));
         }
 
-        var existingUser = await _userManager.FindByEmailAsync(model.Email!);
-        if (existingUser != null)
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user != null && await Db.StoreMembers.AnyAsync(m => m.StoreId == StoreId && m.UserId == user.Id))
         {
-            var alreadyMember = await Db.StoreMembers
-                .AnyAsync(sm => sm.StoreId == storeId && sm.UserId == existingUser.Id);
-            if (alreadyMember)
-            {
-                TempData["Error"] = "This user is already a member of your store.";
-                return RedirectToAction(nameof(Staff));
-            }
-
-            var storeMember = new StoreMember
-            {
-                StoreId = storeId,
-                UserId = existingUser.Id,
-                Role = model.Role
-            };
-            Db.StoreMembers.Add(storeMember);
-            await Db.SaveChangesAsync();
-
-            TempData["Success"] = $"{model.Email} has been added to your store as {model.Role}.";
+            TempData["Error"] = "This user is already a member of your store.";
             return RedirectToAction(nameof(Staff));
         }
 
-        var newUser = new ApplicationUser
+        if (user == null && string.IsNullOrEmpty(model.Password))
         {
-            UserName = model.Email,
-            Email = model.Email,
-            OwnerName = model.FullName
-        };
+            TempData["Error"] = "A password is required to create a new account.";
+            return RedirectToAction(nameof(Staff));
+        }
 
-        using var transaction = await Db.Database.BeginTransactionAsync();
+        // UserManager shares this DbContext, so one transaction covers the new user and the membership.
+        await using var transaction = await Db.Database.BeginTransactionAsync();
         try
         {
-            var result = await _userManager.CreateAsync(newUser, model.Password!);
-            if (result.Succeeded)
+            if (user == null)
             {
-                var storeMember = new StoreMember
+                user = new ApplicationUser { UserName = model.Email, Email = model.Email, OwnerName = model.FullName };
+                var result = await _userManager.CreateAsync(user, model.Password!);
+                if (!result.Succeeded)
                 {
-                    StoreId = storeId,
-                    UserId = newUser.Id,
-                    Role = model.Role
-                };
-                Db.StoreMembers.Add(storeMember);
-                await Db.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                TempData["Success"] = $"{model.FullName} has been invited as {model.Role}.";
-            }
-            else
-            {
-                await transaction.RollbackAsync();
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    await transaction.RollbackAsync();
+                    TempData["Error"] = string.Join(" ", result.Errors.Select(e => e.Description));
+                    return RedirectToAction(nameof(Staff));
                 }
-                TempData["Error"] = string.Join(" ", result.Errors.Select(e => e.Description));
             }
+
+            Db.StoreMembers.Add(new StoreMember { StoreId = StoreId, UserId = user.Id, Role = StoreRoles.Staff });
+            await Db.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            TempData["Success"] = $"{model.FullName} was added as staff.";
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            _logger.LogError(ex, "Failed to assign user {Email} to store {StoreId}", model.Email, storeId);
-            ModelState.AddModelError(string.Empty, "Failed to assign user to the store.");
-            TempData["Error"] = $"Failed to assign user: {ex.Message}";
+            _logger.LogError(ex, "Failed to add {Email} to store {StoreId}", model.Email, StoreId);
+            TempData["Error"] = "Could not add the staff member. Please try again.";
         }
 
         return RedirectToAction(nameof(Staff));
     }
 
-    [HttpPost]
-    public async Task<IActionResult> RemoveEmployee(string userId)
+    [HttpPost, OwnerOnly]
+    public async Task<IActionResult> RemoveStaff(string userId)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
+        var removed = await Db.StoreMembers
+            .Where(m => m.StoreId == StoreId && m.UserId == userId && m.Role != StoreRoles.Owner)
+            .ExecuteDeleteAsync();
 
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser == null) return RedirectToAction("Login", "Auth");
-
-        var currentMember = await Db.StoreMembers
-            .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == currentUser.Id);
-        if (currentMember?.Role != "owner")
-        {
-            TempData["Error"] = "Only the store owner can remove employees.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        if (userId == currentUser.Id)
-        {
-            TempData["Error"] = "You cannot remove yourself from the store.";
-            return RedirectToAction(nameof(Staff));
-        }
-
-        var member = await Db.StoreMembers
-            .FirstOrDefaultAsync(sm => sm.StoreId == storeId && sm.UserId == userId);
-        if (member != null)
-        {
-            Db.StoreMembers.Remove(member);
-            await Db.SaveChangesAsync();
-            TempData["Success"] = "Employee removed from the store.";
-        }
+        TempData[removed > 0 ? "Success" : "Error"] = removed > 0
+            ? "Staff member removed from the store."
+            : "That member could not be removed.";
 
         return RedirectToAction(nameof(Staff));
     }

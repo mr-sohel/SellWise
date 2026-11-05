@@ -1,16 +1,13 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SellWise.Web.Authorization;
 using SellWise.Web.Data;
-using SellWise.Web.Models;
-using SellWise.Web.ViewModels.Alert;
 using SellWise.Web.Services;
-using System.Linq;
-using System.Threading.Tasks;
+using SellWise.Web.ViewModels.Alert;
 
 namespace SellWise.Web.Controllers;
 
-[Authorize]
+[OwnerOnly]
 public class AlertController : BaseController
 {
     private readonly IAlertService _alertService;
@@ -22,19 +19,12 @@ public class AlertController : BaseController
 
     public async Task<IActionResult> Index(bool showUnreadOnly = false)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
+        // Alerts are derived from current stock levels, so refresh them on every visit.
+        await _alertService.ScanAndGenerateAlertsAsync(StoreId);
 
-        await _alertService.ScanAndGenerateAlertsAsync(storeId);
-
-        var query = Db.Alerts
-            .Include(a => a.Product)
-            .Where(a => a.StoreId == storeId && a.Type == "Low Stock");
-
+        var query = Db.Alerts.Where(a => a.StoreId == StoreId && a.Type == AlertService.LowStockType);
         if (showUnreadOnly)
-        {
             query = query.Where(a => !a.IsRead);
-        }
 
         var alerts = await query
             .OrderByDescending(a => a.CreatedAt)
@@ -42,7 +32,7 @@ public class AlertController : BaseController
             {
                 Id = a.Id,
                 ProductId = a.ProductId,
-                ProductName = a.Product != null ? a.Product.Name : "Unknown",
+                ProductName = a.Product.Name,
                 Type = a.Type,
                 Message = a.Message,
                 Severity = a.Severity,
@@ -56,44 +46,22 @@ public class AlertController : BaseController
     }
 
     [HttpPost]
-    public async Task<IActionResult> ScanInventory()
-    {
-        var storeId = GetCurrentStoreId();
-        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
-
-        await _alertService.ScanAndGenerateAlertsAsync(storeId);
-        TempData["SuccessMessage"] = "Inventory scan completed. Alerts generated for low stock items.";
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpPost]
     public async Task<IActionResult> MarkAllRead()
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
-
-        var unread = await Db.Alerts.Where(a => a.StoreId == storeId && !a.IsRead).ToListAsync();
-        foreach (var a in unread)
-        {
-            a.IsRead = true;
-        }
-        await Db.SaveChangesAsync();
+        await Db.Alerts
+            .Where(a => a.StoreId == StoreId && !a.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsRead, true));
 
         return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Dismiss(System.Guid id)
+    public async Task<IActionResult> MarkRead(Guid id)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
+        await Db.Alerts
+            .Where(a => a.Id == id && a.StoreId == StoreId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.IsRead, true));
 
-        var alert = await Db.Alerts.FirstOrDefaultAsync(a => a.Id == id && a.StoreId == storeId);
-        if (alert != null)
-        {
-            Db.Alerts.Remove(alert);
-            await Db.SaveChangesAsync();
-        }
         return RedirectToAction(nameof(Index));
     }
 }

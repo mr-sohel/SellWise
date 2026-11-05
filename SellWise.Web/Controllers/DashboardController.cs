@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SellWise.Web.Authorization;
 using SellWise.Web.Data;
 using SellWise.Web.Services;
 
 namespace SellWise.Web.Controllers;
 
-[Authorize]
+[OwnerOnly]
 public class DashboardController : BaseController
 {
     private const int ForecastPageSize = 8;
@@ -18,15 +18,8 @@ public class DashboardController : BaseController
 
     public async Task<IActionResult> Index(string range = "30d", int page = 1)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty)
-            return RedirectToAction("Login", "Auth");
-
-        if (await IsEmployeeAsync(storeId))
-            return RedirectToAction("Index", "Order");
-
         page = Math.Max(1, page);
-        var vm = await _analytics.GetOverview(storeId, range, page, ForecastPageSize);
+        var vm = await _analytics.GetOverview(StoreId, range, page, ForecastPageSize);
         int totalPages = Math.Max(1, (int)Math.Ceiling(vm.TotalForecastProducts / (double)ForecastPageSize));
         ViewData["ForecastPage"] = Math.Min(page, totalPages);
         ViewData["ForecastTotalPages"] = totalPages;
@@ -36,15 +29,8 @@ public class DashboardController : BaseController
     [HttpGet]
     public async Task<IActionResult> ForecastGrid(string range = "30d", int page = 1)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty)
-            return Unauthorized();
-
-        if (await IsEmployeeAsync(storeId))
-            return Forbid();
-
         page = Math.Max(1, page);
-        var vm = await _analytics.GetForecastsPageAsync(storeId, range, page, ForecastPageSize);
+        var vm = await _analytics.GetForecastsPageAsync(StoreId, range, page, ForecastPageSize);
         return PartialView("_ForecastGrid", vm);
     }
 }

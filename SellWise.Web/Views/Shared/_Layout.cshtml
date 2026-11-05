@@ -3,22 +3,19 @@
 @inject SellWise.Web.Data.AppDbContext _db
 @inject UserManager<ApplicationUser> _userManager
 @{
+    // The active store and role are resolved by BaseController; the layout only needs the store list for the switcher.
     var userId = _userManager.GetUserId(User);
     var activeStoreId = Context.Session.GetString("ActiveStoreId");
+    var isOwner = (ViewData["CurrentStoreRole"] as string) == SellWise.Web.Authorization.StoreRoles.Owner;
 
-    var userStoreMembers = new List<SellWise.Web.Models.StoreMember>();
-    if (userId != null)
-    {
-        userStoreMembers = _db.StoreMembers
-            .Include(m => m.Store)
+    var userStores = userId == null
+        ? new List<SellWise.Web.Models.Store>()
+        : await _db.StoreMembers
             .Where(m => m.UserId == userId)
-            .ToList();
-    }
-    var currentMember = userStoreMembers.FirstOrDefault(m => m.StoreId.ToString() == activeStoreId)
-                        ?? userStoreMembers.FirstOrDefault();
-    var currentStore = currentMember?.Store;
-    var isOwner = currentMember?.Role == "owner";
-    var isEmployee = currentMember?.Role == "employee" || string.Equals(ViewData["CurrentStoreRole"]?.ToString(), "employee", StringComparison.OrdinalIgnoreCase);
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => m.Store)
+            .ToListAsync();
+    var currentStore = userStores.FirstOrDefault(s => s.Id.ToString() == activeStoreId);
 
     // Local initials for the profile avatar (no third-party request)
     var emailName = (User.Identity?.Name ?? "User").Split('@')[0];
@@ -46,7 +43,7 @@
         <!-- Sidebar -->
         <nav class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="sidebarMenu">
             <div class="offcanvas-header d-lg-none border-bottom px-4">
-                <a asp-controller="@(!isEmployee ? "Dashboard" : "Order")" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
+                <a asp-controller="@(isOwner ? "Dashboard" : "Order")" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
                     <div class="brand-logo">
                         <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect width="24" height="24" rx="6" fill="#4338ca"/>
@@ -60,7 +57,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="sidebar-brand d-none d-lg-flex">
-                <a asp-controller="@(!isEmployee ? "Dashboard" : "Order")" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
+                <a asp-controller="@(isOwner ? "Dashboard" : "Order")" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
                     <div class="brand-logo">
                         <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect width="24" height="24" rx="6" fill="#4338ca"/>
@@ -73,7 +70,7 @@
                 </a>
             </div>
             <ul class="nav flex-column">
-                @if (!isEmployee)
+                @if (isOwner)
                 {
                     <li class="nav-item">
                         <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
@@ -100,7 +97,7 @@
                         <span>Customers</span>
                     </a>
                 </li>
-                @if (!isEmployee)
+                @if (isOwner)
                 {
                     <li class="nav-item">
                         <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Report" ? "active" : "")" asp-controller="Report" asp-action="Index">
@@ -145,25 +142,21 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" aria-labelledby="dropdownStore">
                             <li><h6 class="dropdown-header">Your Stores</h6></li>
-                            @foreach (var sm in userStoreMembers)
+                            @foreach (var store in userStores)
                             {
-                                var store = sm.Store;
-                                if (store != null)
-                                {
-                                    <li>
-                                        <form asp-controller="Auth" asp-action="SwitchStore" method="post" class="m-0 p-0 d-inline">
-                                            <input type="hidden" name="storeId" value="@store.Id" />
-                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                                            <button type="submit" class="dropdown-item @(store.Id.ToString() == activeStoreId ? "active fw-bold" : "")">
-                                                @if (store.Id.ToString() == activeStoreId)
-                                                {
-                                                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                }
-                                                @store.Name
-                                            </button>
-                                        </form>
-                                    </li>
-                                }
+                                <li>
+                                    <form asp-controller="Auth" asp-action="SwitchStore" method="post" class="m-0 p-0 d-inline">
+                                        <input type="hidden" name="storeId" value="@store.Id" />
+                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                        <button type="submit" class="dropdown-item @(store.Id.ToString() == activeStoreId ? "active fw-bold" : "")">
+                                            @if (store.Id.ToString() == activeStoreId)
+                                            {
+                                                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            }
+                                            @store.Name
+                                        </button>
+                                    </form>
+                                </li>
                             }
                             @if (isOwner)
                             {

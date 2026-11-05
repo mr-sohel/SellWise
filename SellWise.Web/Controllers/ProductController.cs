@@ -1,21 +1,15 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using SellWise.Web.Authorization;
 using SellWise.Web.Data;
-using SellWise.Web.ViewModels.Product;
-using SellWise.Web.Models;
 using SellWise.Web.Services;
+using SellWise.Web.ViewModels.Product;
 
 namespace SellWise.Web.Controllers;
 
-[Authorize]
 public class ProductController : BaseController
 {
+    private const int PageSize = 20;
     private readonly IProductService _productService;
 
     public ProductController(AppDbContext db, IProductService productService) : base(db)
@@ -25,25 +19,18 @@ public class ProductController : BaseController
 
     public async Task<IActionResult> Index(string search, int page = 1)
     {
-        if (page < 1) page = 1;
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-
-        var query = Db.Products.Where(p => p.StoreId == storeId && p.IsActive);
+        page = Math.Max(1, page);
+        var query = Db.Products.Where(p => p.StoreId == StoreId && p.IsActive);
 
         if (!string.IsNullOrEmpty(search))
-        {
-            query = query.Where(p => p.Name!.Contains(search) || p.Sku!.Contains(search));
-        }
+            query = query.Where(p => p.Name.Contains(search) || (p.Sku != null && p.Sku.Contains(search)));
 
-        int pageSize = 20;
         int totalItems = await query.CountAsync();
-        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
         var products = await query
             .OrderByDescending(p => p.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((page - 1) * PageSize)
+            .Take(PageSize)
             .Select(p => new ProductViewModel
             {
                 Id = p.Id,
@@ -57,64 +44,34 @@ public class ProductController : BaseController
             .ToListAsync();
 
         ViewData["CurrentPage"] = page;
-        ViewData["TotalPages"] = totalPages;
+        ViewData["TotalPages"] = (int)Math.Ceiling(totalItems / (double)PageSize);
         ViewData["Search"] = search;
         ViewData["TotalItems"] = totalItems;
 
         return View(products);
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Create()
-    {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to add products.";
-            return RedirectToAction(nameof(Index));
-        }
+    [HttpGet, OwnerOnly]
+    public IActionResult Create() => View(new ProductFormViewModel());
 
-        return View(new ProductFormViewModel());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, OwnerOnly]
     public async Task<IActionResult> Create(ProductFormViewModel model)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to add products.";
-            return RedirectToAction(nameof(Index));
-        }
-
         if (!ModelState.IsValid)
             return View(model);
 
-        await _productService.CreateProductAsync(storeId, model);
-
+        await _productService.CreateProductAsync(StoreId, model);
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet]
+    [HttpGet, OwnerOnly]
     public async Task<IActionResult> Edit(Guid id)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to edit products.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == storeId);
-
+        var product = await Db.Products.FirstOrDefaultAsync(p => p.Id == id && p.StoreId == StoreId);
         if (product == null)
             return NotFound();
 
-        var model = new ProductFormViewModel
+        return View(new ProductFormViewModel
         {
             Id = product.Id,
             Name = product.Name,
@@ -125,81 +82,36 @@ public class ProductController : BaseController
             StockQuantity = product.StockQuantity,
             LowStockThreshold = product.LowStockThreshold,
             Unit = product.Unit
-        };
-
-        return View(model);
+        });
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, OwnerOnly]
     public async Task<IActionResult> Edit(Guid id, ProductFormViewModel model)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to edit products.";
-            return RedirectToAction(nameof(Index));
-        }
-
         if (id != model.Id)
             return BadRequest();
 
         if (!ModelState.IsValid)
             return View(model);
 
-        try
-        {
-            await _productService.UpdateProductAsync(storeId, id, model);
-        }
-        catch (InvalidOperationException)
-        {
-            return NotFound();
-        }
-
-        return RedirectToAction(nameof(Index));
+        var updated = await _productService.UpdateProductAsync(StoreId, id, model);
+        return updated ? RedirectToAction(nameof(Index)) : NotFound();
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, OwnerOnly]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to delete products.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        await _productService.DeleteProductAsync(storeId, id);
-
+        await _productService.DeleteProductAsync(StoreId, id);
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, OwnerOnly]
     public async Task<IActionResult> Restock(Guid productId, int quantity)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == Guid.Empty) return Unauthorized();
-        if (await IsEmployeeAsync(storeId))
-        {
-            return BadRequest(new { success = false, message = "Employees are not permitted to restock products." });
-        }
-
-        var result = await _productService.RestockProductAsync(storeId, productId, quantity);
+        var result = await _productService.RestockProductAsync(StoreId, productId, quantity);
         if (!result.Success)
-        {
             return BadRequest(new { success = false, message = result.Message });
-        }
 
-        return Json(new
-        {
-            success = true,
-            productId = productId,
-            newStock = result.NewStock,
-            message = result.Message
-        });
+        return Json(new { success = true, productId, newStock = result.NewStock, message = result.Message });
     }
 }

@@ -1,7 +1,7 @@
 @model SellWise.Web.ViewModels.Dashboard.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    var isEmployee = string.Equals(ViewData["CurrentStoreRole"]?.ToString(), "employee", StringComparison.OrdinalIgnoreCase);
+    var isStaff = (ViewData["CurrentStoreRole"] as string) != SellWise.Web.Authorization.StoreRoles.Owner;
     int topPerformersPageSize = 5;
     int topPerformersTotalPages = (int)Math.Ceiling(Model.TopPerformers.Count / (double)topPerformersPageSize);
     if (topPerformersTotalPages < 1) topPerformersTotalPages = 1;
@@ -244,7 +244,7 @@
                     <div class="needs-attention-page @(p > 0 ? "d-none" : "")" data-page="@(p + 1)">
                         @foreach (var item in pageItems)
                         {
-                            @if (!isEmployee)
+                            @if (!isStaff)
                             {
                                 <div class="performers-item performers-item-clickable"
                                      role="button"

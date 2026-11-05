@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SellWise.Web.Authorization;
 using SellWise.Web.Data;
 using SellWise.Web.ViewModels.Report;
 using System.Linq;
@@ -12,7 +12,7 @@ using QuestPDF.Infrastructure;
 
 namespace SellWise.Web.Controllers;
 
-[Authorize]
+[OwnerOnly]
 public class ReportController : BaseController
 {
     public ReportController(AppDbContext db) : base(db)
@@ -22,13 +22,7 @@ public class ReportController : BaseController
 
     public async Task<IActionResult> Index()
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to access reports.";
-            return RedirectToAction("Index", "Order");
-        }
+        var storeId = StoreId;
 
         var totalOrders = await Db.Orders.Where(o => o.StoreId == storeId).CountAsync();
         var totalRevenue = await Db.Orders.Where(o => o.StoreId == storeId).SumAsync(o => o.Total);
@@ -45,13 +39,7 @@ public class ReportController : BaseController
     [HttpPost]
     public async Task<IActionResult> ExportPdf(int days = 30)
     {
-        var storeId = GetCurrentStoreId();
-        if (storeId == System.Guid.Empty) return RedirectToAction("Login", "Auth");
-        if (await IsEmployeeAsync(storeId))
-        {
-            TempData["ErrorMessage"] = "Employees are not permitted to generate PDF reports.";
-            return RedirectToAction(nameof(Index));
-        }
+        var storeId = StoreId;
 
         var startDate = DateTime.UtcNow.AddDays(-days);
 
