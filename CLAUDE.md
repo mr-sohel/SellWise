@@ -8,7 +8,9 @@ SellWise is a multi-store retail POS / inventory / analytics web app, kept delib
 
 - **SellWise.Web**: ASP.NET Core 10 MVC (Razor, Bootstrap 5, Chart.js), EF Core 10 on SQL Server, ASP.NET Core Identity, QuestPDF.
 - **SellWise.ML**: FastAPI service wrapping Prophet (`POST /api/v1/ml/forecast`, `GET /api/v1/ml/health`).
-- **SellWise.Tests**: xUnit tests. The order logic runs against in-memory **SQLite** (not the EF InMemory provider) because it needs real transactions and `ExecuteUpdate`.
+- **SellWise.Tests**: xUnit tests.
+  - `Unit/` runs the order logic against in-memory **SQLite** (not the EF InMemory provider), because it needs real transactions and `ExecuteUpdate`.
+  - `Integration/` hosts the real app with `WebApplicationFactory<Program>` against a Testcontainers SQL Server, so it **requires Docker**. `SellWiseAppFactory` seeds two stores and three users. `BrowserExtensions` handles login and anti-forgery tokens.
 
 ## Commands
 
@@ -17,8 +19,10 @@ SellWise is a multi-store retail POS / inventory / analytics web app, kept delib
 ./reset-db.ps1 | ./reset-db.sh      # drop DB, migrate, reseed demo data
 
 dotnet build SellWise.slnx
-dotnet test SellWise.slnx                                   # all .NET tests
+dotnet test SellWise.slnx                                   # all .NET tests (integration tests need Docker)
+dotnet test SellWise.slnx --filter "FullyQualifiedName~Unit"   # unit tests only, no Docker
 dotnet test SellWise.slnx --filter "FullyQualifiedName~OrderServiceTests.CreateOrder_MergesDuplicateLines"   # single test
+# If the app is running via start.ps1, its Debug build is locked; add -c Release.
 
 cd SellWise.Web
 dotnet run                                  # Development: migrates + seeds demo data on first run

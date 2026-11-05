@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SellWise.Web.Data;
 using SellWise.Web.Models;
 
-namespace SellWise.Tests;
+namespace SellWise.Tests.Unit;
 
 /// <summary>
 /// A throwaway in-memory SQLite database. Unlike the EF in-memory provider, SQLite supports

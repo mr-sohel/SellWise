@@ -1,7 +1,7 @@
 using SellWise.Web.Models;
 using SellWise.Web.Services;
 
-namespace SellWise.Tests;
+namespace SellWise.Tests.Unit;
 
 public class ForecastHelpersTests
 {

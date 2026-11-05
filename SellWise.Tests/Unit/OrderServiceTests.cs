@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using SellWise.Web.Services;
 using SellWise.Web.ViewModels.Order;
 
-namespace SellWise.Tests;
+namespace SellWise.Tests.Unit;
 
 public class OrderServiceTests : IDisposable
 {

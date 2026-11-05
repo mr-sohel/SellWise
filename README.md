@@ -31,7 +31,7 @@ Browser ──HTTP──▶ SellWise.Web (ASP.NET Core MVC) ──EF Core──�
 
 - **SellWise.Web**: controllers stay thin. Business rules live in `Services/` (orders, products, analytics, RFM, alerts).
 - **SellWise.ML**: a stateless forecasting API. It gets 90 days of daily sales for a product and returns a 30-day forecast.
-- **SellWise.Tests**: xUnit tests for the order rules, RFM scoring and forecast helpers.
+- **SellWise.Tests**: xUnit unit tests, plus integration tests that run the whole app against a real SQL Server.
 
 ## Design decisions
 
@@ -103,9 +103,19 @@ cd ../SellWise.Web && dotnet run                  # http://localhost:5000
 ## Tests
 
 ```bash
-dotnet test SellWise.slnx                                   # .NET tests
+dotnet test SellWise.slnx                                   # .NET unit + integration tests (needs Docker)
 cd SellWise.ML && pip install -r requirements-dev.txt && pytest   # ML service tests
 ```
+
+- **Unit tests** (`SellWise.Tests/Unit`): checkout and cancellation rules against in-memory SQLite, RFM
+  scoring, and the forecast helpers.
+- **Integration tests** (`SellWise.Tests/Integration`): run the real app in memory with `WebApplicationFactory`,
+  against a throwaway SQL Server container from Testcontainers, and act like a browser (cookies, forms,
+  anti-forgery tokens). They check that:
+  - the owner of one store can't read or change another store's orders, products or customers by guessing ids
+  - staff are kept out of owner pages
+  - requests without an anti-forgery token are rejected
+  - the dashboard still works when the ML service is down
 
 GitHub Actions runs both suites on every push and pull request.
 
@@ -132,7 +142,7 @@ SellWise.Web/
   ViewModels/      form/view models (entities are never bound directly)
   Views/           Razor views
 SellWise.ML/       FastAPI + Prophet forecasting service and its tests
-SellWise.Tests/    xUnit tests
+SellWise.Tests/    Unit/ (fast, SQLite) and Integration/ (real app + SQL Server container)
 docs/              original project report (describes an earlier, larger version)
 ```
 

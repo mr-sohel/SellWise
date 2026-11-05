@@ -1,6 +1,6 @@
 using SellWise.Web.Services;
 
-namespace SellWise.Tests;
+namespace SellWise.Tests.Unit;
 
 public class RfmScoringTests
 {
