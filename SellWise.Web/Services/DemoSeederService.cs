@@ -226,7 +226,7 @@ public class DemoSeederService
     }
 
     // -----------------------------------------------------------------------
-    // Shared order/expense/alert generators
+    // Order history generator
     // -----------------------------------------------------------------------
 
     private async Task SeedOrders(Guid storeId, List<Customer> customers, List<Product> products, Random rnd, int historyDays, int startOrderNum)
@@ -276,7 +276,7 @@ public class DemoSeederService
                     Status = status,
                     OrderType = isDelivery ? "online" : "offline",
                     SalespersonName = isDelivery ? "Online Store" : (rnd.Next(2) == 0 ? "Sales Staff" : "Admin User"),
-                    Total = product.SellingPrice * qty,
+                    Total = product.SellingPrice * qty + (isDelivery ? 60 : 0),
                     DeliveryCharge = isDelivery ? 60 : 0,
                     Discount = 0,
                     Notes = null,

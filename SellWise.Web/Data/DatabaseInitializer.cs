@@ -84,12 +84,15 @@ public static class DatabaseInitializer
 
         var db = services.GetRequiredService<AppDbContext>();
         var seeder = services.GetRequiredService<DemoSeederService>();
+        var rfm = services.GetRequiredService<IRfmService>();
 
         var techStore = await CreateOwnedStoreAsync(db, admin.Id, "SellWise Tech BD");
         await seeder.SeedStoreAsync(techStore.Id, randomSeed: 42);
+        await rfm.RecalculateAllAsync(techStore.Id);
 
         var fashionStore = await CreateOwnedStoreAsync(db, admin.Id, "StyleHub BD");
         await seeder.SeedSecondStoreAsync(fashionStore.Id, randomSeed: 99);
+        await rfm.RecalculateAllAsync(fashionStore.Id);
 
         logger.LogInformation("Seeded demo account {Email} with two stores", demo.AdminEmail);
     }
